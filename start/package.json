@@ -1,0 +1,63 @@
+{
+  "name": "@ty-ras/start",
+  "version": "0.13.0",
+  "author": {
+    "name": "Stanislav Muhametsin",
+    "email": "346799+stazz@users.noreply.github.com",
+    "url": "https://github.com/stazz"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ty-ras/meta"
+  },
+  "files": [
+    "./src",
+    "./dist",
+    "./template-components",
+    "README.md",
+    "LICENSE.txt"
+  ],
+  "type": "module",
+  "bin": "./dist/index.mjs",
+  "dependencies": {
+    "@effect/schema": "0.0.5",
+    "chalk": "5.2.0",
+    "gradient-string": "2.0.2",
+    "inquirer": "9.1.4",
+    "meow": "11.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "7.21.0",
+    "@babel/eslint-parser": "7.19.1",
+    "@typescript-eslint/eslint-plugin": "5.54.1",
+    "@typescript-eslint/parser": "5.54.1",
+    "@types/gradient-string": "1.1.2",
+    "@types/inquirer": "9.0.3",
+    "@types/node": "18.15.0",
+    "ava": "5.2.0",
+    "c8": "7.13.0",
+    "eslint": "8.35.0",
+    "eslint-config-prettier": "8.7.0",
+    "eslint-plugin-prettier": "4.2.1",
+    "eslint-plugin-sonarjs": "0.18.0",
+    "prettier": "2.8.4",
+    "ts-node": "10.9.1",
+    "typescript": "4.9.5"
+  },
+  "scripts": {
+    "build:run": "yarn run lint && yarn run tsc",
+    "build:ci": "yarn run clear-build-artifacts && yarn run tsc && yarn run format-output-files",
+    "clear-build-artifacts": "rm -rf dist build",
+    "format-output-files": "eslint --no-eslintrc --config '.eslintrc.output.cjs' --fix 'dist/*js'",
+    "lint": "eslint ./src --ext .ts,.mts,.tsx",
+    "execute": "ts-node src/index.mts",
+    "tsc": "tsc --project tsconfig.build.json",
+    "tsc:plain": "tsc",
+    "test:coverage": "c8 --temp-directory /tmp ava",
+    "test:run": "c8 --temp-directory /tmp --reporter text ava"
+  },
+  "resolutions": {
+    "@types/node": "18.15.0"
+  }
+}

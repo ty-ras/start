@@ -16,7 +16,7 @@ const componentsSchema = S.keyof(
 const stages = {
   generalMessage: {
     orderNumber: 0,
-    message: chalk.bold.bgCyan("General project configuration"),
+    message: chalk.bold.bgBlueBright("# General project configuration"),
   },
   folderName: {
     orderNumber: 1,
@@ -73,7 +73,7 @@ const stages = {
     orderNumber: 4,
     message: (components) =>
       hasBEComponent(components)
-        ? chalk.bold.bgCyan("Backend-specific project configuration:")
+        ? chalk.bold.bgBlueBright("# Backend-specific project configuration:")
         : undefined,
   },
   server: {
@@ -117,7 +117,7 @@ const stages = {
     orderNumber: 7,
     message: (components) =>
       hasFEComponent(components)
-        ? chalk.bold.bgCyan("Frontend-specific project configuration:")
+        ? chalk.bold.bgBlueBright("# Frontend-specific project configuration:")
         : undefined,
   },
   client: {
@@ -173,6 +173,11 @@ async function main() {
     booleanDefault: undefined,
   });
   print(chalk.bold(gradient("\nTyRAS\n")));
+  print(
+    chalk.italic(
+      "This program will create new template project to work with HTTP backend and/or client utilizing TyRAS libraries.\n",
+    ),
+  );
   const state: State = {
     flags,
     input,

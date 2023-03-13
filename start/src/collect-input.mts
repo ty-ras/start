@@ -108,67 +108,18 @@ const handleStageStateMutation = (
     // If the condition pattern match evaluated to true, proceed
     Match.when(true, () =>
       F.pipe(
-        // Match the value either from flags, or from unnamed CLI args
-        Match.value(valueName in flags ? flags[valueName] : input[0]),
-        // If value was specified, but didn't match the schema...
-        Match.when(
-          (value) => value !== undefined && !S.is(schema)(value),
-          () => {
-            // Side-effect: notify that value specified via CLI arg was not valid
-            common.print(
-              chalk.bold.cyanBright(
-                `! The value specified as CLI ${
-                  flag ? `parameter "${valueName}"` : "argument"
-                } was not valid, proceeding to prompt for it.`,
-              ),
-              "warn",
-            );
-            // Continue as if value was not set
-            undefined;
-          },
-        ),
-        // Break out of current pattern matching by using value as-is
-        Match.orElse(F.identity),
+        // Try to get the value from CLI flags or args
+        getValueFromCLIFlagsOrArgs(valueName, schema, flag, flags, input),
         // Start next pattern matching
         Match.value,
-        // When value is not set (= undefined)...
-        Match.when(Match.undefined, () =>
-          F.pipe(
-            // Construct schema decoder
-            S.decode(schema),
-            // Prompt the value from user, using schema decoder as validator
-            async (decode) =>
-              (
-                await inquirer.prompt<{
-                  question: StageValues;
-                }>({
-                  ...prompt,
-                  name: "question",
-                  validate: (input) =>
-                    // We could use F.flow here, but the signature of decode is not compatible with validate
-                    F.pipe(
-                      input,
-                      // Use decoder to validate input
-                      decode,
-                      // On success, just return true
-                      E.map(constTrue),
-                      // On error, return string with nicely formatted error message
-                      E.getOrElse(TF.formatErrors),
-                    ),
-                })
-              ).question,
-          ),
-        ),
-        Match.orElse((value) => {
-          // Side-effect: notify user that instead of prompting, the value from CLI will be used
-          common.print(
-            chalk.italic(
-              `Using value supplied via CLI for "${valueName}" (${value}).`,
-            ),
-          );
+        // When value is not set, or is invalid (= undefined), then prompt value from user
+        Match.when(Match.undefined, () => promptValueFromUser(schema, prompt)),
+        // If valid value was in CLI flags or args, use it as-is
+        Match.orElse((value) =>
           // Use the value as-is
-          return Promise.resolve(value);
-        }),
+          Promise.resolve(value),
+        ),
+        // We now have validated value, either from CLI flags/args, or from user.
         async (asyncValue) => {
           // Side-effect: mutate state with the final, validated, value got either as CLI argument or as user input
           // No idea why this gives error:
@@ -183,45 +134,83 @@ const handleStageStateMutation = (
     ),
     Match.option,
   );
-  // if (condition === undefined || condition(getComponentsFromValues(values))) {
-  //   // Check if this is already supplied via flag or input arg
-  //   let value = valueName in flags ? flags[valueName] : input[0];
-  //   if (value !== undefined && !S.is(schema)(value)) {
-  //     common.print(
-  //       chalk.bold.cyanBright(
-  //         `! The value specified as CLI ${
-  //           flag ? `parameter "${valueName}"` : "argument"
-  //         } was not valid, proceeding to prompt for it.`,
-  //       ),
-  //       "warn",
-  //     );
-  //     value = undefined;
-  //   }
-  //   if (value === undefined) {
-  //     const decode = S.decode(schema);
-  //     // Prompt from user
-  //     value = (
-  //       await inquirer.prompt<{
-  //         question: StageValues;
-  //       }>({
-  //         ...prompt,
-  //         name: "question",
-  //         validate: (input) => {
-  //           const result = decode(input);
-  //           return S.isSuccess(result) || TF.formatErrors(result.left);
-  //         },
-  //       })
-  //     ).question;
-  //   } else {
-  //     common.print(
-  //       chalk.italic(
-  //         `Using value supplied via CLI for "${valueName}" (${value}).`,
-  //       ),
-  //     );
-  //   }
-  //   values[valueName as keyof typeof values] = value as any;
-  // }
 };
+
+const getValueFromCLIFlagsOrArgs = (
+  valueName: keyof Stages,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  schema: S.Schema<any>,
+  flag: AnyFlag | undefined,
+  flags: State["flags"],
+  input: State["input"],
+) =>
+  F.pipe(
+    // Match the value either from flags, or from unnamed CLI args
+    Match.value(valueName in flags ? flags[valueName] : input[0]),
+    // If value was specified (is not undefined)
+    Match.not(Match.undefined, (value) =>
+      F.pipe(
+        // Is the value adhering to the schema?
+        Match.value(S.is(schema)(value)),
+        // If value adhers to schema, we can use it.
+        // Notify user about this.
+        Match.when(true, () => {
+          // Side-effect: notify user that instead of prompting, the value from CLI will be used
+          common.print(
+            chalk.italic(
+              `Using value supplied via CLI for "${valueName}" (${value}).`,
+            ),
+          );
+          return value;
+        }),
+        // If value does not adher to schema, we should not use it.
+        // Notify user about this.
+        Match.orElse(() => {
+          // Side-effect: notify that value specified via CLI arg was not valid
+          common.print(
+            chalk.bold.cyanBright(
+              `! The value specified as CLI ${
+                flag ? `parameter "${valueName}"` : "argument"
+              } was not valid, proceeding to prompt for it.`,
+            ),
+            "warn",
+          );
+          // Continue as if value was not set
+          return undefined;
+        }),
+      ),
+    ),
+    // Value was not specified -> return
+    Match.orElse(F.constUndefined),
+  );
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const promptValueFromUser = (schema: S.Schema<any>, prompt: DistinctQuestion) =>
+  F.pipe(
+    // Construct schema decoder
+    S.decode(schema),
+    // Prompt the value from user, using schema decoder as validator
+    async (decode) =>
+      (
+        await inquirer.prompt<{
+          question: StageValues;
+        }>({
+          ...prompt,
+          name: "question",
+          validate: (input) =>
+            // We could use F.flow here, but the signature of decode is not compatible with validate
+            F.pipe(
+              input,
+              // Use decoder to validate input
+              decode,
+              // On success, just return true
+              E.map(constTrue),
+              // On error, return string with nicely formatted error message
+              E.getOrElse(TF.formatErrors),
+            ),
+        })
+      ).question,
+  );
 
 const getFlags = (): Flags => {
   return Object.fromEntries(

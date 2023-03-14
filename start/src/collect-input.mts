@@ -8,68 +8,76 @@ import * as R from "@effect/data/ReadonlyRecord";
 import * as A from "@effect/data/ReadonlyArray";
 import * as N from "@effect/data/Number";
 import * as O from "@effect/data/Option";
+import * as Set from "@effect/data/HashSet";
 import * as Ord from "@effect/data/typeclass/Order";
 import * as S from "@effect/schema";
 import * as TF from "@effect/schema/formatter/Tree";
 import * as Match from "@effect/match";
 import * as common from "./common.mjs";
 
-export const collectInputs = async (welcomeMessage: () => void) =>
-  await F.pipe(
-    meow(help, {
-      importMeta: import.meta,
-      flags: getFlags(),
-      booleanDefault: undefined,
-      autoVersion: true,
-      autoHelp: true,
-    }),
-    ({ flags, input }): CLIArgs => {
-      // At this point, we have not exited due to --version or --help command
-      // So show the welcome message as side-effect.
-      welcomeMessage();
-      return { flags, input };
-    },
-    async (cliArgs) => {
-      const values: InputFromCLIOrUser = {};
-      let components: O.Option<Components> = O.none<Components>();
-      for (const [stageName, stageInfo] of stagesOrdered) {
-        F.pipe(
-          Match.value(
-            O.fromNullable(
-              await handleStage(stageName, stageInfo, cliArgs, components),
-            ),
+export const createCLIArgs = (): CLIArgs => {
+  const { flags, input } = meow(help, {
+    importMeta: import.meta,
+    flags: getFlags(),
+    booleanDefault: undefined,
+    autoVersion: true,
+    autoHelp: true,
+  });
+  return { flags, input };
+};
+
+export const collectInputs = async (
+  cliArgs: CLIArgsInfo,
+  values: InputFromCLIOrUser,
+): Promise<Set.HashSet<CLIArgsInfoSetElement>> => {
+  let components: O.Option<Components> = O.fromNullable(values["components"]);
+  let cliArgsSet = Set.make<ReadonlyArray<CLIArgsInfoSetElement>>();
+  for (const [stageName, stageInfo] of stagesOrdered) {
+    if (!(stageName in values)) {
+      F.pipe(
+        Match.value(
+          O.fromNullable(
+            await handleStage(stageName, stageInfo, cliArgs, components),
           ),
-          Match.when(O.isSome, ({ value }) => {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            values[stageName as keyof typeof values] =
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              value as any;
-            if (stageName === "components") {
-              components = O.some(value as Components);
-            }
-          }),
-          Match.option,
-        );
-      }
-      return values;
-    },
-  );
+        ),
+        Match.when(O.isSome, ({ value: { value, fromCLI } }) => {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          values[stageName as keyof typeof values] =
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            value as any;
+          if (stageName === "components") {
+            components = O.some(value as Components);
+          }
+          if (fromCLI) {
+            cliArgsSet = Set.add(
+              cliArgsSet,
+              stageName as CLIArgsInfoSetElement,
+            );
+          }
+        }),
+        // End pattern matching
+        Match.option,
+      );
+    }
+  }
+  return cliArgsSet;
+};
 
 const handleStage = (
   valueName: keyof Stages,
   stage: Stage,
-  cliArgs: CLIArgs,
+  cliArgs: CLIArgsInfo,
   components: O.Option<Components>,
 ) =>
   F.pipe(
     Match.value(stage),
     Match.when(
       (stage): stage is MessageStage & CommonStage => "message" in stage,
-      (stage): O.Option<void | Promise<StageValues>> =>
+      (stage): O.Option<Promise<StageHandlingResult>> =>
         handleStageMessage(stage, components),
     ),
     Match.orElse(
-      (stage): O.Option<void | Promise<StageValues>> =>
+      (stage): O.Option<Promise<StageHandlingResult>> =>
         handleStageStateMutation(valueName, stage, cliArgs, components),
     ),
     O.getOrNull,
@@ -78,7 +86,7 @@ const handleStage = (
 const handleStageMessage = (
   { message }: MessageStage,
   components: O.Option<Components>,
-): O.Option<void> =>
+): O.Option<Promise<StageHandlingResult>> =>
   F.pipe(
     // Start pattern matching on message
     Match.value(message),
@@ -92,6 +100,7 @@ const handleStageMessage = (
     Match.not(Match.undefined, (str) => common.print(str)),
     // Finalize 2nd matching, otherwise it will never get executed
     Match.option,
+    O.none,
   );
 
 // The asyncness here is not handled particularly nicely
@@ -101,9 +110,9 @@ const handleStageMessage = (
 const handleStageStateMutation = (
   valueName: keyof Stages,
   { condition, schema, flag, prompt }: StateMutatingStage,
-  { flags, input }: CLIArgs,
+  cliArgs: CLIArgsInfo,
   components: O.Option<Components>,
-): O.Option<Promise<StageValues>> => {
+): O.Option<Promise<StageHandlingResult>> => {
   return F.pipe(
     // Match the condition
     Match.value(condition),
@@ -117,13 +126,16 @@ const handleStageStateMutation = (
     Match.when(true, () =>
       F.pipe(
         // Try to get the value from CLI flags or args
-        getValueFromCLIFlagsOrArgs(valueName, schema, flag, flags, input),
+        getValueFromCLIFlagsOrArgs(valueName, schema, flag, cliArgs),
         // Start next pattern matching
         Match.value,
         // When value is not set, or is invalid (= undefined), then prompt value from user
-        Match.when(O.isNone, () => promptValueFromUser(schema, prompt)),
+        Match.when(O.isNone, async () => ({
+          value: await promptValueFromUser(schema, prompt),
+          fromCLI: false,
+        })),
         // If valid value was in CLI flags or args, use it as-is
-        Match.orElse((value) => Promise.resolve(value.value)),
+        Match.orElse(({ value }) => Promise.resolve({ value, fromCLI: true })),
       ),
     ),
     // End matching
@@ -136,51 +148,70 @@ const getValueFromCLIFlagsOrArgs = (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   schema: S.Schema<any>,
   flag: AnyFlag | undefined,
-  flags: CLIArgs["flags"],
-  input: CLIArgs["input"],
+  cliArgs: CLIArgsInfo,
 ): O.Option<StageValues> =>
   F.pipe(
-    // Match the value either from flags, or from unnamed CLI args
-    Match.value<StageValues>(
-      (valueName in flags ? flags[valueName] : input[0]) as StageValues,
-    ),
-    // If value was specified (is not undefined)
-    Match.not(Match.undefined, (value) =>
+    Match.value(cliArgs),
+    Match.when(Set.isHashSet, (cliArgsNames) => {
+      if (Set.has(cliArgsNames, valueName)) {
+        // The value was specified via CLI, but failed more advanced validation
+        common.print(
+          chalk.bold.cyanBright(
+            `Not re-using CLI-supplied value for "${valueName}" after error.`,
+          ),
+        );
+      }
+      return O.none<StageValues | undefined>();
+    }),
+    Match.orElse(({ flags, input }) =>
       F.pipe(
-        // Is the value adhering to the schema?
-        Match.value(S.is(schema)(value)),
-        // If value adhers to schema, we can use it.
-        // Notify user about this.
-        Match.when(true, () => {
-          // Side-effect: notify user that instead of prompting, the value from CLI will be used
-          common.print(
-            chalk.italic(
-              `Using value supplied via CLI for "${valueName}" (${value}).`,
-            ),
-          );
-          return value;
-        }),
-        // If value does not adher to schema, we should not use it.
-        // Notify user about this.
-        Match.orElse(() => {
-          // Side-effect: notify that value specified via CLI arg was not valid
-          common.print(
-            chalk.bold.cyanBright(
-              `! The value specified as CLI ${
-                flag ? `parameter "${valueName}"` : "argument"
-              } was not valid, proceeding to prompt for it.`,
-            ),
-            "warn",
-          );
-          // Continue as if value was not set
-          return undefined;
-        }),
+        // Match the value either from flags, or from unnamed CLI args
+        Match.value<StageValues>(
+          ("flag" in stages[valueName]
+            ? flags[valueName]
+            : input[0]) as StageValues,
+        ),
+        // If value was specified (is not undefined)
+        Match.not(Match.undefined, (value) =>
+          F.pipe(
+            // Is the value adhering to the schema?
+            Match.value(S.is(schema)(value)),
+            // If value adhers to schema, we can use it.
+            // Notify user about this.
+            Match.when(true, () => {
+              // Side-effect: notify user that instead of prompting, the value from CLI will be used
+              common.print(
+                chalk.italic(
+                  `Using value supplied via CLI for "${valueName}" (${value}).`,
+                ),
+              );
+              return value;
+            }),
+            // If value does not adher to schema, we should not use it.
+            // Notify user about this.
+            Match.orElse(() => {
+              // Side-effect: notify that value specified via CLI arg was not valid
+              common.print(
+                chalk.bold.cyanBright(
+                  `! The value specified as CLI ${
+                    flag ? `parameter "${valueName}"` : "argument"
+                  } was not valid, proceeding to prompt for it.`,
+                ),
+                "warn",
+              );
+              // Continue as if value was not set
+              return undefined;
+            }),
+          ),
+        ),
+        Match.option,
       ),
     ),
-    // Value was not specified -> let it be undefined
-    Match.orElse(F.constUndefined),
-    // Create O.Option<X> from X | undefined
-    O.fromNullable,
+    // At this point we have O.Option<StageValues | undefined>
+    // And we want to end up with O.Option<StageValues>
+    // So we need to do a little dancing with O.Options (especially since at least for now there is no .chain for any of @effect/data structures.)
+    O.map(O.fromNullable),
+    O.flatten,
   );
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -249,6 +280,10 @@ interface CLIArgs {
   flags: Result<Flags>["flags"];
 }
 
+export type CLIArgsInfo = CLIArgs | Set.HashSet<CLIArgsInfoSetElement>;
+
+export type CLIArgsInfoSetElement = FlagKeys | CLIInputsKey;
+
 export type Stages = typeof stages;
 
 type StagesGeneric = Record<string, Stage>;
@@ -263,6 +298,16 @@ type Flags = {
 
 type FlagKeys = {
   [P in keyof Stages]: Stages[P] extends { flag: AnyFlag } ? P : never;
+}[keyof Stages];
+
+type CLIInputsKey = {
+  [P in keyof Stages]: Stages[P] extends {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    schema: S.Schema<infer _>;
+    flag?: never;
+  }
+    ? P
+    : never;
 }[keyof Stages];
 
 export type SchemaKeys = {
@@ -281,6 +326,8 @@ type DynamicValue<T> =
 
 type Components = S.Infer<typeof componentsSchema>;
 
+type StageHandlingResult = { value: StageValues; fromCLI: boolean };
+
 const hasBEComponent = (components: Components) => components !== "fe";
 
 const hasFEComponent = (components: Components) => components !== "be";
@@ -292,7 +339,7 @@ const componentsSchema = S.keyof(
   S.struct({ be: S.any, fe: S.any, ["be-and-fe"]: S.any }),
 );
 
-const stages = {
+export const stages = {
   generalMessage: {
     orderNumber: 0,
     message: chalk.bold.bgBlueBright("# General project configuration"),
@@ -449,7 +496,6 @@ const help = `
 const stagesOrdered = F.pipe(
   stages,
   R.toEntries,
-  (lel) => lel,
   A.sort(
     F.pipe(
       N.Order,

@@ -14,67 +14,70 @@ import * as TF from "@effect/schema/formatter/Tree";
 import * as Match from "@effect/match";
 import * as common from "./common.mjs";
 
-export const collectInputs = async (welcomeMessage: () => void) => {
-  // F.pipe(
-  //   meow(help, {
-  //     importMeta: import.meta,
-  //     flags: getFlags(),
-  //     booleanDefault: undefined,
-  //   }),
-  //   ({ flags, input }): State => ({ flags, input, values: {} }),
-  //   E.right,
-  //   E.bindTo("state"),
-  //   () =>
-  //     F.pipe(
-  //       stages,
-  //       R.toEntries,
-  //       (lel) => lel,
-  //       A.sort(
-  //         F.pipe(
-  //           N.Order,
-  //           Ord.contramap((stage) => stage.orderNumber),
-  //         ),
-  //       ),
-  //     ),
-  // );
+export const collectInputs = async (welcomeMessage: () => void) =>
+  await F.pipe(
+    meow(help, {
+      importMeta: import.meta,
+      flags: getFlags(),
+      booleanDefault: undefined,
+      autoVersion: true,
+      autoHelp: true,
+    }),
+    ({ flags, input }): CLIArgs => {
+      // At this point, we have not exited due to --version or --help command
+      // So show the welcome message as side-effect.
+      welcomeMessage();
+      return { flags, input };
+    },
+    async (cliArgs) => {
+      const values: InputFromCLIOrUser = {};
+      let components: O.Option<Components> = O.none<Components>();
+      for (const [stageName, stageInfo] of stagesOrdered) {
+        F.pipe(
+          Match.value(
+            O.fromNullable(
+              await handleStage(stageName, stageInfo, cliArgs, components),
+            ),
+          ),
+          Match.when(O.isSome, ({ value }) => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            values[stageName as keyof typeof values] =
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              value as any;
+            if (stageName === "components") {
+              components = O.some(value as Components);
+            }
+          }),
+          Match.option,
+        );
+      }
+      return values;
+    },
+  );
 
-  const { flags, input } = meow(help, {
-    importMeta: import.meta,
-    flags: getFlags(),
-    booleanDefault: undefined,
-    autoVersion: true,
-    autoHelp: true,
-  });
-  // At this point, we have not exited due to --version or --help command
-  welcomeMessage();
-  const state: State = {
-    flags,
-    input,
-    values: {},
-  };
-  const stagesAndNames = Object.entries(stages) as Array<[keyof Stages, Stage]>;
-  stagesAndNames.sort((x, y) => x[1].orderNumber - y[1].orderNumber);
-  for (const [stageName, stageInfo] of stagesAndNames) {
-    await handleStage(stageName, stageInfo, state);
-  }
-  return state.values;
-};
-
-const handleStage = async (
+const handleStage = (
   valueName: keyof Stages,
   stage: Stage,
-  state: State,
-) => {
-  if ("message" in stage) {
-    handleStageMessage(stage, state.values);
-  } else {
-    await O.getOrNull(handleStageStateMutation(valueName, stage, state));
-  }
-};
+  cliArgs: CLIArgs,
+  components: O.Option<Components>,
+) =>
+  F.pipe(
+    Match.value(stage),
+    Match.when(
+      (stage): stage is MessageStage & CommonStage => "message" in stage,
+      (stage): O.Option<void | Promise<StageValues>> =>
+        handleStageMessage(stage, components),
+    ),
+    Match.orElse(
+      (stage): O.Option<void | Promise<StageValues>> =>
+        handleStageStateMutation(valueName, stage, cliArgs, components),
+    ),
+    O.getOrNull,
+  );
 
 const handleStageMessage = (
   { message }: MessageStage,
-  values: StateBuilder,
+  components: O.Option<Components>,
 ): O.Option<void> =>
   F.pipe(
     // Start pattern matching on message
@@ -82,7 +85,7 @@ const handleStageMessage = (
     // If message is plain string, then use it as-is
     Match.when(Match.string, F.identity),
     // Otherwise, message is a function -> invoke it to get the actual message
-    Match.orElse((message) => message(getComponentsFromValues(values))),
+    Match.orElse((message) => message(O.getOrThrow(components))),
     // Wrap the result of pattern match (string | undefined) to perform another match
     Match.value,
     // If not undefined -> print the message as side-effect
@@ -91,18 +94,23 @@ const handleStageMessage = (
     Match.option,
   );
 
+// The asyncness here is not handled particularly nicely
+// I'm not quite sure how @effect -umbrella libs will handle that eventually.
+// FP-TS had Tasks, but @effect seems to lack those, and use the fiber-based Effect thingy.
+// I guess that works too, but pairing that with newer stuff like pattern matching etc doesn't seem to be quite intuitive at least.
 const handleStageStateMutation = (
   valueName: keyof Stages,
   { condition, schema, flag, prompt }: StateMutatingStage,
-  { flags, input, values }: State,
-) => {
+  { flags, input }: CLIArgs,
+  components: O.Option<Components>,
+): O.Option<Promise<StageValues>> => {
   return F.pipe(
     // Match the condition
     Match.value(condition),
     // If condition is not specified, then it is interpreted as true
     Match.when(Match.undefined, F.constTrue),
     // Otherwise, condition is a function -> invoke it to get the actual boolean value
-    Match.orElse((condition) => condition(getComponentsFromValues(values))),
+    Match.orElse((condition) => condition(O.getOrThrow(components))),
     // Start new pattern matching, which will perform the actual state mutation
     Match.value,
     // If the condition pattern match evaluated to true, proceed
@@ -113,25 +121,12 @@ const handleStageStateMutation = (
         // Start next pattern matching
         Match.value,
         // When value is not set, or is invalid (= undefined), then prompt value from user
-        Match.when(Match.undefined, () => promptValueFromUser(schema, prompt)),
+        Match.when(O.isNone, () => promptValueFromUser(schema, prompt)),
         // If valid value was in CLI flags or args, use it as-is
-        Match.orElse((value) =>
-          // Use the value as-is
-          Promise.resolve(value),
-        ),
-        // We now have validated value, either from CLI flags/args, or from user.
-        async (asyncValue) => {
-          // Side-effect: mutate state with the final, validated, value got either as CLI argument or as user input
-          // No idea why this gives error:
-          // Type 'string | boolean' is not assignable to type 'undefined'.
-          //   Type 'string' is not assignable to type 'undefined'.ts(2322)
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return
-          values[valueName as keyof typeof values] =
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (await asyncValue) as any;
-        },
+        Match.orElse((value) => Promise.resolve(value.value)),
       ),
     ),
+    // End matching
     Match.option,
   );
 };
@@ -141,12 +136,14 @@ const getValueFromCLIFlagsOrArgs = (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   schema: S.Schema<any>,
   flag: AnyFlag | undefined,
-  flags: State["flags"],
-  input: State["input"],
-) =>
+  flags: CLIArgs["flags"],
+  input: CLIArgs["input"],
+): O.Option<StageValues> =>
   F.pipe(
     // Match the value either from flags, or from unnamed CLI args
-    Match.value(valueName in flags ? flags[valueName] : input[0]),
+    Match.value<StageValues>(
+      (valueName in flags ? flags[valueName] : input[0]) as StageValues,
+    ),
     // If value was specified (is not undefined)
     Match.not(Match.undefined, (value) =>
       F.pipe(
@@ -180,8 +177,10 @@ const getValueFromCLIFlagsOrArgs = (
         }),
       ),
     ),
-    // Value was not specified -> return
+    // Value was not specified -> let it be undefined
     Match.orElse(F.constUndefined),
+    // Create O.Option<X> from X | undefined
+    O.fromNullable,
   );
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -245,17 +244,16 @@ interface MessageStage {
 
 type Stage = CommonStage & (StateMutatingStage | MessageStage);
 
-interface State {
+interface CLIArgs {
   input: ReadonlyArray<string>;
   flags: Result<Flags>["flags"];
-  values: StateBuilder;
 }
 
-type Stages = typeof stages;
+export type Stages = typeof stages;
 
 type StagesGeneric = Record<string, Stage>;
 
-type StateBuilder = Partial<{
+export type InputFromCLIOrUser = Partial<{
   -readonly [P in SchemaKeys]: S.Infer<Stages[P]["schema"]>;
 }>;
 
@@ -267,7 +265,7 @@ type FlagKeys = {
   [P in keyof Stages]: Stages[P] extends { flag: AnyFlag } ? P : never;
 }[keyof Stages];
 
-type SchemaKeys = {
+export type SchemaKeys = {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   [P in keyof Stages]: Stages[P] extends { schema: S.Schema<infer _> }
     ? P
@@ -287,24 +285,7 @@ const hasBEComponent = (components: Components) => components !== "fe";
 
 const hasFEComponent = (components: Components) => components !== "be";
 
-const getComponentsFromValues = (values: StateBuilder): Components =>
-  values["components"] ??
-  doThrow(
-    "Internal error: message printing demanded information about components, but that information is not yet available!",
-  );
-
-const doThrow = (message: string) => {
-  throw new Error(message);
-};
-
-// const callFunctionWithArguments =
-//   <TFunc extends (...args: any[]) => any>(
-//     args: F.LazyArg<Parameters<TFunc>>,
-//   ): ((func: TFunc) => ReturnType<TFunc>) =>
-//   (func) =>
-//     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-//     func(...args());
-
+// The constTrue in @effect/data/Function is of type F.LazyArg<boolean> while here we need F.LazyArg<true>
 const constTrue: F.LazyArg<true> = () => true;
 
 const componentsSchema = S.keyof(
@@ -456,6 +437,9 @@ const stages = {
   },
 } as const satisfies StagesGeneric;
 
+// TODO for proper help text, we need to use flag names as constants.
+// OR iterate "stages" to pick only those with 'flag' and generate help string from that
+// Also remember to include the input arg stage.
 const help = `
   Usage: npx ${
     (await readPkgUp.readPackageUp())?.packageJson.name

@@ -277,7 +277,7 @@ type Stage = CommonStage & (StateMutatingStage | MessageStage);
 
 interface CLIArgs {
   input: ReadonlyArray<string>;
-  flags: Result<Flags>["flags"];
+  flags: Partial<Result<Flags>["flags"]>;
 }
 
 export type CLIArgsInfo = CLIArgs | Set.HashSet<CLIArgsInfoSetElement>;
@@ -349,7 +349,7 @@ export const stages = {
     schema: F.pipe(
       S.string,
       S.nonEmpty({ title: "Folder as non-empty string." }),
-      // Looks like validating paths is not so easy task, so for now this check is fine
+      // Looks like validating paths is not so easy task, so for now this simple check is fine
     ),
     prompt: {
       type: "input",
@@ -359,7 +359,7 @@ export const stages = {
   },
   components: {
     orderNumber: 2,
-    schema: S.keyof(S.struct({ be: S.any, fe: S.any, ["be-and-fe"]: S.any })),
+    schema: componentsSchema,
     prompt: {
       type: "list",
       message: "Which components will be using TyRAS libraries?",
@@ -378,7 +378,7 @@ export const stages = {
   },
   dataValidation: {
     orderNumber: 3,
-    schema: componentsSchema,
+    schema: S.keyof(S.struct({ ["io-ts"]: S.any, zod: S.any })),
     prompt: {
       type: "list",
       message: "Which data validation framework should TyRAS be providing?",

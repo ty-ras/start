@@ -5,6 +5,7 @@ import * as common from "./common.mjs";
 import * as collectInput from "./collect-input.mjs";
 import * as createTemplate from "./create-template.mjs";
 
+// eslint-disable-next-line sonarjs/cognitive-complexity
 export default async () => {
   let cliArgs: collectInput.CLIArgsInfo = collectInput.createCLIArgs();
   // At this point, program would've exited if there was --help or --version specified
@@ -17,8 +18,8 @@ export default async () => {
   );
   // Then, collect the inputs - use CLI args or prompt from user
   // Keep collecting until all inputs pass validation
-  const input: collectInput.InputFromCLIOrUser = {};
-  let isInvalid: boolean;
+  let input: collectInput.InputFromCLIOrUser = {};
+  let templateInput: createTemplate.Input | undefined;
   do {
     // Get the inputs from CLI args or user prompt
     // On first loop, the 'input' will be empty and all the things will be checked/asked.
@@ -27,9 +28,7 @@ export default async () => {
       await collectInput.collectInputs(cliArgs, input);
     // Validate the inputs in a way that template creation part knows
     const validationResult = await createTemplate.validateInput(input);
-    // The result will be empty if no errors
-    isInvalid = validationResult.length > 0;
-    if (isInvalid) {
+    if (Array.isArray(validationResult)) {
       // When there are errors, notify user and adjust 'input' variable.
       for (const [valueName, errorMessage] of validationResult) {
         // Notify user about the error
@@ -42,9 +41,22 @@ export default async () => {
       if (!Set.isHashSet(cliArgs)) {
         cliArgs = cliArgsSet;
       }
+    } else if (typeof validationResult === "string") {
+      // This signifies internal error, as at this point the input itself is structurally invalid
+      // Clear everything and start asking from clean slate
+      common.print(
+        chalk.red(
+          `There has been an internal error when collecting input.\nIgnoring all CLI flags from now on, and starting to collect input from beginning.\nError message: ${validationResult}`,
+        ),
+      );
+      cliArgs = { flags: {}, input: [] };
+      input = {};
+    } else {
+      templateInput = validationResult;
     }
-  } while (isInvalid);
+  } while (templateInput === undefined);
   common.print(`THE STATE:\n${JSON.stringify(input, undefined, 2)}`);
+  createTemplate.writeProjectFiles(templateInput);
 };
 
 const gradient = gradientString("#0070BB", "#FEBE10", "#BC3F4A");

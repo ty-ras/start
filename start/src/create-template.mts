@@ -6,6 +6,7 @@ import * as S from "@effect/schema";
 import * as TF from "@effect/schema/formatter/Tree";
 import * as Match from "@effect/match";
 import * as collectInput from "./collect-input.mjs";
+import * as fs from "node:fs/promises";
 
 export const writeProjectFiles = (input: Input) => F.pipe(input);
 
@@ -23,61 +24,65 @@ export const validateInput = (
     Match.value,
     Match.when(E.isLeft, ({ left }) => left),
     Match.orElse(({ right: validatedInput }) =>
-      F.pipe(
-        Object.entries(input) as ReadonlyArray<
-          [
-            keyof collectInput.InputFromCLIOrUser,
-            Exclude<
-              collectInput.InputFromCLIOrUser[keyof collectInput.InputFromCLIOrUser],
-              undefined
-            >,
-          ]
-        >,
-        (entries) =>
-          entries.map(
-            async ([valueName, value]) =>
-              [
-                valueName,
-                await F.pipe(
-                  value,
-                  S.decode(
-                    collectInput.stages[valueName].schema as S.Schema<any>,
-                  ),
-                  async (result) =>
-                    S.isFailure(result)
-                      ? O.some(TF.formatErrors(result.left))
-                      : (await validators[valueName]?.(value as never)) ??
-                        O.none(),
-                ),
-              ] as const,
-          ),
-        async (promises) =>
-          F.pipe(
-            await Promise.all(promises),
-            A.filterMap(([valueName, validationResult]) =>
-              F.pipe(
-                validationResult,
-                O.map((errorMessage) => [valueName, errorMessage] as const),
-              ),
-            ),
-          ),
-        async (validationErrors) =>
-          (await validationErrors).length > 0
-            ? validationErrors
-            : validatedInput,
-      ),
+      invokeValidators(validatedInput),
     ),
   );
 
-const validators: {
-  [P in keyof collectInput.InputFromCLIOrUser]: (
-    value: Exclude<collectInput.InputFromCLIOrUser[P], undefined>,
+const invokeValidators = (input: Readonly<Input>) =>
+  F.pipe(
+    Object.entries(input) as ReadonlyArray<
+      [keyof Input, Exclude<Input[keyof Input], undefined>]
+    >,
+    (entries) =>
+      entries.map(
+        async ([valueName, value]) =>
+          [
+            valueName,
+            await F.pipe(
+              value,
+              S.decode(collectInput.stages[valueName].schema as S.Schema<any>),
+              async (result) => {
+                try {
+                  return S.isFailure(result)
+                    ? O.some(TF.formatErrors(result.left))
+                    : (await validators[valueName]?.(value as never)) ??
+                        O.none();
+                } catch (err) {
+                  return O.some(
+                    err instanceof Error
+                      ? `${err.name}: ${err.message}`
+                      : `${err}`,
+                  );
+                }
+              },
+            ),
+          ] as const,
+      ),
+    async (promises) =>
+      F.pipe(
+        await Promise.all(promises),
+        A.filterMap(([valueName, validationResult]) =>
+          F.pipe(
+            validationResult,
+            O.map((errorMessage) => [valueName, errorMessage] as const),
+          ),
+        ),
+      ),
+    async (validationErrors) =>
+      (await validationErrors).length > 0 ? validationErrors : input,
+  );
+
+const validators: Partial<{
+  [P in keyof Input]: (
+    value: Exclude<Input[P], undefined>,
   ) => Promise<O.Option<string>>;
-} = {
-  folderName: (folderName) =>
-    Promise.resolve(
-      O.some("TODO check that target folder either does not exist or is empty"),
-    ),
+}> = {
+  folderName: async (folderName) => {
+    await fs.mkdir(folderName, { recursive: true });
+    return (await fs.readdir(folderName)).length > 0
+      ? O.some("Target directory not empty!")
+      : O.none();
+  },
 };
 
 const pickSchemas = <TKeys extends Array<collectInput.SchemaKeys>>(

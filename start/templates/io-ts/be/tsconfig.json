@@ -1,0 +1,29 @@
+// Base TS config file for all other TS configs in repo.
+{
+  "compilerOptions": {
+    "module": "es2022",
+    "moduleResolution": "node",
+    "lib": [
+      "ES2022"
+    ],
+    "target": "ES2022",
+    "esModuleInterop": true,
+    "sourceMap": false,
+    "strict": true,
+    "exactOptionalPropertyTypes": true,
+    "declaration": false,
+    "noErrorTruncation": true,
+    "incremental": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "baseUrl": "./src",
+    "tsBuildInfoFile": "./build/tsconfig.tsbuildinfo",
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
+  },
+}

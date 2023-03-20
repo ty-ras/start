@@ -1,93 +1,31 @@
-import { function as F, taskEither as TE } from "fp-ts";
-import * as tt from "io-ts-types";
 import * as tyras from "@ty-ras/backend-node-io-ts-openapi";
+import { state } from "@ty-ras-extras/backend-io-ts";
 import * as services from "../../services";
-import { state, resources } from "@ty-ras-extras/backend-io-ts";
-import type * as userId from "./user-id";
-import type * as userRegistration from "./user-registration";
-import type * as permissions from "./permissions";
 
 export const authenticationStateValidators = {
-  // User ID is for DB
+  // Here one can have e.g. user ID, user name, or something else
+  // Property names are freely decidable, but values must be IO-TS validators (directly from io-ts, io-ts-types, or tyras.instanceOf(...)).
   userId: services.uuidValidation("UserID"),
 } as const;
 
 export const authenticatedStateSpec = tyras.transformEntries(
   authenticationStateValidators,
-  () => true as const,
+  () => {},
 );
 
-export class PermissionsClass {
-  public constructor(
-    public readonly checkPermissions: permissions.CheckUserPermissions,
-    public readonly invalidatePermissions: permissions.InvalidatePermissions,
-  ) {}
-}
-
-export const PERMISSIONS_PROPERTY = "permissions";
-
-export class DatabaseForOrg {
-  public constructor(
-    public readonly db: resources.ResourcePool<
-      {
-        client: services.DBClient;
-        currentOrgID: string;
-      },
-      string
-    >,
-  ) {}
-
-  public bindToOrganizationID(organizationID: string): services.DBPool {
-    return {
-      acquire: () =>
-        F.pipe(
-          this.db.acquire(organizationID),
-          TE.map(({ client }) => client),
-        ),
-      release: (client) =>
-        this.db.release({ client, currentOrgID: organizationID }),
-    };
-  }
-}
-
-export const DB_PROPERTY = "db";
-
-export class UserIdCacheClass {
-  public constructor(public readonly cache: userId.UserIDCache) {
-    // Nothing to do in constructor
-  }
-}
-
-export const USER_ID_CACHE_PROPERTY = "userIdCache";
-
-export class UserRegistrationClass {
-  public constructor(
-    public readonly cache: userRegistration.UserRegistration,
-  ) {}
-}
-
-export const USER_REGISTRATION_PROPERTY = "userRegistration";
-
 export const additionalStateValidators = {
-  [PERMISSIONS_PROPERTY]: tyras.instanceOf(
-    PermissionsClass,
-    "PermissionsClass",
-  ),
-  [USER_ID_CACHE_PROPERTY]: tyras.instanceOf(
-    UserIdCacheClass,
-    "UserIDCacheClass",
-  ),
-  [USER_REGISTRATION_PROPERTY]: tyras.instanceOf(
-    UserRegistrationClass,
-    "UserRegistrationClass",
-  ),
+  // Here one can have e.g. DB connection pool, in-memory caches, etc
+  // Property names are freely decidable as long as they don't clash with what is in authenticationStateValidators.
+  // Values must be IO-TS validators (directly from io-ts, io-ts-types, or tyras.instanceOf(...)).
 } as const;
 
 export const endpointState = state.createStateValidatorFactory(
-  state.getFullStateValidationInfo(authenticationStateValidators, {
-    [DB_PROPERTY]: tyras.instanceOf(DatabaseForOrg, "DatabaseOrgUser"),
-    ...additionalStateValidators,
-  }),
+  state.getFullStateValidationInfo(
+    // Authentication-related
+    authenticationStateValidators,
+    // Generic
+    additionalStateValidators,
+  ),
 );
 
 export type FullStateValidationInfo = state.GetStateValidationInfo<

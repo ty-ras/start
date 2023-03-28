@@ -2,8 +2,8 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@ty-ras/backend-node-io-ts-openapi": "0.13.5",
-    "@ty-ras-extras/backend-io-ts": "0.13.5",
+    "@ty-ras/backend-node-io-ts-openapi": "^0.13.5",
+    "@ty-ras-extras/backend-io-ts": "^0.13.5",
     "fp-ts": "^2.13.1",
     "io-ts": "^2.2.20",
     "io-ts-types": "^0.5.19",

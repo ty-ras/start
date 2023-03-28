@@ -1,4 +1,3 @@
-// Base TS config file for all other TS configs in repo.
 {
   "compilerOptions": {
     "module": "es2022",

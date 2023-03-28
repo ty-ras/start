@@ -2,14 +2,12 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import * as tyras from "@ty-ras/backend-node-io-ts-openapi";
 import type { state } from "@ty-ras-extras/backend-io-ts";
-import type * as thisState from "./state";
+import * as thisState from "./state";
 import type * as types from "./types";
 
-export const createBuilders = <TStateInfo extends state.TStateInfoOfKeysBase>(
-  authenticatedStateSpec: Partial<
-    Readonly<Record<TStateInfo[number], boolean>>
-  >,
-) => {
+export const createBuilders = <
+  TStateInfo extends state.TStateInfoOfKeysBase,
+>() => {
   const noMetadata = tyras.startBuildingAPI<tyras.ServerContext, TStateInfo>();
 
   return {
@@ -28,7 +26,7 @@ export const createBuilders = <TStateInfo extends state.TStateInfoOfKeysBase>(
       (statePropertyNames) => {
         return {
           securitySchemes: statePropertyNames.some(
-            (name) => name in authenticatedStateSpec,
+            (name) => name in thisState.authenticatedStateSpec,
           )
             ? [
                 {

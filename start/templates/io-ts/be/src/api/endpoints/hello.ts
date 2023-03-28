@@ -5,7 +5,7 @@ import * as aux from "../auxiliary";
 
 export const createHelloEndpoints = (builder: aux.Builder) => {
   return [
-    builder.atURL`/hello/${helloTarget}`.batchSpec(hello).createEndpoint({
+    builder.atURL`/${helloTarget}`.batchSpec(hello).createEndpoint({
       openapi: {
         description: "Get a greeting for given target.",
       },

@@ -17,6 +17,7 @@
     "rootDir": "./src",
     "baseUrl": "./src",
     "tsBuildInfoFile": "./build/tsconfig.tsbuildinfo",
+    "noEmit": true
   },
   "include": [
     "src/**/*"

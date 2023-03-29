@@ -3,14 +3,14 @@ import * as tyras from "@ty-ras/backend-node-io-ts-openapi";
 import { function as F, either as E } from "fp-ts";
 import type * as api from "../api";
 import type * as config from "../config";
-import type * as env from "../environment/environment";
+import type * as env from "../environment";
 
 export const startHTTPServer = async <
   TokenVerifierOutput extends Record<string, unknown>,
   TPools extends Record<string, unknown>,
   TStateProperties extends TStatePropertiesBase<TokenVerifierOutput, TPools>,
 >(
-  { server: serverConfig, cors }: config.ConfigHTTPServer,
+  { server, cors }: config.ConfigHTTPServer,
   {
     endpoints,
     tokenVerifier,
@@ -84,8 +84,8 @@ export const startHTTPServer = async <
         return state;
       },
     }),
-    serverConfig.host,
-    serverConfig.port,
+    server.host,
+    server.port,
   );
 };
 

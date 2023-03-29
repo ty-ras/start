@@ -30,13 +30,13 @@ const config = t.type(
           },
           "HTTPServerConfig",
         ),
-        // Uncomment if needed
-        // cors: t.type(
-        //   {
-        //     frontendAddress: tt.NonEmptyString,
-        //   },
-        //   "HTTPCorsConfig",
-        // ),
+        // Remove this if CORS is not needed
+        cors: t.type(
+          {
+            frontendAddress: tt.NonEmptyString,
+          },
+          "HTTPCorsConfig",
+        ),
       },
       "HTTPConfig",
     ),

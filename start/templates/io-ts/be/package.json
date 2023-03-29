@@ -27,6 +27,7 @@
     "typescript": "^5.0.2"
   },
   "scripts": {
-    "tsc": "tsc"
+    "tsc": "tsc",
+    "server-ts": "ts-node src/index"
   }
 }

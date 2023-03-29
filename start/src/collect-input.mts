@@ -10,8 +10,8 @@ import * as N from "@effect/data/Number";
 import * as O from "@effect/data/Option";
 import * as Set from "@effect/data/HashSet";
 import * as Ord from "@effect/data/typeclass/Order";
-import * as S from "@effect/schema";
-import * as TF from "@effect/schema/formatter/Tree";
+import * as S from "@effect/schema/Schema";
+import * as TF from "@effect/schema/TreeFormatter";
 import * as Match from "@effect/match";
 import * as common from "./common.mjs";
 
@@ -218,7 +218,7 @@ const getValueFromCLIFlagsOrArgs = (
 const promptValueFromUser = (schema: S.Schema<any>, prompt: DistinctQuestion) =>
   F.pipe(
     // Construct schema decoder
-    S.decode(schema),
+    S.decodeEither(schema),
     // Prompt the value from user, using schema decoder as validator
     async (decode) =>
       (
@@ -236,7 +236,7 @@ const promptValueFromUser = (schema: S.Schema<any>, prompt: DistinctQuestion) =>
               // On success, just return true
               E.map(constTrue),
               // On error, return string with nicely formatted error message
-              E.getOrElse(TF.formatErrors),
+              E.getOrElse(({ errors }) => TF.formatErrors(errors)),
             ),
         })
       ).question,
@@ -289,7 +289,7 @@ export type Stages = typeof stages;
 type StagesGeneric = Record<string, Stage>;
 
 export type InputFromCLIOrUser = Partial<{
-  -readonly [P in SchemaKeys]: S.Infer<Stages[P]["schema"]>;
+  -readonly [P in SchemaKeys]: S.To<Stages[P]["schema"]>;
 }>;
 
 type Flags = {
@@ -317,14 +317,14 @@ export type SchemaKeys = {
     : never;
 }[keyof Stages];
 
-type StageValues = S.Infer<Stages[SchemaKeys]["schema"]>;
+type StageValues = S.To<Stages[SchemaKeys]["schema"]>;
 
 type DynamicValue<T> =
   // We cannot pass StateBuilder as argument, since then stages object would be circularly referencing itself.
   // But since all our dynamic messages depend on just be/fe/be-and-fe mode, we can pass that instead
   (components: Components) => T;
 
-type Components = S.Infer<typeof componentsSchema>;
+type Components = S.To<typeof componentsSchema>;
 
 type StageHandlingResult = { value: StageValues; fromCLI: boolean };
 

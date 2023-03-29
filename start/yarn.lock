@@ -212,26 +212,34 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
-"@effect/data@^0.3.2", "@effect/data@~0.3.1":
-  version "0.3.3"
-  resolved "https://registry.yarnpkg.com/@effect/data/-/data-0.3.3.tgz#fc03abdf2b26100378d1239e080df356e89b9c9b"
-  integrity sha512-qDeIoVmMErcd9fJLcWsDalmty5NJ/mtv7vAsFtYbH3gOY9jHRst2TWQnUTRjpCr/KTGv+fTX+5qcEDyzymNgGg==
+"@effect/data@^0.7.3", "@effect/data@^0.7.4", "@effect/data@~0.7.3":
+  version "0.7.4"
+  resolved "https://registry.yarnpkg.com/@effect/data/-/data-0.7.4.tgz#53d6006f66e048b7eaa208c3a4de8b1d058a59bd"
+  integrity sha512-vHDyTq66H5JIFMysp11KawygR7ikc2do5FdRdvruLN4H6hFW7u404Bl/UVOu4MiKugHvV1MUaV2fy/dzOlwY7w==
 
-"@effect/match@0.3.0":
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/@effect/match/-/match-0.3.0.tgz#03774309ef2e01fb6708d331bf993c37fc671e98"
-  integrity sha512-pEmqyWKJYHMwlXNBkUUcNndJ4rxd86qlcj7IjjOYSLWf/VhANWfwPblBsH3QLWL8nZ2ocJUePG2vZpmn3P9KIg==
+"@effect/io@^0.15.1":
+  version "0.15.1"
+  resolved "https://registry.yarnpkg.com/@effect/io/-/io-0.15.1.tgz#ba088d82384e28368abddc6ae8d534671975349b"
+  integrity sha512-+y4xJsNSeDM0ULcHathoVGB6uxSUTXT0IBiwyZUdqhB7sgZpTrYoi5RUnQSgpI8cVLZr7ukfOVPHI/PMVt9DXw==
   dependencies:
-    "@effect/data" "^0.3.2"
-    "@effect/schema" "~0.0.3"
+    "@effect/data" "~0.7.3"
 
-"@effect/schema@0.0.5", "@effect/schema@~0.0.3":
-  version "0.0.5"
-  resolved "https://registry.yarnpkg.com/@effect/schema/-/schema-0.0.5.tgz#ec7318e949150ac05ce9c076e8611c8459de21fe"
-  integrity sha512-xe+aL+WsK9+DGkyiMWCq7EeEbMMDYOKI4WveBs20Bgfl38vYiOxNtbJ8qcS6SUKso8bkyJcsZnlBUfzoW9pdyw==
+"@effect/match@0.8.0":
+  version "0.8.0"
+  resolved "https://registry.yarnpkg.com/@effect/match/-/match-0.8.0.tgz#54e6362a7b87bf161c248b9b34949829d1f90bb4"
+  integrity sha512-QTk8IoEAkf44ZtJ5e0FOzdPakxzwWhWhGREjQG9McbVzIz4TX1QFP0DACbMLAiyJT8r3DYaHDacRuiyhacvthw==
   dependencies:
-    "@effect/data" "~0.3.1"
-    fast-check "^3.7.0"
+    "@effect/data" "^0.7.4"
+    "@effect/schema" "~0.8.0"
+
+"@effect/schema@~0.8.0":
+  version "0.8.0"
+  resolved "https://registry.yarnpkg.com/@effect/schema/-/schema-0.8.0.tgz#3638e6120976087b5c0669cf846508a2119aa87b"
+  integrity sha512-BcouVR+hCmhewgqY21rHPTPQdkyevr7LDLJQJxCxiAdo9nppJO2zbXrhGUh2lD58XCJIiVy9w7X42wcKD6dICg==
+  dependencies:
+    "@effect/data" "^0.7.3"
+    "@effect/io" "^0.15.1"
+    fast-check "^3.7.1"
 
 "@eslint/eslintrc@^2.0.0":
   version "2.0.0"
@@ -1286,10 +1294,10 @@ external-editor@^3.0.3:
     iconv-lite "^0.4.24"
     tmp "^0.0.33"
 
-fast-check@^3.7.0:
-  version "3.7.0"
-  resolved "https://registry.yarnpkg.com/fast-check/-/fast-check-3.7.0.tgz#6ffbe5e0185f6e421ad29ad38e97b3ff8a4f5987"
-  integrity sha512-1QFnXC7UcTlSBk7523W99QbnP6mTrvUjEXLKODjjhh/QJUHAzzBow2POae7hV+Qrqjj4XaU0HbTfwEa8HprS5g==
+fast-check@^3.7.1:
+  version "3.8.0"
+  resolved "https://registry.yarnpkg.com/fast-check/-/fast-check-3.8.0.tgz#43a6367db76c2bc1a1976e9898e1e6a4acfbac26"
+  integrity sha512-Mz6k/+bton0iMXdIaqG/ow81oUCYxIDtmGUvf1Q/9O5QhiLI6T9JaCNEr4Y6LfMOpY/jBUfo8hK+3qd5sGfTfw==
   dependencies:
     pure-rand "^6.0.0"
 
@@ -2681,10 +2689,10 @@ type-fest@^3.0.0, type-fest@^3.1.0:
   resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-3.6.1.tgz#cf8025edeebfd6cf48de73573a5e1423350b9993"
   integrity sha512-htXWckxlT6U4+ilVgweNliPqlsVSSucbxVexRYllyMVJDtf5rTjv6kF/s+qAd4QSL1BZcnJPEJavYBPQiWuZDA==
 
-typescript@4.9.5:
-  version "4.9.5"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.9.5.tgz#095979f9bcc0d09da324d58d03ce8f8374cbe65a"
-  integrity sha512-1FXk9E2Hm+QzZQ7z+McJiHL4NW1F2EzMu9Nq9i3zAaGqibafqYwCVU6WyWAuyQRRzOlxou8xZSyXLEN8oKj24g==
+typescript@5.0.2:
+  version "5.0.2"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.0.2.tgz#891e1a90c5189d8506af64b9ef929fca99ba1ee5"
+  integrity sha512-wVORMBGO/FAs/++blGNeAVdbNKtIh1rbBL2EyQ1+J9lClJ93KiiKe8PmFIVdXhHcyv44SL9oglmfeSsndo0jRw==
 
 universalify@^2.0.0:
   version "2.0.0"

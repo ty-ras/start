@@ -2,8 +2,8 @@ import * as F from "@effect/data/Function";
 import * as O from "@effect/data/Option";
 import * as E from "@effect/data/Either";
 import * as A from "@effect/data/ReadonlyArray";
-import * as S from "@effect/schema";
-import * as TF from "@effect/schema/formatter/Tree";
+import * as S from "@effect/schema/Schema";
+import * as TF from "@effect/schema/TreeFormatter";
 import * as Match from "@effect/match";
 import * as collectInput from "./collect-input.mjs";
 import * as fs from "node:fs/promises";
@@ -20,7 +20,7 @@ export const validateInput = (
   F.pipe(
     input,
     inputSchemaDecoder,
-    E.mapLeft(TF.formatErrors),
+    E.mapLeft(({ errors }) => TF.formatErrors(errors)),
     Match.value,
     Match.when(E.isLeft, ({ left }) => left),
     Match.orElse(({ right: validatedInput }) =>
@@ -40,11 +40,13 @@ const invokeValidators = (input: Readonly<Input>) =>
             valueName,
             await F.pipe(
               value,
-              S.decode(collectInput.stages[valueName].schema as S.Schema<any>),
+              S.decodeEither(
+                collectInput.stages[valueName].schema as S.Schema<any>,
+              ),
               async (result) => {
                 try {
-                  return S.isFailure(result)
-                    ? O.some(TF.formatErrors(result.left))
+                  return E.isLeft(result)
+                    ? O.some(TF.formatErrors(result.left.errors))
                     : (await validators[valueName]?.(value as never)) ??
                         O.none();
                 } catch (err) {
@@ -146,6 +148,9 @@ const inputSchema = F.pipe(
   ),
 );
 
-const inputSchemaDecoder = S.decode(inputSchema);
+// We must use parseEither instead of decodeEither
+// This is because parseEither always takes unknown as input parameter
+// The decodeEither takes schema input type as input parameter -> in this case, it will be something else than unknown
+const inputSchemaDecoder = S.parseEither(inputSchema);
 
-export type Input = S.Infer<typeof inputSchema>;
+export type Input = S.To<typeof inputSchema>;

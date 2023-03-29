@@ -116,7 +116,7 @@ const inputSchema = F.pipe(
           pickSchemas(
             // FE properties
             "client",
-            "extrasInFrontend",
+            // "extrasInFrontend",
           ),
         ),
         S.identifier("FrontendProperties"),
@@ -126,7 +126,7 @@ const inputSchema = F.pipe(
           pickSchemas(
             // BE properties
             "server",
-            "extrasInBackend",
+            // "extrasInBackend",
           ),
         ),
         S.identifier("BackendProperties"),
@@ -136,13 +136,13 @@ const inputSchema = F.pipe(
           pickSchemas(
             // FE properties
             "client",
-            "extrasInFrontend",
+            // "extrasInFrontend",
             // BE properties
             "server",
-            "extrasInBackend",
+            // "extrasInBackend",
           ),
         ),
-        S.identifier("BackendProperties"),
+        S.identifier("BackendAndFrontendProperties"),
       ),
     ),
   ),

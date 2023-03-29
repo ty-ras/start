@@ -56,6 +56,7 @@ export default async () => {
     }
   } while (templateInput === undefined);
   common.print(`THE STATE:\n${JSON.stringify(input, undefined, 2)}`);
+  // TODO start ora spinner here
   createTemplate.writeProjectFiles(templateInput);
 };
 

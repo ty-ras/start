@@ -423,22 +423,23 @@ export const stages = {
     },
     condition: hasBEComponent,
   },
-  extrasInBackend: {
-    orderNumber: 6,
-    schema: S.boolean,
-    prompt: {
-      type: "confirm",
-      message:
-        "Should dependency to @ty-ras-extras be added to backend project?",
-      default: true,
-    },
-    flag: {
-      type: "boolean",
-      isRequired: false,
-      alias: "eb",
-    },
-    condition: hasBEComponent,
-  },
+  // The templates always use extras
+  // extrasInBackend: {
+  //   orderNumber: 6,
+  //   schema: S.boolean,
+  //   prompt: {
+  //     type: "confirm",
+  //     message:
+  //       "Should dependency to @ty-ras-extras be added to backend project?",
+  //     default: true,
+  //   },
+  //   flag: {
+  //     type: "boolean",
+  //     isRequired: false,
+  //     alias: "eb",
+  //   },
+  //   condition: hasBEComponent,
+  // },
   feMessage: {
     orderNumber: 7,
     message: (components) =>
@@ -466,22 +467,23 @@ export const stages = {
     },
     condition: hasFEComponent,
   },
-  extrasInFrontend: {
-    orderNumber: 9,
-    schema: S.boolean,
-    prompt: {
-      type: "confirm",
-      message:
-        "Should dependency to @ty-ras-extras be added to frontend project?",
-      default: true,
-    },
-    flag: {
-      type: "boolean",
-      isRequired: false,
-      alias: "ef",
-    },
-    condition: hasFEComponent,
-  },
+  // The templates always use extras
+  // extrasInFrontend: {
+  //   orderNumber: 9,
+  //   schema: S.boolean,
+  //   prompt: {
+  //     type: "confirm",
+  //     message:
+  //       "Should dependency to @ty-ras-extras be added to frontend project?",
+  //     default: true,
+  //   },
+  //   flag: {
+  //     type: "boolean",
+  //     isRequired: false,
+  //     alias: "ef",
+  //   },
+  //   condition: hasFEComponent,
+  // },
 } as const satisfies StagesGeneric;
 
 // TODO for proper help text, we need to use flag names as constants.

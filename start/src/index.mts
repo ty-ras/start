@@ -23,7 +23,7 @@ export default async () => {
   do {
     // Get the inputs from CLI args or user prompt
     // On first loop, the 'input' will be empty and all the things will be checked/asked.
-    // On subsequent loops (if any), only the errored properties will be missing to be checked/asked again.
+    // On subsequent loops (if any), only the errored properties will be missing, and thus checked/asked again.
     const cliArgsSet: Set.HashSet<collectInput.CLIArgsInfoSetElement> =
       await collectInput.collectInputs(cliArgs, input);
     // Validate the inputs in a way that template creation part knows

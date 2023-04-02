@@ -339,12 +339,14 @@ const componentsSchema = S.keyof(
   S.struct({ be: S.any, fe: S.any, ["be-and-fe"]: S.any }),
 );
 
+export const FOLDER_NAME = "folderName";
+
 export const stages = {
   generalMessage: {
     orderNumber: 0,
     message: chalk.bold.bgBlueBright("# General project configuration"),
   },
-  folderName: {
+  [FOLDER_NAME]: {
     orderNumber: 1,
     schema: F.pipe(
       S.string,

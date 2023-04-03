@@ -232,10 +232,10 @@
     "@effect/data" "^0.10.2"
     "@effect/schema" "~0.9.0"
 
-"@effect/schema@~0.9.0":
-  version "0.9.0"
-  resolved "https://registry.yarnpkg.com/@effect/schema/-/schema-0.9.0.tgz#9453a6c4f68f04a8ad28b1f609a8e082263c8c8b"
-  integrity sha512-oEy1WQvTfZ80tT8yIliATExktcmbeYHO7aeBMQC4dxow6bxfbEGhQrjy/cWM9VrVREvUTSCZqZjTvsayluvC5g==
+"@effect/schema@0.9.1", "@effect/schema@~0.9.0":
+  version "0.9.1"
+  resolved "https://registry.yarnpkg.com/@effect/schema/-/schema-0.9.1.tgz#255a12a8e07b09d9becf576194408b727bc1b599"
+  integrity sha512-1bQP+z6+2DiMkLRG9zbQAfRqz2p5GtOF3nNfPvNf2oNRHdwDoHg153opdj8hpwiTXNKLmCNy9qCW7nZbQ4zyOw==
   dependencies:
     "@effect/data" "^0.9.1"
     "@effect/io" "^0.16.1"

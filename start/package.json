@@ -61,6 +61,7 @@
   },
   "resolutions": {
     "@types/node": "18.15.0",
-    "@effect/data": "0.10.2"
+    "@effect/data": "0.10.2",
+    "@effect/schema": "0.9.1"
   }
 }

@@ -22,16 +22,7 @@ const tmpDir = await fs.mkdtemp(path.join(testOutputDir, "test-run-"));
 test.before("Transpile source code", async () => {
   // eslint-disable-next-line no-console
   console.info("Beginning invoking TSC", tmpDir);
-  await execFile(
-    "yarn",
-    [
-      "run",
-      "tsc",
-      // Until this is resolved: https://github.com/Effect-TS/schema/issues/208
-      "--skipLibCheck",
-    ],
-    { shell: false },
-  );
+  await execFile("yarn", ["run", "tsc"], { shell: false });
   // eslint-disable-next-line no-console
   console.info("Finished invoking TSC");
 });

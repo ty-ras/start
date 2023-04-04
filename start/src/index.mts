@@ -57,7 +57,7 @@ export default async () => {
   } while (templateInput === undefined);
   common.print(`THE STATE:\n${JSON.stringify(input, undefined, 2)}`);
   // TODO start ora spinner here
-  createTemplate.writeProjectFiles(templateInput);
+  await createTemplate.writeProjectFiles(templateInput);
 };
 
 const gradient = gradientString("#0070BB", "#FEBE10", "#BC3F4A");

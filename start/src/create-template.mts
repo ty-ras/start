@@ -7,8 +7,26 @@ import * as TF from "@effect/schema/TreeFormatter";
 import * as Match from "@effect/match";
 import * as collectInput from "./collect-input.mjs";
 import * as fs from "node:fs/promises";
+import * as path from "node:path";
+import * as fse from "fs-extra";
 
-export const writeProjectFiles = (input: Input) => F.pipe(input);
+export const writeProjectFiles = async ({
+  folderName,
+  dataValidation,
+  components,
+}: Input) => {
+  await fse.copy(
+    path.join(
+      new URL(import.meta.url).pathname,
+      "..",
+      "..",
+      "templates",
+      dataValidation,
+      components,
+    ),
+    folderName,
+  );
+};
 
 export const validateInput = (
   input: collectInput.InputFromCLIOrUser,

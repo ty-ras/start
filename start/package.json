@@ -34,6 +34,7 @@
     "@babel/eslint-parser": "7.19.1",
     "@typescript-eslint/eslint-plugin": "5.54.1",
     "@typescript-eslint/parser": "5.54.1",
+    "@types/fs-extra": "11.0.1",
     "@types/gradient-string": "1.1.2",
     "@types/inquirer": "9.0.3",
     "@types/node": "18.15.0",

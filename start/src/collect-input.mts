@@ -14,6 +14,8 @@ import * as S from "@effect/schema/Schema";
 import * as TF from "@effect/schema/TreeFormatter";
 import * as Match from "@effect/match";
 import * as common from "./common.mjs";
+import * as path from "node:path";
+import * as process from "node:process";
 
 export const createCLIArgs = (): CLIArgs => {
   const { flags, input } = meow(help, {
@@ -351,7 +353,12 @@ export const stages = {
     schema: F.pipe(
       S.string,
       S.nonEmpty({ title: "Folder as non-empty string." }),
-      // Looks like validating paths is not so easy task, so for now this simple check is fine
+      // change path given via cmd args / user input to absolute
+      S.transform(
+        S.string,
+        (rawPath) => path.resolve(rawPath),
+        (absolutePath) => path.relative(absolutePath, process.cwd()),
+      ),
     ),
     prompt: {
       type: "input",

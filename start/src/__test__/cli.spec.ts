@@ -25,6 +25,16 @@ test.before("Transpile source code", async () => {
   await execFile("yarn", ["run", "tsc"], { shell: false });
   // eslint-disable-next-line no-console
   console.info("Finished invoking TSC");
+
+  // We also need to create dummy package.json in order to load also libraries in ESM mode.
+  await fs.writeFile(
+    "dist/package.json",
+    JSON.stringify({
+      name: "dist",
+      type: "module",
+    }),
+    "utf8",
+  );
 });
 
 // This callback is parametrized test macro to run a successful test with given input
@@ -80,7 +90,7 @@ const runCLIAndVerify = async (
       child.once("exit", (code, signal) => resolve(code ?? signal ?? -1)),
     ),
     // This promise waits on timeout
-    new Promise<void>((resolve) => setTimeout(resolve, 10 * 1000)),
+    new Promise<void>((resolve) => setTimeout(resolve, 20_1000)),
   ]);
 
   if (maybeExitCode !== 0) {

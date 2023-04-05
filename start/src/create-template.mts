@@ -9,12 +9,16 @@ import * as collectInput from "./collect-input.mjs";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import * as fse from "fs-extra";
+import { request } from "undici";
+import * as semver from "semver";
 
 export const writeProjectFiles = async ({
   folderName,
   dataValidation,
   components,
 }: Input) => {
+  // TODO event invocations
+  // Copy all files first
   await fse.copy(
     path.join(
       new URL(import.meta.url).pathname,
@@ -25,6 +29,12 @@ export const writeProjectFiles = async ({
       components,
     ),
     folderName,
+  );
+
+  // Change the "^x.y.z" version specifications to "a.b.c" fixed versions
+  await materializePackageJson(
+    path.join(folderName, "package.json"),
+    path.basename(folderName),
   );
 };
 
@@ -172,3 +182,70 @@ const inputSchema = F.pipe(
 const inputSchemaDecoder = S.parseEither(inputSchema);
 
 export type Input = S.To<typeof inputSchema>;
+
+const parsePackageJson = F.pipe(
+  S.record(S.string, S.unknown),
+  S.extend(
+    S.struct({
+      dependencies: S.record(S.string, S.string),
+      devDependencies: S.record(S.string, S.string),
+    }),
+  ),
+  S.parse,
+);
+
+const materializePackageJson = async (
+  packageJsonPath: string,
+  name: string,
+) => {
+  // Modify raw version specifications of package.json file into actual versions, which are newest according to version spec
+  const { devDependencies, dependencies, ...packageJson } = F.pipe(
+    await fs.readFile(packageJsonPath, "utf8"),
+    JSON.parse,
+    parsePackageJson,
+  );
+
+  const newPackageJson = {
+    name,
+    ...packageJson,
+    dependencies: Object.fromEntries(
+      await Promise.all(Object.entries(dependencies).map(getLatestVersion)),
+    ),
+    devDependencies: Object.fromEntries(
+      await Promise.all(Object.entries(devDependencies).map(getLatestVersion)),
+    ),
+  };
+
+  await fs.writeFile(
+    packageJsonPath,
+    JSON.stringify(newPackageJson, undefined, 2),
+    "utf8",
+  );
+};
+
+const getLatestVersion = async ([name, versionSpec]: readonly [
+  string,
+  string,
+]) => {
+  const { versions } = parsePackument(
+    await (await request(`https://registry.npmjs.com/${name}`)).body.json(),
+  );
+  return [
+    name,
+    semver.maxSatisfying(Object.keys(versions), versionSpec) ??
+      doThrow(
+        `No matching versions found for package "${name}" with version spec "${versionSpec}".`,
+      ),
+  ] as const;
+};
+
+const doThrow = (msg: string) => {
+  throw new Error(msg);
+};
+
+const parsePackument = F.pipe(
+  S.struct({
+    versions: S.record(S.string, S.unknown),
+  }),
+  S.parse,
+);

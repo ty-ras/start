@@ -1,6 +1,9 @@
 import chalk from "chalk";
 import gradientString from "gradient-string";
+import ora from "ora";
+import * as F from "@effect/data/Function";
 import * as Set from "@effect/data/HashSet";
+import * as Match from "@effect/match";
 import * as common from "./common.mjs";
 import * as collectInput from "./collect-input.mjs";
 import * as createTemplate from "./create-template.mjs";
@@ -19,7 +22,7 @@ export default async () => {
   // Then, collect the inputs - use CLI args or prompt from user
   // Keep collecting until all inputs pass validation
   let input: collectInput.InputFromCLIOrUser = {};
-  let templateInput: createTemplate.Input | undefined;
+  let validatedInput: createTemplate.ValidatedInput | undefined;
   do {
     // Get the inputs from CLI args or user prompt
     // On first loop, the 'input' will be empty and all the things will be checked/asked.
@@ -52,12 +55,53 @@ export default async () => {
       cliArgs = { flags: {}, input: [] };
       input = {};
     } else {
-      templateInput = validationResult;
+      validatedInput = validationResult;
     }
-  } while (templateInput === undefined);
+  } while (validatedInput === undefined);
   common.print(`THE STATE:\n${JSON.stringify(input, undefined, 2)}`);
   // TODO start ora spinner here
-  await createTemplate.writeProjectFiles(templateInput);
+  const spinner = ora("Beginning template creation").start();
+  let success = false;
+  try {
+    await createTemplate.writeProjectFiles({
+      validatedInput,
+      onEvent: (evt) => {
+        spinner.text = F.pipe(
+          Match.value(evt),
+          Match.when(
+            { event: "startCopyTemplateFiles" },
+            () => "Starting to copy template files",
+          ),
+          Match.when(
+            { event: "startFixPackageJsonVersions" },
+            () => "Fixing package.json versions",
+          ),
+          Match.when(
+            { event: "startReadPackument" },
+            ({ data: { packageName, versionSpec } }) =>
+              `Fetching packument for "${packageName}" and version spec "${versionSpec}".`,
+          ),
+          Match.when(
+            { event: "endReadPackument" },
+            ({ data: { packageName, resolvedVersion, versions } }) =>
+              `For "${packageName}", resolved version "${resolvedVersion}" from ${
+                Object.keys(versions).length
+              } total versions`,
+          ),
+          Match.orElse(() => ""),
+        );
+      },
+    });
+    success = true;
+  } finally {
+    if (success) {
+      spinner.succeed("Project created!");
+    } else {
+      spinner.fail(
+        "Project creation failed, please see error message for more information.",
+      );
+    }
+  }
 };
 
 const gradient = gradientString("#0070BB", "#FEBE10", "#BC3F4A");

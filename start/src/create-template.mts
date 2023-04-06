@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/ban-types */
 import * as F from "@effect/data/Function";
 import * as O from "@effect/data/Option";
 import * as E from "@effect/data/Either";
@@ -11,14 +13,14 @@ import * as path from "node:path";
 import * as fse from "fs-extra";
 import { request } from "undici";
 import * as semver from "semver";
+import type * as types from "./types";
 
 export const writeProjectFiles = async ({
-  folderName,
-  dataValidation,
-  components,
+  validatedInput: { folderName, dataValidation, components },
+  onEvent,
 }: Input) => {
-  // TODO event invocations
   // Copy all files first
+  onEvent?.({ event: "startCopyTemplateFiles", data: {} });
   await fse.copy(
     path.join(
       new URL(import.meta.url).pathname,
@@ -30,12 +32,57 @@ export const writeProjectFiles = async ({
     ),
     folderName,
   );
+  onEvent?.({ event: "endCopyTemplateFiles", data: {} });
 
-  // Change the "^x.y.z" version specifications to "a.b.c" fixed versions
-  await materializePackageJson(
-    path.join(folderName, "package.json"),
-    path.basename(folderName),
+  // Now, fix all version specs of all package.json files into actual versions.
+  onEvent?.({ event: "startFixPackageJsonVersions", data: {} });
+
+  // Start by finding all package.json files
+  const projectName = path.basename(folderName);
+  const packageJsonPaths: Array<string> = [];
+  for await (const filePath of readDirRecursive(folderName)) {
+    if (path.basename(filePath) === "package.json") {
+      packageJsonPaths.push(filePath);
+    }
+  }
+
+  // Callback which will create the "name" field of package.json file.
+  const extractPackageName = F.pipe(
+    Match.value(packageJsonPaths.length),
+    Match.when(0, () => {
+      throw new Error(
+        "Internal error: template contained no package.json files.",
+      );
+    }),
+    // If only one package.json in the template, then just use that as a name
+    Match.when(1, (): ExtractPackageName => () => projectName),
+    // When there are multiple package.json files in the template, it means that there is workspaces-based setup.
+    // Top-level package.json will be "@abc/main", while others will be "@abc/<folder name>"
+    Match.orElse(
+      (): ExtractPackageName => (packageJsonPath) =>
+        `@${projectName}/${
+          path.relative(folderName, packageJsonPath) === "package.json"
+            ? // Top-level package.json is just a container for "workspaces"
+              "main"
+            : // Uppermost directory name (e.g. "components/backend/package.json" -> "backend")
+              path.basename(path.dirname(packageJsonPath))
+        }`,
+    ),
   );
+  // Now perform actual version fixing
+  await Promise.all(
+    packageJsonPaths.map((packageJsonPath) =>
+      // Change the "^x.y.z" version specifications to "x.b.c" fixed versions
+      materializePackageJson(
+        onEvent,
+        packageJsonPath,
+        extractPackageName(packageJsonPath),
+      ),
+    ),
+  );
+  onEvent?.({ event: "endFixPackageJsonVersions", data: { packageJsonPaths } });
+
+  // We are done!
 };
 
 export const validateInput = (
@@ -43,7 +90,8 @@ export const validateInput = (
 ):
   | string
   | Promise<
-      Input | Array<readonly [keyof collectInput.InputFromCLIOrUser, string]>
+      | ValidatedInput
+      | Array<readonly [keyof collectInput.InputFromCLIOrUser, string]>
     > =>
   F.pipe(
     input,
@@ -56,10 +104,24 @@ export const validateInput = (
     ),
   );
 
-const invokeValidators = (input: Readonly<Input>) =>
+export interface Input {
+  validatedInput: ValidatedInput;
+  onEvent?: OnEvent;
+}
+
+export type ValidatedInput = S.To<typeof inputSchema>;
+
+export type OnEvent = (evt: EventArgument) => void;
+type MaybeOnEvent = OnEvent | undefined;
+export type EventArgument = types.ToDiscriminatingTypeUnion<EventsPayloads>;
+
+const invokeValidators = (input: Readonly<ValidatedInput>) =>
   F.pipe(
     Object.entries(input) as ReadonlyArray<
-      [keyof Input, Exclude<Input[keyof Input], undefined>]
+      [
+        keyof ValidatedInput,
+        Exclude<ValidatedInput[keyof ValidatedInput], undefined>,
+      ]
     >,
     (entries) =>
       entries.map(
@@ -103,8 +165,8 @@ const invokeValidators = (input: Readonly<Input>) =>
   );
 
 const validators: Partial<{
-  [P in keyof Input]: (
-    value: Exclude<Input[P], undefined>,
+  [P in keyof ValidatedInput]: (
+    value: Exclude<ValidatedInput[P], undefined>,
   ) => Promise<O.Option<string>>;
 }> = {
   folderName: async (folderName) => {
@@ -181,7 +243,19 @@ const inputSchema = F.pipe(
 // The decodeEither takes schema input type as input parameter -> in this case, it will be something else than unknown
 const inputSchemaDecoder = S.parseEither(inputSchema);
 
-export type Input = S.To<typeof inputSchema>;
+export interface EventsPayloads {
+  startCopyTemplateFiles: {};
+  endCopyTemplateFiles: {};
+  startFixPackageJsonVersions: {};
+  startReadPackument: { packageName: string; versionSpec: string };
+  endReadPackument: {
+    packageName: string;
+    versionSpec: string;
+    resolvedVersion: string;
+    versions: Record<string, unknown>;
+  };
+  endFixPackageJsonVersions: { packageJsonPaths: ReadonlyArray<string> };
+}
 
 const parsePackageJson = F.pipe(
   S.record(S.string, S.unknown),
@@ -195,6 +269,7 @@ const parsePackageJson = F.pipe(
 );
 
 const materializePackageJson = async (
+  onEvent: MaybeOnEvent,
   packageJsonPath: string,
   name: string,
 ) => {
@@ -204,6 +279,7 @@ const materializePackageJson = async (
     JSON.parse,
     parsePackageJson,
   );
+  const getLatestVersion = getLatestVersionWithEvents(onEvent);
 
   const newPackageJson = {
     name,
@@ -223,21 +299,27 @@ const materializePackageJson = async (
   );
 };
 
-const getLatestVersion = async ([name, versionSpec]: readonly [
-  string,
-  string,
-]) => {
-  const { versions } = parsePackument(
-    await (await request(`https://registry.npmjs.com/${name}`)).body.json(),
-  );
-  return [
-    name,
-    semver.maxSatisfying(Object.keys(versions), versionSpec) ??
+const getLatestVersionWithEvents =
+  (onEvent: MaybeOnEvent) =>
+  async ([name, versionSpec]: readonly [string, string]) => {
+    onEvent?.({
+      event: "startReadPackument",
+      data: { packageName: name, versionSpec },
+    });
+    const { versions } = parsePackument(
+      await (await request(`https://registry.npmjs.com/${name}`)).body.json(),
+    );
+    const resolvedVersion =
+      semver.maxSatisfying(Object.keys(versions), versionSpec) ??
       doThrow(
         `No matching versions found for package "${name}" with version spec "${versionSpec}".`,
-      ),
-  ] as const;
-};
+      );
+    onEvent?.({
+      event: "endReadPackument",
+      data: { packageName: name, versionSpec, resolvedVersion, versions },
+    });
+    return [name, resolvedVersion] as const;
+  };
 
 const doThrow = (msg: string) => {
   throw new Error(msg);
@@ -249,3 +331,20 @@ const parsePackument = F.pipe(
   }),
   S.parse,
 );
+
+// For some reason, fs-extra doesn't have recursive readdir, so we have our own
+async function* readDirRecursive(
+  dir: string,
+): AsyncGenerator<string, void, unknown> {
+  const entries = await fs.readdir(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const res = path.resolve(dir, entry.name);
+    if (entry.isDirectory()) {
+      yield* readDirRecursive(res);
+    } else {
+      yield res;
+    }
+  }
+}
+
+type ExtractPackageName = (packageJsonPath: string) => string;

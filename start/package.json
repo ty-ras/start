@@ -57,12 +57,13 @@
     "newtype-ts": "0.3.5"
   },
   "scripts": {
-    "build:run": "yarn run lint && yarn run tsc",
-    "build:ci": "yarn run clear-build-artifacts && yarn run tsc && yarn run format-output-files",
+    "build:run": "yarn run lint && yarn run tsc && yarn run chmodx",
+    "build:ci": "yarn run clear-build-artifacts && yarn run tsc && yarn run format-output-files && yarn run chmodx",
+    "chmodx": "chmod +x dist/cli.mjs",
     "clear-build-artifacts": "rm -rf dist build",
     "format-output-files": "eslint --no-eslintrc --config '.eslintrc.output.cjs' --fix 'dist/*js'",
     "lint": "eslint ./src --ext .ts,.mts,.tsx",
-    "execute": "ts-node src/cli.mts",
+    "dev": "ts-node src/cli.mts",
     "tsc": "tsc --project tsconfig.build.json",
     "tsc:plain": "tsc",
     "test:coverage": "c8 --temp-directory /tmp ava",

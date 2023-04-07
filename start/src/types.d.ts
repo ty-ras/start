@@ -13,8 +13,7 @@
  * to type
  * ```ts
  * { event: key1, data: data1 }
- * |
- * { event: key2, data: data2 }
+ * | { event: key2, data: data2 }
  * ...
  * ```
  */

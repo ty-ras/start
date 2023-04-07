@@ -38,13 +38,8 @@ export const writeProjectFiles = async ({
   onEvent?.({ event: "startFixPackageJsonVersions", data: {} });
 
   // Start by finding all package.json files
+  const packageJsonPaths = await getAllPackageJsonPaths(folderName);
   const projectName = path.basename(folderName);
-  const packageJsonPaths: Array<string> = [];
-  for await (const filePath of readDirRecursive(folderName)) {
-    if (path.basename(filePath) === "package.json") {
-      packageJsonPaths.push(filePath);
-    }
-  }
 
   // Callback which will create the "name" field of package.json file.
   const extractPackageName = F.pipe(
@@ -61,7 +56,7 @@ export const writeProjectFiles = async ({
     Match.orElse(
       (): ExtractPackageName => (packageJsonPath) =>
         `@${projectName}/${
-          path.relative(folderName, packageJsonPath) === "package.json"
+          path.dirname(packageJsonPath) === folderName
             ? // Top-level package.json is just a container for "workspaces"
               "main"
             : // Uppermost directory name (e.g. "components/backend/package.json" -> "backend")
@@ -196,34 +191,37 @@ const pickSchemas = <TKeys extends Array<collectInput.SchemaKeys>>(
 // No intersections yet in @effect/schema I think...
 const inputSchema = F.pipe(
   F.pipe(
-    S.struct(pickSchemas("folderName", "components", "dataValidation")),
+    S.struct(pickSchemas("folderName", "dataValidation")),
     S.identifier("GeneralProperties"),
   ),
   S.extend(
     S.union(
       F.pipe(
-        S.struct(
-          pickSchemas(
+        S.struct({
+          components: S.literal("fe"),
+          ...pickSchemas(
             // FE properties
             "client",
             // "extrasInFrontend",
           ),
-        ),
+        }),
         S.identifier("FrontendProperties"),
       ),
       F.pipe(
-        S.struct(
-          pickSchemas(
+        S.struct({
+          components: S.literal("be"),
+          ...pickSchemas(
             // BE properties
             "server",
             // "extrasInBackend",
           ),
-        ),
+        }),
         S.identifier("BackendProperties"),
       ),
       F.pipe(
-        S.struct(
-          pickSchemas(
+        S.struct({
+          components: S.literal("be-and-fe"),
+          ...pickSchemas(
             // FE properties
             "client",
             // "extrasInFrontend",
@@ -231,7 +229,7 @@ const inputSchema = F.pipe(
             "server",
             // "extrasInBackend",
           ),
-        ),
+        }),
         S.identifier("BackendAndFrontendProperties"),
       ),
     ),
@@ -332,6 +330,19 @@ const parsePackument = F.pipe(
   S.parse,
 );
 
+type ExtractPackageName = (packageJsonPath: string) => string;
+
+// We export this only for tests
+export const getAllPackageJsonPaths = async (rootDir: string) => {
+  const packageJsonPaths: Array<string> = [];
+  for await (const filePath of readDirRecursive(rootDir)) {
+    if (path.basename(filePath) === "package.json") {
+      packageJsonPaths.push(filePath);
+    }
+  }
+  return packageJsonPaths;
+};
+
 // For some reason, fs-extra doesn't have recursive readdir, so we have our own
 async function* readDirRecursive(
   dir: string,
@@ -346,5 +357,3 @@ async function* readDirRecursive(
     }
   }
 }
-
-type ExtractPackageName = (packageJsonPath: string) => string;

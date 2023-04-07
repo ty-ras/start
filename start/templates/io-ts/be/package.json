@@ -28,6 +28,7 @@
   },
   "scripts": {
     "tsc": "tsc",
-    "server-ts": "ts-node src/index"
+    "server-ts": "ts-node src/index",
+    "dev": "MY_BACKEND_CONFIG=./config-dev.json yarn run server-ts"
   }
 }

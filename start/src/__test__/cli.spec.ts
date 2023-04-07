@@ -1,9 +1,14 @@
+/* eslint-disable no-console */
 import test, { type ExecutionContext } from "ava";
+import * as S from "@effect/schema/Schema";
+import * as F from "@effect/data/Function";
 import * as process from "node:child_process";
 import * as util from "node:util";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import * as input from "../collect-input.mjs";
+import * as template from "../create-template.mjs";
+
 const execFile = util.promisify(process.execFile);
 
 const testOutputDir = path.join(
@@ -20,32 +25,30 @@ const tmpDir = await fs.mkdtemp(path.join(testOutputDir, "test-run-"));
 
 // Before running tests, transpile source code once
 test.before("Transpile source code", async () => {
-  // eslint-disable-next-line no-console
-  console.info("Beginning invoking TSC", tmpDir);
+  console.info("Target directory is", tmpDir);
+  console.info("Beginning invoking TSC");
   await execFile("yarn", ["run", "tsc"], { shell: false });
-  // eslint-disable-next-line no-console
   console.info("Finished invoking TSC");
-
-  // We also need to create dummy package.json in order to load also libraries in ESM mode.
-  await fs.writeFile(
-    "dist/package.json",
-    JSON.stringify({
-      name: "dist",
-      type: "module",
-    }),
-    "utf8",
-  );
 });
 
 // This callback is parametrized test macro to run a successful test with given input
 const testSuccessfulRun = async (
   c: ExecutionContext,
   args: input.InputFromCLIOrUser,
+  expectedPackageJsonCount = 1,
 ) => {
-  c.plan(2);
+  c.plan(2 + expectedPackageJsonCount);
   await c.notThrowsAsync(
     runCLIAndVerify(c, {
-      args,
+      args: {
+        folderName: path.join(
+          tmpDir,
+          `${args.components}-${args.dataValidation}-${args.server ?? "none"}-${
+            args.client ?? "none"
+          }`,
+        ),
+        ...args,
+      },
     }),
   );
 };
@@ -54,8 +57,13 @@ test("Test BE-IOTS-NODE", testSuccessfulRun, {
   components: "be",
   dataValidation: "io-ts",
   server: "node",
-  folderName: path.join(tmpDir, "be-iots-node"),
 });
+
+// test("Test FE-IOTS-FETCH", testSuccessfulRun, {
+//   components: "fe",
+//   dataValidation: "io-ts",
+//   client: "fetch",
+// });
 
 const runCLIAndVerify = async (
   c: ExecutionContext,
@@ -75,38 +83,13 @@ const runCLIAndVerify = async (
     shell: false,
     stdio: [hasStdin ? "pipe" : "ignore", "pipe", "pipe"],
   });
-  let stdout = "";
-  let stderr = "";
-  child.stdout?.on("data", (chunk) => (stdout += `${chunk}`));
-  child.stderr?.on("data", (chunk) => (stderr += `${chunk}`));
+  const outputs = collectProcessOutputs(child);
   if (hasStdin) {
     child.stdin?.write(stdinLines.join("\n"));
     child.stdin?.end();
   }
 
-  const maybeExitCode = await Promise.any([
-    // This promise waits for the exit event
-    new Promise<number | string>((resolve) =>
-      child.once("exit", (code, signal) => resolve(code ?? signal ?? -1)),
-    ),
-    // This promise waits on timeout
-    new Promise<void>((resolve) => setTimeout(resolve, 20_1000)),
-  ]);
-
-  if (maybeExitCode !== 0) {
-    throw new Error(
-      `${
-        typeof maybeExitCode !== "undefined"
-          ? `Starter template exited with ${maybeExitCode}`
-          : "Timeout"
-      }.
-STDOUT
-${stdout}
-STDERR
-${stderr}
-`,
-    );
-  }
+  await waitForProcessWithTimeout("Creating starter template", child, outputs);
 
   await verifyTemplate(c, args?.folderName ?? "/no-folder-name-supplied");
 };
@@ -118,7 +101,137 @@ interface CLIArgs {
 }
 
 const verifyTemplate = async (c: ExecutionContext, projectPath: string) => {
-  const statResult = await fs.stat(path.join(projectPath, "package.json"));
-  c.true(statResult.isFile());
-  await execFile("yarn", ["run", "tsc"], { shell: false, cwd: projectPath });
+  const packageJsonPaths = await template.getAllPackageJsonPaths(projectPath);
+  c.true(
+    packageJsonPaths.length > 0,
+    "There must be at least one package.json path in resulting template",
+  );
+  await Promise.all(
+    packageJsonPaths.map(async (packageJsonPath) => {
+      // Read package.json, verify it has no floating version specs
+      const { name, dependencies, devDependencies } = F.pipe(
+        await fs.readFile(packageJsonPath, "utf8"),
+        JSON.parse,
+        parsePackageJson,
+      );
+      c.true(
+        Object.values(dependencies)
+          .concat(Object.values(devDependencies))
+          .every((version) => /^\d/.test(version)),
+      );
+      const yarnExtraArgs =
+        path.dirname(packageJsonPath) === projectPath
+          ? []
+          : ["workspace", name];
+
+      // Now run tsc, to ensure no compilation errors exist
+      await execFile("yarn", [...yarnExtraArgs, "run", "tsc"], {
+        shell: false,
+        cwd: projectPath,
+      });
+      // Make sure program actually starts and prints information that it successfully initialized
+      const devRun = process.spawn("yarn", [...yarnExtraArgs, "run", "dev"], {
+        shell: false,
+        cwd: projectPath,
+      });
+      const outputCollectState = collectProcessOutputs(devRun);
+
+      await waitForProcessWithTimeout(
+        `Starting dev run for "${name}"`,
+        devRun,
+        outputCollectState,
+        waitForProcessPrinting(outputCollectState, {
+          stdout: "Started server",
+        }),
+      );
+    }),
+  );
+};
+
+const waitForProcessWithTimeout = async (
+  processKind: string,
+  child: process.ChildProcess,
+  outputCollectState: ProcessOutputCollectState,
+  waitForProcess?: Promise<number | NodeJS.Signals>,
+) => {
+  const maybeExitCode = await Promise.any([
+    // This promise waits for custom event, or the exit event, if not specific
+    waitForProcess ?? waitForProcessExit(child),
+    // This promise waits on timeout
+    new Promise<void>((resolve) => setTimeout(resolve, 20_1000)),
+  ]);
+
+  if (maybeExitCode !== 0) {
+    throw new Error(
+      `${processKind} ${
+        typeof maybeExitCode !== "undefined"
+          ? `exited with ${maybeExitCode}`
+          : "failed to complete in sufficient time"
+      }.
+STDOUT
+${outputCollectState.stdout}
+STDERR
+${outputCollectState.stderr}
+`,
+    );
+  }
+};
+
+interface RunProcessUntilPrinting {
+  stdout?: string;
+  stderr?: string;
+}
+
+const parsePackageJson = F.pipe(
+  S.struct({
+    name: S.string,
+    dependencies: S.record(S.string, S.string),
+    devDependencies: S.record(S.string, S.string),
+  }),
+  S.parse,
+);
+
+interface ProcessOutputCollectState {
+  stdout: string;
+  stderr: string;
+}
+
+const collectProcessOutputs = (child: process.ChildProcess) => {
+  const retVal: ProcessOutputCollectState = {
+    stdout: "",
+    stderr: "",
+  };
+  child.stdout?.on("data", (chunk) => (retVal.stdout += `${chunk}`));
+  child.stderr?.on("data", (chunk) => (retVal.stderr += `${chunk}`));
+  return retVal;
+};
+
+const waitForProcessExit = (child: process.ChildProcess) =>
+  new Promise<number | NodeJS.Signals>((resolve) =>
+    child.once("exit", (code, signal) => resolve(code ?? signal ?? -1)),
+  );
+
+const waitForProcessPrinting = async (
+  outputCollectState: ProcessOutputCollectState,
+  { stdout, stderr }: RunProcessUntilPrinting,
+) => {
+  const targetStdoutState = !!stdout;
+  const targetStderrState = !!stderr;
+  const getCurrentState = (isStdout: boolean) => {
+    const stringToSearch = isStdout ? stdout : stderr;
+    return (
+      !!stringToSearch &&
+      outputCollectState[isStdout ? "stdout" : "stderr"].indexOf(
+        stringToSearch,
+      ) >= 0
+    );
+  };
+  while (
+    getCurrentState(true) !== targetStdoutState &&
+    getCurrentState(false) !== targetStderrState
+  ) {
+    await new Promise((resolve) => setTimeout(resolve, 200));
+  }
+
+  return 0;
 };

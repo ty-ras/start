@@ -1,4 +1,2 @@
-build
-dist
 .env
 config-*.json

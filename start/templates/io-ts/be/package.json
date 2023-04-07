@@ -15,8 +15,6 @@
     "@babel/eslint-parser": "^7.21.3",
     "@typescript-eslint/eslint-plugin": "^5.55.0",
     "@typescript-eslint/parser": "^5.55.0",
-    "@types/gradient-string": "^1.1.2",
-    "@types/inquirer": "^9.0.3",
     "@types/node": "^18.15.0",
     "eslint": "^8.36.0",
     "eslint-config-prettier": "^8.7.0",
@@ -27,8 +25,10 @@
     "typescript": "^5.0.2"
   },
   "scripts": {
-    "tsc": "tsc",
+    "build": "yarn run tsc --project tsconfig.build.json",
+    "dev": "MY_BACKEND_CONFIG=./config-dev.json yarn run server-ts",
+    "lint": "eslint ./src --ext .ts,.tsx",
     "server-ts": "ts-node src/index",
-    "dev": "MY_BACKEND_CONFIG=./config-dev.json yarn run server-ts"
+    "tsc": "tsc"
   }
 }

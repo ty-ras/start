@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false
+  },
+  "exclude": [
+    // Don't include tests to actual runtime build
+    "src/**/__test__/*"
+  ],
+}

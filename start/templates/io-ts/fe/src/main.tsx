@@ -1,8 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import Greeting from "./view/Greeting";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    <h1>Hello, world!</h1>
+    <Greeting />
   </React.StrictMode>,
 );

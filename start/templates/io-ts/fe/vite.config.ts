@@ -13,7 +13,7 @@ export default defineConfig(({command, mode}) =>({
     emptyOutDir: true
   },
   server: {
-    host: "0.0.0.0", // "127.0.0.1",
+    host: "127.0.0.1",
     port: 3001
   }
 }));

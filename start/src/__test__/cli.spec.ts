@@ -59,11 +59,11 @@ test("Test BE-IOTS-NODE", testSuccessfulRun, {
   server: "node",
 });
 
-// test("Test FE-IOTS-FETCH", testSuccessfulRun, {
-//   components: "fe",
-//   dataValidation: "io-ts",
-//   client: "fetch",
-// });
+test("Test FE-IOTS-FETCH", testSuccessfulRun, {
+  components: "fe",
+  dataValidation: "io-ts",
+  client: "fetch",
+});
 
 const runCLIAndVerify = async (
   c: ExecutionContext,
@@ -119,10 +119,9 @@ const verifyTemplate = async (c: ExecutionContext, projectPath: string) => {
           .concat(Object.values(devDependencies))
           .every((version) => /^\d/.test(version)),
       );
+      const packageDir = path.dirname(packageJsonPath);
       const yarnExtraArgs =
-        path.dirname(packageJsonPath) === projectPath
-          ? []
-          : ["workspace", name];
+        packageDir === projectPath ? [] : ["workspace", name];
 
       // Now run tsc, to ensure no compilation errors exist
       await execFile("yarn", [...yarnExtraArgs, "run", "tsc"], {
@@ -130,18 +129,30 @@ const verifyTemplate = async (c: ExecutionContext, projectPath: string) => {
         cwd: projectPath,
       });
       // Make sure program actually starts and prints information that it successfully initialized
-      const devRun = process.spawn("yarn", [...yarnExtraArgs, "run", "dev"], {
-        shell: false,
-        cwd: projectPath,
-      });
+
+      let isFE = false;
+      try {
+        await fs.stat(path.join(packageDir, "vite.config.ts"));
+        isFE = true;
+      } catch {
+        // Ignore
+      }
+      const devRun = process.spawn(
+        "yarn",
+        [...yarnExtraArgs, "run", isFE ? "build" : "dev"],
+        {
+          shell: false,
+          cwd: projectPath,
+        },
+      );
       const outputCollectState = collectProcessOutputs(devRun);
 
       await waitForProcessWithTimeout(
         `Starting dev run for "${name}"`,
         devRun,
         outputCollectState,
-        waitForProcessPrinting(outputCollectState, {
-          stdout: "Started server",
+        waitForProcessPrinting(devRun, outputCollectState, {
+          stdout: isFE ? "✓ built in" : "Started server",
         }),
       );
     }),
@@ -212,9 +223,12 @@ const waitForProcessExit = (child: process.ChildProcess) =>
   );
 
 const waitForProcessPrinting = async (
+  child: process.ChildProcess,
   outputCollectState: ProcessOutputCollectState,
   { stdout, stderr }: RunProcessUntilPrinting,
 ) => {
+  let exitCodeOrSignal: undefined | number | NodeJS.Signals;
+  child.once("exit", (ec, signal) => (exitCodeOrSignal = ec ?? signal ?? -1));
   const targetStdoutState = !!stdout;
   const targetStderrState = !!stderr;
   const getCurrentState = (isStdout: boolean) => {
@@ -226,12 +240,18 @@ const waitForProcessPrinting = async (
       ) >= 0
     );
   };
+  let foundText: boolean;
   while (
-    getCurrentState(true) !== targetStdoutState &&
-    getCurrentState(false) !== targetStderrState
+    !(foundText =
+      getCurrentState(true) === targetStdoutState &&
+      getCurrentState(false) === targetStderrState) &&
+    exitCodeOrSignal === undefined
   ) {
     await new Promise((resolve) => setTimeout(resolve, 200));
   }
+  if (foundText) {
+    child.kill();
+  }
 
-  return 0;
+  return foundText ? 0 : exitCodeOrSignal || -1;
 };

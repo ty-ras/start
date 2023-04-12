@@ -1,0 +1,9 @@
+{
+  "name": "@ty-ras-sample/backend",
+  "private": true,
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^18.15.0",
+    "ts-node": "^10.9.1"
+  }
+}

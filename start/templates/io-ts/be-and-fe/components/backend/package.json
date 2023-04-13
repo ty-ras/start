@@ -1,9 +1,22 @@
 {
   "name": "@ty-ras-sample/backend",
+  "version": "1.0.0",
   "private": true,
-  "dependencies": {},
+  "type": "module",
+  "dependencies": {
+    "@ty-ras/backend-node-io-ts-openapi": "^0.13.5",
+    "@ty-ras-extras/backend-io-ts": "^0.13.5",
+    "@ty-ras-sample/protocol": "1.0.0"
+  },
   "devDependencies": {
     "@types/node": "^18.15.0",
     "ts-node": "^10.9.1"
+  },
+  "scripts": {
+    "build": "yarn run tsc --project tsconfig.build.json",
+    "dev": "MY_BACKEND_CONFIG=./config-dev.json yarn run server-ts",
+    "lint": "eslint ./src --ext .ts,.tsx",
+    "server-ts": "ts-node src/index",
+    "tsc": "tsc"
   }
 }

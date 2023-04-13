@@ -13,10 +13,8 @@
     "declaration": false,
     "noErrorTruncation": true,
     "incremental": true,
-    "outDir": "./dist",
     "rootDir": "./src",
     "baseUrl": "./src",
-    "tsBuildInfoFile": "./build/tsconfig.tsbuildinfo",
     "noEmit": true
   },
   "include": [

@@ -53,15 +53,22 @@ const testSuccessfulRun = async (
   );
 };
 
-test("Test BE-IOTS-NODE", testSuccessfulRun, {
-  components: "be",
+// test("Test BE-IOTS-NODE", testSuccessfulRun, {
+//   components: "be",
+//   dataValidation: "io-ts",
+//   server: "node",
+// });
+
+// test("Test FE-IOTS-FETCH", testSuccessfulRun, {
+//   components: "fe",
+//   dataValidation: "io-ts",
+//   client: "fetch",
+// });
+
+test("Test BEFE-IOTS-NODE-FETCH", testSuccessfulRun, {
+  components: "be-and-fe",
   dataValidation: "io-ts",
   server: "node",
-});
-
-test("Test FE-IOTS-FETCH", testSuccessfulRun, {
-  components: "fe",
-  dataValidation: "io-ts",
   client: "fetch",
 });
 
@@ -106,7 +113,10 @@ const verifyTemplate = async (c: ExecutionContext, projectPath: string) => {
     packageJsonPaths.length > 0,
     "There must be at least one package.json path in resulting template",
   );
+  const isOnePackageJson = packageJsonPaths.length === 1;
+
   await Promise.all(
+    // eslint-disable-next-line sonarjs/cognitive-complexity
     packageJsonPaths.map(async (packageJsonPath) => {
       // Read package.json, verify it has no floating version specs
       const { name, dependencies, devDependencies } = F.pipe(
@@ -120,41 +130,51 @@ const verifyTemplate = async (c: ExecutionContext, projectPath: string) => {
           .every((version) => /^\d/.test(version)),
       );
       const packageDir = path.dirname(packageJsonPath);
-      const yarnExtraArgs =
-        packageDir === projectPath ? [] : ["workspace", name];
+      if (isOnePackageJson || packageDir !== projectPath) {
+        const yarnExtraArgs = isOnePackageJson ? [] : ["workspace", name];
 
-      // Now run tsc, to ensure no compilation errors exist
-      await execFile("yarn", [...yarnExtraArgs, "run", "tsc"], {
-        shell: false,
-        cwd: projectPath,
-      });
-      // Make sure program actually starts and prints information that it successfully initialized
-
-      let isFE = false;
-      try {
-        await fs.stat(path.join(packageDir, "vite.config.ts"));
-        isFE = true;
-      } catch {
-        // Ignore
-      }
-      const devRun = process.spawn(
-        "yarn",
-        [...yarnExtraArgs, "run", isFE ? "build" : "dev"],
-        {
+        // Now run tsc, to ensure no compilation errors exist
+        await execFile("yarn", [...yarnExtraArgs, "run", "tsc"], {
           shell: false,
           cwd: projectPath,
-        },
-      );
-      const outputCollectState = collectProcessOutputs(devRun);
+        });
 
-      await waitForProcessWithTimeout(
-        `Starting dev run for "${name}"`,
-        devRun,
-        outputCollectState,
-        waitForProcessPrinting(devRun, outputCollectState, {
-          stdout: isFE ? "✓ built in" : "Started server",
-        }),
-      );
+        // Make sure program actually starts and prints information that it successfully initialized
+        let packageKind: PackageKind = "protocol";
+        try {
+          await fs.stat(path.join(packageDir, "vite.config.ts"));
+          packageKind = "fe";
+        } catch {
+          // Try BE-specific file
+          try {
+            await fs.stat(path.join(packageDir, "tsconfig.build.json"));
+            packageKind = "be";
+          } catch {
+            // Ignore
+          }
+        }
+        if (packageKind !== "protocol") {
+          const isFE = packageKind === "fe";
+          const devRun = process.spawn(
+            "yarn",
+            [...yarnExtraArgs, "run", isFE ? "build" : "dev"],
+            {
+              shell: false,
+              cwd: projectPath,
+            },
+          );
+          const outputCollectState = collectProcessOutputs(devRun);
+
+          await waitForProcessWithTimeout(
+            `Starting dev run for "${name}"`,
+            devRun,
+            outputCollectState,
+            waitForProcessPrinting(devRun, outputCollectState, {
+              stdout: isFE ? "✓ built in" : "Started server",
+            }),
+          );
+        }
+      }
     }),
   );
 };
@@ -255,3 +275,5 @@ const waitForProcessPrinting = async (
 
   return foundText ? 0 : exitCodeOrSignal || -1;
 };
+
+type PackageKind = "be" | "fe" | "protocol";

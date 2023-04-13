@@ -54,6 +54,7 @@ export const writeProjectFiles = async ({
     // When there are multiple package.json files in the template, it means that there is workspaces-based setup.
     // Top-level package.json will be "@abc/main", while others will be "@abc/<folder name>"
     Match.orElse(
+      // TODO - package.json name in these cases is actually not used.
       (): ExtractPackageName => (packageJsonPath) =>
         `@${projectName}/${
           path.dirname(packageJsonPath) === folderName
@@ -65,7 +66,7 @@ export const writeProjectFiles = async ({
     ),
   );
   // Now perform actual version fixing
-  await Promise.all(
+  const packageJsonFiles = await Promise.all(
     packageJsonPaths.map((packageJsonPath) =>
       // Change the "^x.y.z" version specifications to "x.b.c" fixed versions
       materializePackageJson(
@@ -76,6 +77,10 @@ export const writeProjectFiles = async ({
     ),
   );
   onEvent?.({ event: "endFixPackageJsonVersions", data: { packageJsonPaths } });
+
+  // If there is more than one package.json file, we must switch all "@ty-ras-sample" strings into actual project prefix
+  // if (packageJsonFiles.length > 1) {
+  // }
 
   // We are done!
 };
@@ -300,22 +305,28 @@ const materializePackageJson = async (
 const getLatestVersionWithEvents =
   (onEvent: MaybeOnEvent) =>
   async ([name, versionSpec]: readonly [string, string]) => {
-    onEvent?.({
-      event: "startReadPackument",
-      data: { packageName: name, versionSpec },
-    });
-    const { versions } = parsePackument(
-      await (await request(`https://registry.npmjs.com/${name}`)).body.json(),
-    );
-    const resolvedVersion =
-      semver.maxSatisfying(Object.keys(versions), versionSpec) ??
-      doThrow(
-        `No matching versions found for package "${name}" with version spec "${versionSpec}".`,
+    let resolvedVersion = versionSpec;
+    // Make sure this really is version spec and not fixed version
+    // Fixed version happens e.g. in BE&FE template when workspace component references another
+    if (!/^\d/.test(versionSpec)) {
+      // Resolve version spec
+      onEvent?.({
+        event: "startReadPackument",
+        data: { packageName: name, versionSpec },
+      });
+      const { versions } = parsePackument(
+        await (await request(`https://registry.npmjs.com/${name}`)).body.json(),
       );
-    onEvent?.({
-      event: "endReadPackument",
-      data: { packageName: name, versionSpec, resolvedVersion, versions },
-    });
+      resolvedVersion =
+        semver.maxSatisfying(Object.keys(versions), versionSpec) ??
+        doThrow(
+          `No matching versions found for package "${name}" with version spec "${versionSpec}".`,
+        );
+      onEvent?.({
+        event: "endReadPackument",
+        data: { packageName: name, versionSpec, resolvedVersion, versions },
+      });
+    }
     return [name, resolvedVersion] as const;
   };
 

@@ -65,12 +65,17 @@ const testSuccessfulRun = async (
 //   client: "fetch",
 // });
 
-test("Test BEFE-IOTS-NODE-FETCH", testSuccessfulRun, {
-  components: "be-and-fe",
-  dataValidation: "io-ts",
-  server: "node",
-  client: "fetch",
-});
+test(
+  "Test BEFE-IOTS-NODE-FETCH",
+  testSuccessfulRun,
+  {
+    components: "be-and-fe",
+    dataValidation: "io-ts",
+    server: "node",
+    client: "fetch",
+  },
+  3, // There are really 4, but we don't run commands for top-level package.json
+);
 
 const runCLIAndVerify = async (
   c: ExecutionContext,
@@ -108,12 +113,42 @@ interface CLIArgs {
 }
 
 const verifyTemplate = async (c: ExecutionContext, projectPath: string) => {
-  const packageJsonPaths = await template.getAllPackageJsonPaths(projectPath);
+  const packageJsonPaths = (await template.getAllFilePaths(projectPath)).filter(
+    (filePath) => path.basename(filePath) === "package.json",
+  );
   c.true(
     packageJsonPaths.length > 0,
     "There must be at least one package.json path in resulting template",
   );
   const isOnePackageJson = packageJsonPaths.length === 1;
+
+  if (!isOnePackageJson) {
+    // Create symlinks to top-level node_modules folder to simulate effect of running yarn install on workspaces
+    const scopeName = `@${path.basename(projectPath)}`;
+    const symlinkHome = path.join(projectPath, "node_modules", scopeName);
+    await fs.mkdir(symlinkHome, {
+      recursive: true,
+    });
+    await Promise.all(
+      packageJsonPaths
+        .filter(
+          (packageJsonPath) => path.dirname(packageJsonPath) !== projectPath,
+        )
+        .map(async (packageJsonPath) =>
+          fs.symlink(
+            `../../${path.relative(
+              projectPath,
+              path.dirname(packageJsonPath),
+            )}`,
+            path.join(
+              symlinkHome,
+              path.basename(path.dirname(packageJsonPath)),
+            ),
+            "dir",
+          ),
+        ),
+    );
+  }
 
   await Promise.all(
     // eslint-disable-next-line sonarjs/cognitive-complexity
@@ -140,19 +175,13 @@ const verifyTemplate = async (c: ExecutionContext, projectPath: string) => {
         });
 
         // Make sure program actually starts and prints information that it successfully initialized
-        let packageKind: PackageKind = "protocol";
-        try {
-          await fs.stat(path.join(packageDir, "vite.config.ts"));
-          packageKind = "fe";
-        } catch {
-          // Try BE-specific file
-          try {
-            await fs.stat(path.join(packageDir, "tsconfig.build.json"));
-            packageKind = "be";
-          } catch {
-            // Ignore
-          }
-        }
+        const packageKind: PackageKind =
+          (await tryStat(path.join(packageDir, "vite.config.ts"))) !== undefined
+            ? "fe"
+            : (await tryStat(path.join(packageDir, "tsconfig.build.json"))) !==
+              undefined
+            ? "be"
+            : "protocol";
         if (packageKind !== "protocol") {
           const isFE = packageKind === "fe";
           const devRun = process.spawn(
@@ -277,3 +306,11 @@ const waitForProcessPrinting = async (
 };
 
 type PackageKind = "be" | "fe" | "protocol";
+
+const tryStat = async (path: string) => {
+  try {
+    return await fs.stat(path);
+  } catch {
+    return undefined;
+  }
+};

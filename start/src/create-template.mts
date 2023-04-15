@@ -38,7 +38,10 @@ export const writeProjectFiles = async ({
   onEvent?.({ event: "startFixPackageJsonVersions", data: {} });
 
   // Start by finding all package.json files
-  const packageJsonPaths = await getAllPackageJsonPaths(folderName);
+  const allFilePaths = await getAllFilePaths(folderName);
+  const packageJsonPaths = allFilePaths.filter(
+    (filePath) => path.basename(filePath) === "package.json",
+  );
   const projectName = path.basename(folderName);
 
   // Callback which will create the "name" field of package.json file.
@@ -66,7 +69,7 @@ export const writeProjectFiles = async ({
     ),
   );
   // Now perform actual version fixing
-  const packageJsonFiles = await Promise.all(
+  await Promise.all(
     packageJsonPaths.map((packageJsonPath) =>
       // Change the "^x.y.z" version specifications to "x.b.c" fixed versions
       materializePackageJson(
@@ -79,8 +82,38 @@ export const writeProjectFiles = async ({
   onEvent?.({ event: "endFixPackageJsonVersions", data: { packageJsonPaths } });
 
   // If there is more than one package.json file, we must switch all "@ty-ras-sample" strings into actual project prefix
-  // if (packageJsonFiles.length > 1) {
-  // }
+  if (packageJsonPaths.length > 1) {
+    onEvent?.({ event: "startFixingPackageNames", data: {} });
+    const modifiedPaths: Set<string> = new Set();
+    await Promise.all(
+      allFilePaths.map(
+        async (filePath) =>
+          await F.pipe(
+            await fs.readFile(filePath, "utf8"),
+            (fileContents) => {
+              const newFileContents = fileContents.replaceAll(
+                "@ty-ras-sample",
+                `@${projectName}`,
+              );
+              if (fileContents !== newFileContents) {
+                modifiedPaths.add(filePath);
+                onEvent?.({
+                  event: "fixedPackageName",
+                  data: { path: filePath },
+                });
+              }
+              return newFileContents;
+            },
+            (newFileContents) =>
+              fs.writeFile(filePath, newFileContents, "utf8"),
+          ),
+      ),
+    );
+    onEvent?.({
+      event: "endFixingPackageNames",
+      data: { paths: modifiedPaths },
+    });
+  }
 
   // We are done!
 };
@@ -258,6 +291,9 @@ export interface EventsPayloads {
     versions: Record<string, unknown>;
   };
   endFixPackageJsonVersions: { packageJsonPaths: ReadonlyArray<string> };
+  startFixingPackageNames: {};
+  fixedPackageName: { path: string };
+  endFixingPackageNames: { paths: Set<string> };
 }
 
 const parsePackageJson = F.pipe(
@@ -344,14 +380,12 @@ const parsePackument = F.pipe(
 type ExtractPackageName = (packageJsonPath: string) => string;
 
 // We export this only for tests
-export const getAllPackageJsonPaths = async (rootDir: string) => {
-  const packageJsonPaths: Array<string> = [];
+export const getAllFilePaths = async (rootDir: string) => {
+  const filePaths: Array<string> = [];
   for await (const filePath of readDirRecursive(rootDir)) {
-    if (path.basename(filePath) === "package.json") {
-      packageJsonPaths.push(filePath);
-    }
+    filePaths.push(filePath);
   }
-  return packageJsonPaths;
+  return filePaths;
 };
 
 // For some reason, fs-extra doesn't have recursive readdir, so we have our own

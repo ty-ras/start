@@ -88,6 +88,14 @@ export default async () => {
                 Object.keys(versions).length
               } total versions`,
           ),
+          Match.when(
+            { event: "startFixingPackageNames" },
+            () => "Starting to fix package names",
+          ),
+          Match.when(
+            { event: "fixedPackageName" },
+            ({ data: { path } }) => `Fixed package names from ${path}`,
+          ),
           Match.orElse(() => ""),
         );
       },

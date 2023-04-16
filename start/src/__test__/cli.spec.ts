@@ -53,17 +53,17 @@ const testSuccessfulRun = async (
   );
 };
 
-// test("Test BE-IOTS-NODE", testSuccessfulRun, {
-//   components: "be",
-//   dataValidation: "io-ts",
-//   server: "node",
-// });
+test("Test BE-IOTS-NODE", testSuccessfulRun, {
+  components: "be",
+  dataValidation: "io-ts",
+  server: "node",
+});
 
-// test("Test FE-IOTS-FETCH", testSuccessfulRun, {
-//   components: "fe",
-//   dataValidation: "io-ts",
-//   client: "fetch",
-// });
+test("Test FE-IOTS-FETCH", testSuccessfulRun, {
+  components: "fe",
+  dataValidation: "io-ts",
+  client: "fetch",
+});
 
 test(
   "Test BEFE-IOTS-NODE-FETCH",
@@ -74,7 +74,7 @@ test(
     server: "node",
     client: "fetch",
   },
-  3, // There are really 4, but we don't run commands for top-level package.json
+  4,
 );
 
 const runCLIAndVerify = async (
@@ -120,92 +120,19 @@ const verifyTemplate = async (c: ExecutionContext, projectPath: string) => {
     packageJsonPaths.length > 0,
     "There must be at least one package.json path in resulting template",
   );
-  const isOnePackageJson = packageJsonPaths.length === 1;
+  const manyPackageJsons = S.is(nonEmptyPackageJsonPaths)(packageJsonPaths);
 
-  if (!isOnePackageJson) {
-    // Create symlinks to top-level node_modules folder to simulate effect of running yarn install on workspaces
-    const scopeName = `@${path.basename(projectPath)}`;
-    const symlinkHome = path.join(projectPath, "node_modules", scopeName);
-    await fs.mkdir(symlinkHome, {
-      recursive: true,
-    });
-    await Promise.all(
-      packageJsonPaths
-        .filter(
-          (packageJsonPath) => path.dirname(packageJsonPath) !== projectPath,
-        )
-        .map(async (packageJsonPath) =>
-          fs.symlink(
-            `../../${path.relative(
-              projectPath,
-              path.dirname(packageJsonPath),
-            )}`,
-            path.join(
-              symlinkHome,
-              path.basename(path.dirname(packageJsonPath)),
-            ),
-            "dir",
-          ),
-        ),
-    );
+  if (manyPackageJsons) {
+    await linkWorkspacePackages(projectPath, packageJsonPaths);
   }
 
-  await Promise.all(
-    // eslint-disable-next-line sonarjs/cognitive-complexity
-    packageJsonPaths.map(async (packageJsonPath) => {
-      // Read package.json, verify it has no floating version specs
-      const { name, dependencies, devDependencies } = F.pipe(
-        await fs.readFile(packageJsonPath, "utf8"),
-        JSON.parse,
-        parsePackageJson,
-      );
-      c.true(
-        Object.values(dependencies)
-          .concat(Object.values(devDependencies))
-          .every((version) => /^\d/.test(version)),
-      );
-      const packageDir = path.dirname(packageJsonPath);
-      if (isOnePackageJson || packageDir !== projectPath) {
-        const yarnExtraArgs = isOnePackageJson ? [] : ["workspace", name];
-
-        // Now run tsc, to ensure no compilation errors exist
-        await execFile("yarn", [...yarnExtraArgs, "run", "tsc"], {
-          shell: false,
-          cwd: projectPath,
-        });
-
-        // Make sure program actually starts and prints information that it successfully initialized
-        const packageKind: PackageKind =
-          (await tryStat(path.join(packageDir, "vite.config.ts"))) !== undefined
-            ? "fe"
-            : (await tryStat(path.join(packageDir, "tsconfig.build.json"))) !==
-              undefined
-            ? "be"
-            : "protocol";
-        if (packageKind !== "protocol") {
-          const isFE = packageKind === "fe";
-          const devRun = process.spawn(
-            "yarn",
-            [...yarnExtraArgs, "run", isFE ? "build" : "dev"],
-            {
-              shell: false,
-              cwd: projectPath,
-            },
-          );
-          const outputCollectState = collectProcessOutputs(devRun);
-
-          await waitForProcessWithTimeout(
-            `Starting dev run for "${name}"`,
-            devRun,
-            outputCollectState,
-            waitForProcessPrinting(devRun, outputCollectState, {
-              stdout: isFE ? "✓ built in" : "Started server",
-            }),
-          );
-        }
-      }
-    }),
+  const verifySinglePackage = createVerifySinglePackage(
+    c,
+    projectPath,
+    !manyPackageJsons,
   );
+
+  await Promise.all(packageJsonPaths.map(verifySinglePackage));
 };
 
 const waitForProcessWithTimeout = async (
@@ -313,4 +240,100 @@ const tryStat = async (path: string) => {
   } catch {
     return undefined;
   }
+};
+
+const nonEmptyPackageJsonPaths = S.nonEmptyArray(S.string);
+type NonEmptyPackageJsonPaths = S.To<typeof nonEmptyPackageJsonPaths>;
+
+const linkWorkspacePackages = async (
+  projectPath: string,
+  packageJsonPaths: NonEmptyPackageJsonPaths,
+) => {
+  // Create symlinks to top-level node_modules folder to simulate effect of running yarn install on workspaces
+  const scopeName = `@${path.basename(projectPath)}`;
+  const symlinkHome = path.join(projectPath, "node_modules", scopeName);
+  await fs.mkdir(symlinkHome, {
+    recursive: true,
+  });
+  await Promise.all(
+    packageJsonPaths
+      .filter(
+        (packageJsonPath) => path.dirname(packageJsonPath) !== projectPath,
+      )
+      .map(async (packageJsonPath) =>
+        fs.symlink(
+          `../../${path.relative(projectPath, path.dirname(packageJsonPath))}`,
+          path.join(symlinkHome, path.basename(path.dirname(packageJsonPath))),
+          "dir",
+        ),
+      ),
+  );
+};
+
+const createVerifySinglePackage = (
+  c: ExecutionContext,
+  projectPath: string,
+  isOnePackageJson: boolean,
+) => {
+  const runPackageDev = async (
+    name: string,
+    yarnExtraArgs: ReadonlyArray<string>,
+    isFE: boolean,
+  ) => {
+    const devRun = process.spawn(
+      "yarn",
+      [...yarnExtraArgs, "run", isFE ? "build" : "dev"],
+      {
+        shell: false,
+        cwd: projectPath,
+      },
+    );
+    const outputCollectState = collectProcessOutputs(devRun);
+
+    await waitForProcessWithTimeout(
+      `Starting dev run for "${name}"`,
+      devRun,
+      outputCollectState,
+      waitForProcessPrinting(devRun, outputCollectState, {
+        stdout: isFE ? "✓ built in" : "Started server",
+      }),
+    );
+  };
+  return async (packageJsonPath: string) => {
+    // Read package.json, verify it has no floating version specs
+    const { name, dependencies, devDependencies } = F.pipe(
+      await fs.readFile(packageJsonPath, "utf8"),
+      JSON.parse,
+      parsePackageJson,
+    );
+    c.true(
+      Object.values(dependencies)
+        .concat(Object.values(devDependencies))
+        .every((version) => /^\d/.test(version)),
+    );
+    const packageDir = path.dirname(packageJsonPath);
+    // Don't do anything for top-level package.json if we are in multi-package.json template
+    if (isOnePackageJson || packageDir !== projectPath) {
+      const yarnExtraArgs = isOnePackageJson ? [] : ["workspace", name];
+
+      // Now run tsc, to ensure no compilation errors exist
+      await execFile("yarn", [...yarnExtraArgs, "run", "tsc"], {
+        shell: false,
+        cwd: projectPath,
+      });
+
+      // Make sure program actually starts and prints information that it successfully initialized
+      const packageKind: PackageKind =
+        (await tryStat(path.join(packageDir, "vite.config.ts"))) !== undefined
+          ? "fe"
+          : (await tryStat(path.join(packageDir, "tsconfig.build.json"))) !==
+            undefined
+          ? "be"
+          : "protocol";
+      // Don't try to run protocol package - it is library-only
+      if (packageKind !== "protocol") {
+        await runPackageDev(name, yarnExtraArgs, packageKind === "fe");
+      }
+    }
+  };
 };

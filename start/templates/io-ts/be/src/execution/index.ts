@@ -73,7 +73,9 @@ const mainFunction = <
               tokenVerifier,
             }),
             // eslint-disable-next-line no-console
-            console.info("Started server")
+            console.info(
+              `Started server at ${config.server.host}:${config.server.port}`,
+            )
           ),
           E.toError,
         ),

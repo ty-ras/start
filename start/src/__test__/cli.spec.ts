@@ -145,10 +145,13 @@ const waitForProcessWithTimeout = async (
     // This promise waits for custom event, or the exit event, if not specific
     waitForProcess ?? waitForProcessExit(child),
     // This promise waits on timeout
-    new Promise<void>((resolve) => setTimeout(resolve, 20_1000)),
+    new Promise<void>((resolve) => setTimeout(resolve, 120_000)),
   ]);
 
   if (maybeExitCode !== 0) {
+    if (maybeExitCode === undefined) {
+      child.kill();
+    }
     throw new Error(
       `${processKind} ${
         typeof maybeExitCode !== "undefined"
@@ -295,7 +298,7 @@ const createVerifySinglePackage = (
       devRun,
       outputCollectState,
       waitForProcessPrinting(devRun, outputCollectState, {
-        stdout: isFE ? "✓ built in" : "Started server",
+        stdout: isFE ? "✓ built in" : "Started server at",
       }),
     );
   };

@@ -8,7 +8,7 @@ The contents of this folder are created using [`ty-ras/start` npx starter templa
 
 As a very first task, it is good idea to pick your favourite testing framework, and write some tests for the code.
 
-Another good first candidate is to actually run development server.
+As a good second task, one can run development server.
 To do that, simply execute `dev` script from `package.json` using your favourite package manager:
 ```sh
 yarn run dev

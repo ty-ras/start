@@ -1,19 +1,18 @@
 # HTTP Backend with TyRAS Framework
 
-Welcome to TyRAS-oriented Node HTTP server app!
-This app is using [`io-ts`](https://github.com/gcanti/io-ts) as data validation framework.
-The contents of this folder were created using [`ty-ras/start` npx starter template](https://github.com/ty-ras/meta/tree/main/start).
+This component is a Node HTTP server app.
+It is part of the [TyRAS-oriented Node HTTP fullstack app](../../README.md).
 
 # Next tasks
 
 As a very first task, it is good idea to pick your favourite testing framework, and write some tests for the code.
 
 As a good second task, one can run development server.
-To do that, simply install dependencies, and execute `dev` script from `package.json` using your favourite package manager:
+To do that, simply execute `dev` script from `package.json` using your favourite package manager:
 ```sh
-yarn install && yarn run dev
-npm install && npm run dev
-pnpm install && pnpm run dev
+yarn run dev
+npm run dev
+pnpm run dev
 ```
 
 After running the command above, the text `Started server at <host>:<port>` will signal that HTTP server is now listening at given port.
@@ -23,11 +22,9 @@ After running the command above, the text `Started server at <host>:<port>` will
 The `src` folder contains all the code.
 That folder is further structured in the following way:
 - `api` folder contains all code related to HTTP server.
-    - `protocol` subfolder contains type definitions related to exposed HTTP endpoints and the data flowing between them.
-      This is the core which utilizes some TyRAS interfaces, but mostly it is just defining the endpoint shape using TypeScript types, and data contents using `io-ts` validators.
-    - `auxiliary` subfolder contains the utility code, used when constructing HTTP server containing endpoints defined by `protocol` folder.
+    - `auxiliary` subfolder contains the utility code, used when constructing HTTP server containing endpoints defined by the [protocol component](../protocol).
       The only file most likely needing to be customized as application evolves, is `state.ts`.
-    - `endpoints` subfolder contains the code which constructs the endpoints defined by `protocol` folder, using functions and constants provided by TyRAS framework, and also utilizing code in `auxiliary` folder.
+    - `endpoints` subfolder contains the code which constructs the endpoints defined by [protocol component](../protocol), using functions and constants provided by TyRAS framework, and also utilizing code in `auxiliary` folder.
     - `index.ts` ties all of the above together to expose `apiEndpoints` constant which contains all endpoints for TyRAS HTTP server to run.
 - `environment` folder contains API for the environment where the HTTP server is running.
   In this sample it contains only the API and no implementation, but it can be expanded to contain e.g. cloud-provider-specific (AWS/Azure/GCP/etc) things like bearer token verification, access to some storage (S3/Storage Account/etc), etc.

@@ -1,19 +1,18 @@
 # HTTP Frontend with TyRAS Framework
 
-Welcome to TyRAS-oriented Vite-powered React app!
-This app is using [`io-ts`](https://github.com/gcanti/io-ts) as data validation framework.
-The contents of this folder were created using [`ty-ras/start` npx starter template](https://github.com/ty-ras/meta/tree/main/start).
+This component is a Vite-powered React app.
+It is part of the [TyRAS-oriented Node HTTP fullstack app](../../README.md).
 
 # Next tasks
 
 As a very first task, it is good idea to pick your favourite testing framework (Vitest is a good candidate if you will keep Vite as a bundler), and write some tests for the code.
 
 As a good second task, one can run development server.
-To do that, simply install dependencies, and execute `dev` script from `package.json` using your favourite package manager:
+To do that, simply execute `dev` script from `package.json` using your favourite package manager:
 ```sh
-yarn install && yarn run dev
-npm install && npm run dev
-pnpm install && pnpm run dev
+yarn run dev
+npm run dev
+pnpm run dev
 ```
 
 After running the command above, the text ` VITE v4.2.1  ready in 1414 ms` will signal that HTTP server is now listening at given port, and the browser can be used to load the frontend.
@@ -23,10 +22,8 @@ After running the command above, the text ` VITE v4.2.1  ready in 1414 ms` will 
 The `src` folder contains all the code.
 That folder is further structured in the following way:
 - `services` folder contains code not related to UI directly.
-    - `protocol` subfolder contains type definitions related to exposed HTTP endpoints and the data flowing between them.
-      This is the core which utilizes some TyRAS interfaces, but mostly it is just defining the endpoint shape using TypeScript types, and data contents using `io-ts` validators.
     - `hello.ts` file contains code which will build invokable callback which will use the greeting API of the protocol.
-    - `index.ts` exposes an object which contains all of the protocol callbacks.
+    - `index.ts` exposes an object which contains all of the callbacks to call endpoints defined in the [protocol component](../protocol).
       Currently there is only 1 (`hello.ts`), but new ones can be added easily.
 - `hooks` folder contains small API for using `Task`s of the `fp-ts` library with React hooks.
 - `view` folder contains all directly UI-related code.

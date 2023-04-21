@@ -22,7 +22,7 @@
   "bin": "./dist/cli.mjs",
   "module": "./dist/index.mjs",
   "dependencies": {
-    "@effect/match": "0.10.1",
+    "@effect/match": "0.16.0",
     "chalk": "5.2.0",
     "fs-extra": "11.1.0",
     "gradient-string": "2.0.2",
@@ -82,7 +82,6 @@
   },
   "resolutions": {
     "@types/node": "18.15.0",
-    "@effect/data": "0.10.2",
-    "@effect/schema": "0.9.1"
+    "@effect/schema": "0.16.0"
   }
 }

@@ -259,33 +259,33 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
-"@effect/data@0.10.2", "@effect/data@^0.10.2", "@effect/data@^0.9.1", "@effect/data@~0.9.1":
-  version "0.10.2"
-  resolved "https://registry.yarnpkg.com/@effect/data/-/data-0.10.2.tgz#743606113f8a8207c5e247e1d0888e6f4f6ccff7"
-  integrity sha512-ozoTc7M2MdM0AtM+oZw2Iuf/8rR4Yw4oCCanJuwQi1TMl+++XT7AkHAeqiWpvxpsIGAGoUxh/wSm9IQ/Rz+DqA==
+"@effect/data@^0.12.2", "@effect/data@~0.12.2":
+  version "0.12.2"
+  resolved "https://registry.yarnpkg.com/@effect/data/-/data-0.12.2.tgz#c76ce6e9f92484e77f184f3392724f7729f6467d"
+  integrity sha512-bmWRTcsSRG1FlBswT+D8SxW6r3c4B3pKJrjYfitCD03tXHnup5gLHaWqbFgIjiyYITS+UsJRRjVrNxvyGG4ZNQ==
 
-"@effect/io@^0.16.1":
-  version "0.16.2"
-  resolved "https://registry.yarnpkg.com/@effect/io/-/io-0.16.2.tgz#92f27e42ea2ca834d70573a176601127ea05da57"
-  integrity sha512-f4g4ZPvzkf1HNr3M4Fp7ZKl1gxXdcx9kxL5ugdbYskKl67ESiNslmsvkbr9STr9oAST7KO7+tL4quXFDsYvHYw==
+"@effect/io@^0.25.0":
+  version "0.25.0"
+  resolved "https://registry.yarnpkg.com/@effect/io/-/io-0.25.0.tgz#5406dc0a6ebde84c5221086c383585fcf63c34e2"
+  integrity sha512-vDwE2d+5JA5/X1gD47Tubf51mE6UQ4ge5Uw40XQnvB/1GD/OEloD/ipHeDIszluwjqr3n1DDsf41JziP1gt+9Q==
   dependencies:
-    "@effect/data" "~0.9.1"
+    "@effect/data" "~0.12.2"
 
-"@effect/match@0.10.1":
-  version "0.10.1"
-  resolved "https://registry.yarnpkg.com/@effect/match/-/match-0.10.1.tgz#d34d4fd12f5eb2766bc022f006215cebe1c209f3"
-  integrity sha512-FKceiRHTHWFMQn0oeSSmP9Qg8bv5bImIhK286dM/Q/X+IgAr3AjIkwW3eJP4ulPcKBw6ybJocx12+ebZyrLHkg==
+"@effect/match@0.16.0":
+  version "0.16.0"
+  resolved "https://registry.yarnpkg.com/@effect/match/-/match-0.16.0.tgz#601788ac0376aefc28507f832e0cbcc3bf69f4ca"
+  integrity sha512-49pc92G7zaJu+nCj73nTGc1cOqCNIMO0qeLXD8I1y9usTnKoQjykwLLkxYzy8L6lTZvEI4oYcke4d+lZIcAOIQ==
   dependencies:
-    "@effect/data" "^0.10.2"
-    "@effect/schema" "~0.9.0"
+    "@effect/data" "^0.12.2"
+    "@effect/schema" "^0.15.0"
 
-"@effect/schema@0.9.1", "@effect/schema@~0.9.0":
-  version "0.9.1"
-  resolved "https://registry.yarnpkg.com/@effect/schema/-/schema-0.9.1.tgz#255a12a8e07b09d9becf576194408b727bc1b599"
-  integrity sha512-1bQP+z6+2DiMkLRG9zbQAfRqz2p5GtOF3nNfPvNf2oNRHdwDoHg153opdj8hpwiTXNKLmCNy9qCW7nZbQ4zyOw==
+"@effect/schema@0.16.0", "@effect/schema@^0.15.0":
+  version "0.16.0"
+  resolved "https://registry.yarnpkg.com/@effect/schema/-/schema-0.16.0.tgz#1719b9c64b99fd72e408c9ea8fabcb9566dacb6a"
+  integrity sha512-KYf77SQRD6Z2KJ30XMc47KHbPGTYCQwjXNuGlELl/WjzJYJuvKSQBMTRUUuhrjSi+ROTm5sUwwfskLfXeO0GVA==
   dependencies:
-    "@effect/data" "^0.9.1"
-    "@effect/io" "^0.16.1"
+    "@effect/data" "^0.12.2"
+    "@effect/io" "^0.25.0"
     fast-check "^3.8.0"
 
 "@esbuild/android-arm64@0.17.16":

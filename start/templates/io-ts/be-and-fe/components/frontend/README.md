@@ -17,6 +17,8 @@ pnpm run dev
 
 After running the command above, the text ` VITE v4.2.1  ready in 1414 ms` will signal that HTTP server is now listening at given port, and the browser can be used to load the frontend.
 
+Please notice that installing dependencies **must not** be done from *this folder*, instead, it must be done from [main folder](../..).
+
 # The code structure
 
 The `src` folder contains all the code.

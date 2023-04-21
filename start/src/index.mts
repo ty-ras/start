@@ -58,8 +58,11 @@ export default async () => {
       validatedInput = validationResult;
     }
   } while (validatedInput === undefined);
-  common.print(`THE STATE:\n${JSON.stringify(input, undefined, 2)}`);
-  // TODO start ora spinner here
+  common.print(
+    chalk.bgGray(
+      `Creating project to folder "${validatedInput.folderName}" with components "${validatedInput.components}".`,
+    ),
+  );
   const spinner = ora("Beginning template creation").start();
   let success = false;
   try {
@@ -110,6 +113,11 @@ export default async () => {
       );
     }
   }
+  common.print(
+    chalk.whiteBright(
+      `Project creation succeeded!\nPlease take a look in the README file within folder "${validatedInput.folderName}" for short information on how to proceed.`,
+    ),
+  );
 };
 
 const gradient = gradientString("#0070BB", "#FEBE10", "#BC3F4A");

@@ -4,6 +4,8 @@ This component is a protocol specification for backend and frontend to use.
 It is part of the [TyRAS-oriented Node HTTP fullstack app](../../README.md).
 It is not meant to be executed as standalone component, but rather it is a library to be used when communicating via HTTP protocol - to define the endpoints and the shape of the data being transferred.
 
+Please notice that installing dependencies **must not** be done from *this folder*, instead, it must be done from [main folder](../..).
+
 # The code structure
 
 The `src` folder contains all the code.

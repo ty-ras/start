@@ -13,7 +13,7 @@ This project utilizes [workspaces](https://docs.npmjs.com/cli/v9/using-npm/works
 
 # Next tasks
 
-As a very first task, install dependencies using your favourite package manager:
+As a very first task, install dependencies of all the components using your favourite package manager:
 ```sh
 yarn install
 npm install

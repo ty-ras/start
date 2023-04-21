@@ -17,6 +17,8 @@ pnpm run dev
 
 After running the command above, the text `Started server at <host>:<port>` will signal that HTTP server is now listening at given port.
 
+Please notice that installing dependencies **must not** be done from *this folder*, instead, it must be done from [main folder](../..).
+
 # The code structure
 
 The `src` folder contains all the code.

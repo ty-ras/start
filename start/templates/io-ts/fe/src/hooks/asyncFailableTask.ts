@@ -10,10 +10,12 @@ import { useCallback, useEffect, useState } from "react";
  * Please pass result of `useCallback` as a parameter to this function!
  * Otherwise, the `invokeTask` of returned object will constantly change!
  * @param createTask The callback which creates the task, or returns `undefined`. **Should be result of `useCallback` call**.
+ * @param skipLoggingIfError Skip logging error information to console (for "legit" error cases).
  * @returns Object with task invocation callback, as well as current task state information.
  */
 export const useAsyncFailableTask = <E, T, TInput extends Array<any>>(
   createTask: (...args: TInput) => TE.TaskEither<E, T> | undefined,
+  skipLoggingIfError = false,
 ) => {
   /* eslint-enable @typescript-eslint/no-explicit-any*/
   const [state, setState] = useState<TaskInvocationState<E, T>>(stateInitial);
@@ -45,7 +47,9 @@ export const useAsyncFailableTask = <E, T, TInput extends Array<any>>(
     [state, createTask],
   );
 
-  logIfError(state);
+  if (!skipLoggingIfError) {
+    logIfError(state);
+  }
 
   return { taskState: state, invokeTask };
 };
@@ -151,9 +155,8 @@ const stateInvoking = "invoking";
 
 export const logIfError = <E, T>(state: TaskInvocationState<E, T>) => {
   if (isError(state)) {
-    // Actually, this spams way too much in "legit" cases, e.g. if user login failed, then on every keypress, the error is printed to console.
     // eslint-disable-next-line no-console
-    // console.error("Task error", state.error);
+    console.error("Task error", state.error);
   }
 };
 

@@ -1,6 +1,9 @@
 {
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">= 18"
+  },
   "dependencies": {
     "@ty-ras/frontend-fetch-io-ts": "^0.13.1",
     "@ty-ras-extras/frontend-io-ts": "^0.13.2",

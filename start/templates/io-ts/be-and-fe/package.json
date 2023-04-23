@@ -4,6 +4,9 @@
   "workspaces": [
     "components/*"
   ],
+  "engines": {
+    "node": ">= 18"
+  },
   "dependencies": {
     "fp-ts": "^2.13.1",
     "io-ts": "^2.2.20",

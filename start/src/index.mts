@@ -106,7 +106,7 @@ export default async () => {
     success = true;
   } finally {
     if (success) {
-      spinner.succeed("Project created!");
+      spinner.succeed("Project created.");
     } else {
       spinner.fail(
         "Project creation failed, please see error message for more information.",

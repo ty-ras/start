@@ -53,24 +53,52 @@ const testSuccessfulRun = async (
   );
 };
 
-test("Test BE-IOTS-NODE", testSuccessfulRun, {
+// We must run tests in serial - otherwise there will be so many connections established that there will be errors
+// Furthermore, due to nature of the program, running tests in sequential manner is actually a bit faster.
+const runOneTest = test.serial;
+
+runOneTest("Test BE-IOTS-NODE", testSuccessfulRun, {
   components: "be",
   dataValidation: "io-ts",
   server: "node",
 });
 
-test("Test FE-IOTS-FETCH", testSuccessfulRun, {
+runOneTest("Test FE-IOTS-FETCH", testSuccessfulRun, {
   components: "fe",
   dataValidation: "io-ts",
   client: "fetch",
 });
 
-test(
+runOneTest(
   "Test BEFE-IOTS-NODE-FETCH",
   testSuccessfulRun,
   {
     components: "be-and-fe",
     dataValidation: "io-ts",
+    server: "node",
+    client: "fetch",
+  },
+  4,
+);
+
+runOneTest("Test BE-ZOD-NODE", testSuccessfulRun, {
+  components: "be",
+  dataValidation: "zod",
+  server: "node",
+});
+
+runOneTest("Test FE-ZOD-FETCH", testSuccessfulRun, {
+  components: "fe",
+  dataValidation: "zod",
+  client: "fetch",
+});
+
+runOneTest(
+  "Test BEFE-ZOD-NODE-FETCH",
+  testSuccessfulRun,
+  {
+    components: "be-and-fe",
+    dataValidation: "zod",
     server: "node",
     client: "fetch",
   },
@@ -120,7 +148,7 @@ const verifyTemplate = async (c: ExecutionContext, projectPath: string) => {
     packageJsonPaths.length > 0,
     "There must be at least one package.json path in resulting template",
   );
-  const manyPackageJsons = S.is(nonEmptyPackageJsonPaths)(packageJsonPaths);
+  const manyPackageJsons = packageJsonPaths.length > 1;
 
   if (manyPackageJsons) {
     await linkWorkspacePackages(projectPath, packageJsonPaths);
@@ -245,12 +273,9 @@ const tryStat = async (path: string) => {
   }
 };
 
-const nonEmptyPackageJsonPaths = S.nonEmptyArray(S.string);
-type NonEmptyPackageJsonPaths = S.To<typeof nonEmptyPackageJsonPaths>;
-
 const linkWorkspacePackages = async (
   projectPath: string,
-  packageJsonPaths: NonEmptyPackageJsonPaths,
+  packageJsonPaths: ReadonlyArray<string>,
 ) => {
   // Create symlinks to top-level node_modules folder to simulate effect of running yarn install on workspaces
   const scopeName = `@${path.basename(projectPath)}`;
@@ -321,6 +346,12 @@ const createVerifySinglePackage = (
 
       // Now run tsc, to ensure no compilation errors exist
       await execFile("yarn", [...yarnExtraArgs, "run", "tsc"], {
+        shell: false,
+        cwd: projectPath,
+      });
+
+      // Run also linter, to ensure that new project won't immediately have red suiggles because of bad formatting
+      await execFile("yarn", [...yarnExtraArgs, "run", "lint"], {
         shell: false,
         cwd: projectPath,
       });

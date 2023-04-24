@@ -12,7 +12,7 @@ const runPoolEviction = async (
     // It is enough to check once a minute.
     await new Promise<void>((resolve) => setTimeout(resolve, 60 * 1000));
     // Destroy all connections which have been idle for 10min or more.
-    await poolAdmin.runEviction(10 * 60 * 1000)();
+    await poolAdmin.runEviction(10 * 60 * 1000);
   }
 };
 

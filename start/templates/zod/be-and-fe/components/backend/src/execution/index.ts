@@ -2,7 +2,7 @@ import type * as t from "zod";
 import { main, configuration } from "@ty-ras-extras/backend-zod";
 import * as poolEvictions from "./pool-evictions";
 import * as http from "./http";
-import * as config from "../config";
+import type * as config from "../config";
 import type * as env from "../environment";
 
 export const invokeMain = <
@@ -43,7 +43,7 @@ const mainFunction = async <
   // Transform stringified configuration into unvalidated configuration object
   // It will be either directly the value of environment variable, or read from file
   // Validate that configuration object adhers to configuration type specification
-  const cfg = configuration.validateFromStringifiedJSON(
+  const cfg = configuration.validateFromStringifiedJSONOrThrow(
     configValidation,
     await configuration.getJSONStringValueFromMaybeStringWhichIsJSONOrFilenameFromEnvVar(
       envVarName,

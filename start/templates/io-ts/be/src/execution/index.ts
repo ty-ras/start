@@ -3,7 +3,7 @@ import type * as t from "io-ts";
 import { main, configuration } from "@ty-ras-extras/backend-io-ts";
 import * as poolEvictions from "./pool-evictions";
 import * as http from "./http";
-import * as config from "../config";
+import type * as config from "../config";
 import type * as env from "../environment";
 
 export const invokeMain = <

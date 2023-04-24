@@ -23,6 +23,7 @@ await execution.invokeMain({
       string,
       resources.ResourcePoolWithAdministration<never, void>
     > = {};
+    console.log("FAK", http);
     return Promise.resolve({
       config: http,
       parameters: {

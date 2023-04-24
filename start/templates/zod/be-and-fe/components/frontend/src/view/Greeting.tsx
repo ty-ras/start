@@ -1,4 +1,3 @@
-import { function as F, either as E, taskEither as TE } from "fp-ts";
 import { useState, useCallback } from "react";
 import * as tyras from "@ty-ras/frontend-fetch-zod";
 import * as task from "../hooks/asyncFailableTask";
@@ -10,23 +9,15 @@ const Greeting = () => {
     input: target,
   });
   const { invokeTask } = task.useAsyncFailableTask(
-    useCallback(
-      (target: string) =>
-        F.pipe(
-          // Execute backend call, catching any thrown exceptions, and ending up in TaskEither<Error, tyras.APICallResult<T>>
-          TE.tryCatch(
-            async () => await backend.hello.sayHello({ url: { target } }),
-            E.toError,
-          ),
-          // Transform TaskEither<Error, tyras.APICallResult<T>> into TaskEither<tyras.APICallResultError, T>>
-          TE.chainEitherKW(tyras.toEither),
-          // If backend call was successful, react on result
-          TE.map((greetingFromBackend) =>
-            setResult({ input: target, result: greetingFromBackend }),
-          ),
-        ),
-      [],
-    ),
+    useCallback(async (target: string) => {
+      // Execute backend call, catching any thrown exceptions, and ending up in TaskEither<Error, tyras.APICallResult<T>>
+      const beResult = await backend.hello.sayHello({ url: { target } });
+      if (beResult.error === "none") {
+        setResult({ input: target, result: beResult.data });
+      } else {
+        throw tyras.toErrorFE(beResult);
+      }
+    }, []),
   );
   return (
     <>

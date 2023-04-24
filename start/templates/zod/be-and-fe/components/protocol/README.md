@@ -11,7 +11,7 @@ Please notice that installing dependencies **must not** be done from *this folde
 The `src` folder contains all the code.
 That folder is further structured in the following way:
 - `hello` folder contains code related to `/api/greeting` endpoint - just to give one idea on how actual endpoint specifications can be implemented:
-    - `data.ts` file contains `io-ts` validators for all the input and output data used in the endpoint,
+    - `data.ts` file contains `zod` validators for all the input and output data used in the endpoint,
     - `endpoints.ts` file contains type definitions which describe the HTTP endpoints to be exposed by this logical unit of the whole API, and
     - `index.ts` ties it all together by exposing the endpoint type definitions directly, and data validators behind the `data` alias.
 - `index.ts` re-exports all the `index.ts` files of all the subfolders there is.

@@ -4,7 +4,7 @@ import * as services from "../../services";
 
 export const authenticationStateValidators = {
   // Here one can have e.g. user ID, user name, or something else
-  // Property names are freely decidable, but values must be IO-TS validators (directly from io-ts, io-ts-types, or tyras.instanceOf(...)).
+  // Property names are freely decidable, but values must be Zod validators.
   userId: services.uuidValidation("UserID"),
 } as const;
 
@@ -16,7 +16,7 @@ export const authenticatedStateSpec = tyras.transformEntries(
 export const additionalStateValidators = {
   // Here one can have e.g. DB connection pool, in-memory caches, etc
   // Property names are freely decidable as long as they don't clash with what is in authenticationStateValidators.
-  // Values must be IO-TS validators (directly from io-ts, io-ts-types, or tyras.instanceOf(...)).
+  // Values must be Zod validators.
 } as const;
 
 export const endpointState = state.createStateValidatorFactory(

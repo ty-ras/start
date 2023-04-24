@@ -1,7 +1,7 @@
 # HTTP Backend and Frontend with TyRAS Framework
 
 Welcome to TyRAS-oriented Node HTTP fullstack app!
-This app is using [`io-ts`](https://github.com/gcanti/io-ts) as data validation framework.
+This app is using [`zod`](https://github.com/colinhacks/zod) as data validation framework.
 The contents of this folder were created using [`ty-ras/start` npx starter template](https://github.com/ty-ras/meta/tree/main/start).
 
 # Project structure

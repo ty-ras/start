@@ -1,7 +1,7 @@
 import * as aux from "../auxiliary";
 import { OpenAPIV3 as openapi } from "openapi-types";
 import * as tyras from "@ty-ras/backend-node-zod-openapi";
-import * as t from "io-ts";
+import * as t from "zod";
 import * as tls from "tls";
 
 export const createOpenAPIEndpoint = (
@@ -34,7 +34,7 @@ export const createOpenAPIEndpoint = (
           return returnMD;
         },
         // We could pass proper validator for this, but let's go with unknown for now.
-        tyras.responseBodyForValidatedData(t.unknown),
+        tyras.responseBody(t.unknown()),
         // No metadata spec - as this is the metadata-returning endpoint itself
         {},
       )

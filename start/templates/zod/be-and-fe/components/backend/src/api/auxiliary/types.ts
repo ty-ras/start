@@ -1,7 +1,6 @@
 import type * as tyras from "@ty-ras/backend-node-zod-openapi";
 import type { state } from "@ty-ras-extras/backend-zod";
 import type * as thisState from "./state";
-import type { taskEither as TE } from "fp-ts";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
@@ -30,9 +29,9 @@ export type TMetadataProviders = {
 
 export type TFunctionalityBase<TParams = any, TReturn = any> = (
   input: TParams,
-) => TE.TaskEither<Error, TReturn>;
+) => Promise<TReturn>;
 
-export type InlineFunctionality<TReturn> = () => TE.TaskEither<Error, TReturn>;
+export type InlineFunctionality<TReturn> = () => Promise<TReturn>;
 
 export type FunctionalityParameters<TFunctionality extends TFunctionalityBase> =
   TFunctionality extends TFunctionalityBase<infer T, infer _> ? T : never;

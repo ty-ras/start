@@ -1,6 +1,5 @@
 /* eslint-disable no-console */
 import * as tyras from "@ty-ras/backend-node-zod-openapi";
-import { function as F, either as E } from "fp-ts";
 import type * as api from "../api";
 import type * as config from "../config";
 import type * as env from "../environment";
@@ -26,20 +25,14 @@ export const startHTTPServer = async <
       // Endpoints comprise the REST API as a whole
       endpoints,
       // React on various server events.
-      events: F.flow(
+      events: (eventName, eventArgs) => {
         // First, trigger CORS handler (it will modify the context object of eventArgs)
-        (eventName, eventArgs) => ({
-          eventName,
-          eventArgs,
-          corsTriggered: corsHandler(eventName, eventArgs),
-        }),
+        const corsTriggered = corsHandler(eventName, eventArgs);
         // Then log event info + whether CORS triggered to console
-        ({ eventName, eventArgs, corsTriggered }) => (
-          console.info("EVENT", eventName, corsTriggered),
+        console.info("EVENT", eventName, corsTriggered),
           // eslint-disable-next-line sonarjs/no-use-of-empty-return-value
-          logEventArgs(eventArgs)
-        ),
-      ),
+          logEventArgs(eventArgs);
+      },
       // Create the state object for endpoints
       // Endpoints specify which properties of State they want, and this callback tries to provide them
       // The final validation of the returned state object is always done by endpoint specification, and thus it is enough to just attempt to e.g. provide username.
@@ -57,7 +50,7 @@ export const startHTTPServer = async <
             await tokenVerifier(
               `${authScheme} `,
               context.headers["authorization"],
-            )(),
+            ),
         );
         for (const propertyName of statePropertyNames) {
           if (isPropertyInObject(pools, propertyName)) {
@@ -66,13 +59,13 @@ export const startHTTPServer = async <
             isPropertyInObject(tokenVerifierProperties, propertyName)
           ) {
             if (!getVerifierOutputLazy.hasBeenInvoked()) {
-              const verifierOutput = await getVerifierOutputLazy.promise();
-              if (E.isLeft(verifierOutput)) {
-                console.error("Token validation error: ", verifierOutput);
-              } else {
-                Object.entries(verifierOutput.right).forEach(
+              try {
+                const verifierOutput = await getVerifierOutputLazy.promise();
+                Object.entries(verifierOutput).forEach(
                   ([key, value]) => (state[key as keyof typeof state] = value),
                 );
+              } catch (e) {
+                console.error("Token validation error: ", e);
               }
             }
           } else {

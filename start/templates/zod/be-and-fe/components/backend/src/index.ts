@@ -1,4 +1,3 @@
-import { taskEither as TE } from "fp-ts";
 import type { resources } from "@ty-ras-extras/backend-zod";
 import * as execution from "./execution";
 import configValidation from "./config";
@@ -11,12 +10,11 @@ await execution.invokeMain({
   envVarName: "MY_BACKEND_CONFIG",
   getServerParameters: ({ http }) => {
     const environment: env.Environment<never> = {
-      tokenVerifier: () =>
-        TE.left(
-          new Error(
-            "When creating authentication for the HTTP server, please replace this code call to actual token verification code in src/environment/<cloud provider name>/xyz.ts files.",
-          ),
-        ),
+      tokenVerifier: () => {
+        throw new Error(
+          "When creating authentication for the HTTP server, please replace this code call to actual token verification code in src/environment/<cloud provider name>/xyz.ts files.",
+        );
+      },
     };
     // Add DB pools and other pools needed by endpoints here.
     // Key should be state property name, and value class that will be validated using validator of that state property.

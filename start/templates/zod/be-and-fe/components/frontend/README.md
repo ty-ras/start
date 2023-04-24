@@ -27,7 +27,7 @@ That folder is further structured in the following way:
     - `hello.ts` file contains code which will build invokable callback which will use the greeting API of the protocol.
     - `index.ts` exposes an object which contains all of the callbacks to call endpoints defined in the [protocol component](../protocol).
       Currently there is only 1 (`hello.ts`), but new ones can be added easily.
-- `hooks` folder contains small API for using `Task`s of the `fp-ts` library with React hooks.
+- `hooks` folder contains small API for using `Promise`s while observing their errors via React hooks.
 - `view` folder contains all directly UI-related code.
   This sample has only the very basic UI component, in order to avoid extra work if e.g. UI framework/bundler are changed.
 - `config.ts` file contains runtime validator for the configuration of the program.

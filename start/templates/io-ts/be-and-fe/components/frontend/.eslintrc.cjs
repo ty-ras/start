@@ -1,4 +1,4 @@
-const baseline = require('../../.eslintrc.library.cjs');
+const baseline = require('../../.eslintrc.base.cjs');
 baseline.parserOptions.tsconfigRootDir = __dirname
 baseline.settings['import/resolver'].node.extensions.push(".tsx");
 

@@ -1,4 +1,4 @@
-import * as t from "io-ts";
+import * as t from "zod";
 
 // This is RFC-adhering UUID regex. Relax if needed.
 // Taken from https://stackoverflow.com/questions/7905929/how-to-test-valid-uuid-guid
@@ -9,6 +9,9 @@ export const uuidRegex =
 export const uuidRegexFullString = new RegExp(`^${uuidRegex.source}$`, "i");
 
 export const uuidValidation = (name: string) =>
-  t.refinement(t.string, (str) => uuidRegexFullString.test(str), name);
+  t
+    .string()
+    .refine((str) => uuidRegexFullString.test(str))
+    .describe(name);
 
 export const UUID_ZEROES = "00000000-0000-0000-0000-000000000000";

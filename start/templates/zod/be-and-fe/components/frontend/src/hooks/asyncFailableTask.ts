@@ -1,43 +1,43 @@
-import { function as F, taskEither as TE } from "fp-ts";
 import { useCallback, useEffect, useState } from "react";
 
 /* eslint-disable @typescript-eslint/no-explicit-any*/
+
 /**
- * Creates a invocation callback and task state tracking for a callback producing `TaskEither`, which typically performs some asynchronous, failable action.
+ * Creates a invocation callback and task state tracking for a callback producing `Promise`, which typically performs some asynchronous, failable action.
  * The invocation callback will take care of not executing the task in parallel, but instead simply return if the task is already running.
  *
  * IMPORTANT!
  * Please pass result of `useCallback` as a parameter to this function!
  * Otherwise, the `invokeTask` of returned object will constantly change!
- * @param createTask The callback which creates the task, or returns `undefined`. **Should be result of `useCallback` call**.
+ * @param createTask The callback which return the Promise, or returns `undefined`. **Should be result of `useCallback` call**.
+ * @param skipLoggingIfError Skip logging error information to console (for "legit" error cases).
  * @returns Object with task invocation callback, as well as current task state information.
  */
-export const useAsyncFailableTask = <E, T, TInput extends Array<any>>(
-  createTask: (...args: TInput) => TE.TaskEither<E, T> | undefined,
+export const useAsyncFailableTask = <T, TInput extends Array<any>>(
+  createTask: (...args: TInput) => Promise<T> | undefined,
+  skipLoggingIfError = false,
 ) => {
   /* eslint-enable @typescript-eslint/no-explicit-any*/
-  const [state, setState] = useState<TaskInvocationState<E, T>>(stateInitial);
+  const [state, setState] = useState<TaskInvocationState<T>>(stateInitial);
 
   const invokeTask: InvokeTask<TInput> = useCallback(
     (...args: TInput) => {
       let started = false;
       if (state !== "invoking") {
-        const task = createTask(...args);
-        if (task) {
-          setState("invoking");
-          started = true;
-          void F.pipe(
-            task,
-            TE.bimap(
-              (error) => (
-                // eslint-disable-next-line no-console
-                console.error("Failure in async task", error),
-                setState({ result: "error", error })
-              ),
-              (data) => setState({ result: "success", data }),
-            ),
-          )();
-        }
+        void (async () => {
+          try {
+            const task = createTask(...args);
+            if (task) {
+              setState("invoking");
+              started = true;
+              setState({ result: "success", data: await task });
+            }
+          } catch (error) {
+            // eslint-disable-next-line no-console
+            console.error("Failure in async task", error),
+              setState({ result: "error", error });
+          }
+        })();
       }
 
       return started;
@@ -45,7 +45,9 @@ export const useAsyncFailableTask = <E, T, TInput extends Array<any>>(
     [state, createTask],
   );
 
-  logIfError(state);
+  if (!skipLoggingIfError) {
+    logIfError(state);
+  }
 
   return { taskState: state, invokeTask };
 };
@@ -73,8 +75,8 @@ export const useTaskStatusIndicator = (shouldShowBasedOnTaskState: boolean) => {
   };
 };
 
-export const useHasErrored = <E, T>(
-  taskState: TaskInvocationState<E, T>,
+export const useHasErrored = <T>(
+  taskState: TaskInvocationState<T>,
   timeout = 1000,
 ) => {
   const { shouldShow: hasErrored, hasShown: clearError } =
@@ -109,11 +111,11 @@ export type InvokeTask<TInput extends Array<any>> = (
   ...args: TInput
 ) => boolean;
 
-export type TaskInvocationState<E, T> =
+export type TaskInvocationState<T> =
   | TaskInvocationStateInitial
   | TaskInvocationStateInvoking
   | TaskInvocationStateSuccess<T>
-  | TaskInvocationStateError<E>;
+  | TaskInvocationStateError;
 
 export type TaskInvocationStateInitial = typeof stateInitial;
 export type TaskInvocationStateInvoking = typeof stateInvoking;
@@ -123,37 +125,36 @@ export interface TaskInvocationStateSuccess<T> {
   data: T;
 }
 
-export interface TaskInvocationStateError<E> {
+export interface TaskInvocationStateError {
   result: "error";
-  error: E;
+  error: unknown;
 }
 
-export const isInitial = <E, T>(
-  state: TaskInvocationState<E, T>,
+export const isInitial = <T>(
+  state: TaskInvocationState<T>,
 ): state is TaskInvocationStateInitial => state === stateInitial;
 
-export const isInvoking = <E, T>(
-  state: TaskInvocationState<E, T>,
+export const isInvoking = <T>(
+  state: TaskInvocationState<T>,
 ): state is TaskInvocationStateInvoking => state === stateInvoking;
 
-export const isError = <E, T>(
-  state: TaskInvocationState<E, T>,
-): state is TaskInvocationStateError<E> =>
+export const isError = <T>(
+  state: TaskInvocationState<T>,
+): state is TaskInvocationStateError =>
   typeof state === "object" && state.result === "error";
 
-export const isSuccess = <E, T>(
-  state: TaskInvocationState<E, T>,
+export const isSuccess = <T>(
+  state: TaskInvocationState<T>,
 ): state is TaskInvocationStateSuccess<T> =>
   typeof state === "object" && state.result === "success";
 
 const stateInitial = "initial";
 const stateInvoking = "invoking";
 
-export const logIfError = <E, T>(state: TaskInvocationState<E, T>) => {
+export const logIfError = <T>(state: TaskInvocationState<T>) => {
   if (isError(state)) {
-    // Actually, this spams way too much in "legit" cases, e.g. if user login failed, then on every keypress, the error is printed to console.
     // eslint-disable-next-line no-console
-    // console.error("Task error", state.error);
+    console.error("Task error", state.error);
   }
 };
 

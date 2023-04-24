@@ -1,49 +1,43 @@
-import * as t from "io-ts";
-import * as tt from "io-ts-types";
+import * as t from "zod";
 
 export type Config = t.TypeOf<typeof config>;
 export type ConfigAuthentication = Config["authentication"];
 export type ConfigHTTPServer = Config["http"];
 
-const remoteEndpoint = t.type({
-  host: tt.NonEmptyString,
-  port: t.Int,
+const remoteEndpoint = t.object({
+  host: t.string().nonempty(),
+  port: t.number().int(),
 });
 
-const authConfig = t.type(
-  {
+const authConfig = t
+  .object({
     // Insert authentication-related properties here
     // E.g. AWS pool ID + client ID + region, AzureAD tenant ID + app ID, etc.
-  },
-  "AuthConfig",
-);
+  })
+  .describe("AuthConfig");
 
-const config = t.type(
-  {
+const config = t
+  .object({
     authentication: authConfig,
-    http: t.type(
-      {
-        server: t.type(
-          {
-            ...remoteEndpoint.props,
+    http: t
+      .object({
+        server: t
+          .object({
+            ...remoteEndpoint.shape,
             // TODO: certs
-          },
-          "HTTPServerConfig",
-        ),
+          })
+          .describe("HTTPServerConfig"),
         // Remove this if CORS is not needed
-        cors: t.type(
-          {
-            frontendAddress: tt.NonEmptyString,
-          },
-          "HTTPCorsConfig",
-        ),
-      },
-      "HTTPConfig",
-    ),
+        cors: t
+          .object({
+            frontendAddress: t.string().nonempty(),
+          })
+          .describe("HTTPCorsConfig"),
+      })
+      .describe("HTTPConfig"),
     // Insert any additional config properties here
     // E.g. database, messaging, etc
-  },
-  "BEConfig",
-);
+  })
+  .describe("BEConfig");
 
 export default config;

@@ -1,4 +1,4 @@
-import * as t from "io-ts";
+import * as t from "zod";
 import * as tyras from "@ty-ras/backend-node-zod-openapi";
 import * as protocol from "@ty-ras-sample/protocol";
 import * as aux from "../auxiliary";
@@ -40,7 +40,7 @@ const hello: aux.EndpointSpec<
   state: aux.endpointState(stateSpec),
   method: tyras.METHOD_GET,
   endpointHandler: ({ url: { target } }) => `Hello, ${target}!`,
-  output: tyras.responseBody(helloResponse, false),
+  output: tyras.responseBody(helloResponse),
   mdArgs: {
     openapi: {
       ...aux.mdArgsBase(

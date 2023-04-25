@@ -24,6 +24,7 @@ export const createCLIArgs = (): CLIArgs => {
     booleanDefault: undefined,
     autoVersion: true,
     autoHelp: true,
+    help: 
   });
   return { flags, input };
 };

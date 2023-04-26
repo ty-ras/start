@@ -82,8 +82,8 @@
     "dev": "ts-node src/cli.mts",
     "tsc": "tsc --project tsconfig.build.json",
     "tsc:plain": "tsc",
-    "test:coverage": "c8 --temp-directory /tmp ava",
-    "test:run": "c8 --temp-directory /tmp --reporter text ava"
+    "test:coverage": "ava",
+    "test:run": "ava"
   },
   "resolutions": {
     "@types/node": "18.15.0",

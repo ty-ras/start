@@ -5,12 +5,13 @@ import * as F from "@effect/data/Function";
 import * as Set from "@effect/data/HashSet";
 import * as Match from "@effect/match";
 import * as common from "./common.mjs";
-import * as collectInput from "./collect-input.mjs";
+import * as collectInput from "./collect-input/index.mjs";
 import * as createTemplate from "./create-template.mjs";
 
 // eslint-disable-next-line sonarjs/cognitive-complexity
 export default async () => {
   let cliArgs: collectInput.CLIArgsInfo = collectInput.createCLIArgs();
+
   // At this point, program would've exited if there was --help or --version specified
   // Since we are still here, continue with printing welcome message
   common.print(chalk.bold(gradient("\nTyRAS\n")));
@@ -28,7 +29,7 @@ export default async () => {
     // On first loop, the 'input' will be empty and all the things will be checked/asked.
     // On subsequent loops (if any), only the errored properties will be missing, and thus checked/asked again.
     const cliArgsSet: Set.HashSet<collectInput.CLIArgsInfoSetElement> =
-      await collectInput.collectInputs(cliArgs, input);
+      await collectInput.collectInput(cliArgs, input);
     // Validate the inputs in a way that template creation part knows
     const validationResult = await createTemplate.validateInput(input);
     if (Array.isArray(validationResult)) {

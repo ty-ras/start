@@ -6,7 +6,7 @@ import * as process from "node:child_process";
 import * as util from "node:util";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import * as input from "../collect-input.mjs";
+import * as input from "../collect-input/index.mjs";
 import * as template from "../create-template.mjs";
 
 const execFile = util.promisify(process.execFile);

@@ -7,7 +7,7 @@ import * as A from "@effect/data/ReadonlyArray";
 import * as S from "@effect/schema/Schema";
 import * as TF from "@effect/schema/TreeFormatter";
 import * as Match from "@effect/match";
-import * as collectInput from "./collect-input.mjs";
+import * as collectInput from "./collect-input/index.mjs";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import * as fse from "fs-extra";

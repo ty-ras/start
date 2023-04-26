@@ -12,6 +12,7 @@ import * as Set from "@effect/data/HashSet";
 import * as Ord from "@effect/data/typeclass/Order";
 import * as S from "@effect/schema/Schema";
 import * as TF from "@effect/schema/TreeFormatter";
+import * as AST from "@effect/schema/AST";
 import * as Match from "@effect/match";
 import * as common from "./common.mjs";
 import * as path from "node:path";
@@ -24,7 +25,6 @@ export const createCLIArgs = (): CLIArgs => {
     booleanDefault: undefined,
     autoVersion: true,
     autoHelp: true,
-    help: 
   });
   return { flags, input };
 };
@@ -122,7 +122,7 @@ const handleStageStateMutation = (
     // If condition is not specified, then it is interpreted as true
     Match.when(Match.undefined, F.constTrue),
     // Otherwise, condition is a function -> invoke it to get the actual boolean value
-    Match.orElse((condition) => condition(O.getOrThrow(components))),
+    Match.orElse(({ isApplicable }) => isApplicable(O.getOrThrow(components))),
     // Start new pattern matching, which will perform the actual state mutation
     Match.value,
     // If the condition pattern match evaluated to true, proceed
@@ -265,7 +265,12 @@ interface StateMutatingStage {
   flag?: AnyFlag;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   schema: S.Schema<any>;
-  condition?: DynamicValue<boolean>;
+  condition?: ConditionWithDescription;
+}
+
+interface ConditionWithDescription {
+  description: string;
+  isApplicable: DynamicValue<boolean>;
 }
 
 interface MessageStage {
@@ -331,9 +336,15 @@ type Components = S.To<typeof componentsSchema>;
 
 type StageHandlingResult = { value: StageValues; fromCLI: boolean };
 
-const hasBEComponent = (components: Components) => components !== "fe";
+const hasBEComponent: ConditionWithDescription = {
+  description: 'Used only when components is "be" or "be-and-fe".',
+  isApplicable: (components) => components !== "fe",
+};
 
-const hasFEComponent = (components: Components) => components !== "be";
+const hasFEComponent: ConditionWithDescription = {
+  description: 'Used only when components is "fe" or "be-and-fe".',
+  isApplicable: (components) => components !== "be",
+};
 
 // The constTrue in @effect/data/Function is of type F.LazyArg<boolean> while here we need F.LazyArg<true>
 const constTrue: F.LazyArg<true> = () => true;
@@ -408,7 +419,7 @@ export const stages = {
   beMessage: {
     orderNumber: 4,
     message: (components) =>
-      hasBEComponent(components)
+      hasBEComponent.isApplicable(components)
         ? chalk.bold.bgBlueBright("# Backend-specific project configuration:")
         : undefined,
   },
@@ -453,7 +464,7 @@ export const stages = {
   feMessage: {
     orderNumber: 7,
     message: (components) =>
-      hasFEComponent(components)
+      hasFEComponent.isApplicable(components)
         ? chalk.bold.bgBlueBright("# Frontend-specific project configuration:")
         : undefined,
   },
@@ -496,6 +507,19 @@ export const stages = {
   // },
 } as const satisfies StagesGeneric;
 
+const schemaToHelpText = (ast: AST.AST): string => {
+  switch (ast._tag) {
+    case "Union":
+      return ast.types.map(schemaToHelpText).join("|");
+    case "Literal":
+      return typeof ast.literal === "string"
+        ? `"${ast.literal}"`
+        : `${ast.literal}`;
+    default:
+      throw new Error(`Unrecognized AST: ${ast._tag}`);
+  }
+};
+
 // TODO for proper help text, we need to use flag names as constants.
 // OR iterate "stages" to pick only those with 'flag' and generate help string from that
 // Also remember to include the input arg stage.
@@ -503,6 +527,39 @@ const help = `
   Usage: npx ${
     (await readPkgUp.readPackageUp())?.packageJson.name
   } [options...] [folder]
+
+  All options and folder are optional as command-line arguments.
+  If any of them is omitted, the program will prompt for their values.
+  Options:
+    ${Object.entries(stages as StagesGeneric)
+      .filter(
+        (
+          tuple,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        ): tuple is [
+          string,
+          CommonStage & StateMutatingStage & { flag: AnyFlag },
+        ] =>
+          // This comment is only to make function body be on different line
+          "flag" in tuple[1],
+      )
+      .map(
+        ([
+          name,
+          {
+            flag: { alias },
+            prompt: { message },
+            schema,
+            condition,
+          },
+        ]) =>
+          `--${name}, -${alias}\t${message}${
+            condition === undefined
+              ? ""
+              : `\n          ${condition.description}`
+          }\n          Schema: ${schemaToHelpText(schema.ast)}`,
+      )
+      .join("\n    ")}
 `;
 
 const stagesOrdered = F.pipe(

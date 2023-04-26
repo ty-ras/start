@@ -41,7 +41,7 @@ const testSuccessfulRun = async (
   await c.notThrowsAsync(
     runCLIAndVerify(c, {
       args: {
-        folderName: path.join(
+        [FOLDER_NAME]: path.join(
           tmpDir,
           `${args.components}-${args.dataValidation}-${args.server ?? "none"}-${
             args.client ?? "none"
@@ -112,7 +112,7 @@ const runCLIAndVerify = async (
   const hasStdin = !!stdinLines && stdinLines.length > 0;
   const processArgs = Object.entries(args ?? {}).reduce<Array<string>>(
     (cliArgs, [propName, propValue]) => (
-      propName === input.FOLDER_NAME
+      propName === FOLDER_NAME
         ? cliArgs.push(`${propValue}`)
         : cliArgs.unshift(`--${propName}`, `${propValue}`),
       cliArgs
@@ -371,3 +371,5 @@ const createVerifySinglePackage = (
     }
   };
 };
+
+const FOLDER_NAME = "folderName";

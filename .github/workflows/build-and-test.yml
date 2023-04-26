@@ -97,6 +97,7 @@ jobs:
       - id: coverage
         name: Upload coverage for '${{ matrix.dir }}'
         uses: codecov/codecov-action@v3
+        if: matrix.dir != 'start'
         with:
           flags: ${{ matrix.dir }}
           directory: ${{ matrix.dir }}

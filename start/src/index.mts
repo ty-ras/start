@@ -4,9 +4,8 @@ import ora from "ora";
 import * as F from "@effect/data/Function";
 import * as Set from "@effect/data/HashSet";
 import * as Match from "@effect/match";
-import * as common from "./common.mjs";
 import * as collectInput from "./collect-input/index.mjs";
-import * as createTemplate from "./create-template.mjs";
+import * as createTemplate from "./create-template/index.mjs";
 
 // eslint-disable-next-line sonarjs/cognitive-complexity
 export default async () => {
@@ -14,8 +13,8 @@ export default async () => {
 
   // At this point, program would've exited if there was --help or --version specified
   // Since we are still here, continue with printing welcome message
-  common.print(chalk.bold(gradient("\nTyRAS\n")));
-  common.print(
+  collectInput.print(chalk.bold(gradient("\nTyRAS\n")));
+  collectInput.print(
     chalk.italic(
       "This program will create new project to work with HTTP backend and/or frontend utilizing TyRAS libraries.\n",
     ),
@@ -36,7 +35,7 @@ export default async () => {
       // When there are errors, notify user and adjust 'input' variable.
       for (const [valueName, errorMessage] of validationResult) {
         // Notify user about the error
-        common.print(
+        collectInput.print(
           chalk.redBright(`Error for "${valueName}":\n${errorMessage}\n`),
         );
         // Delete it so that collectInputs would ask for it again
@@ -48,7 +47,7 @@ export default async () => {
     } else if (typeof validationResult === "string") {
       // This signifies internal error, as at this point the input itself is structurally invalid
       // Clear everything and start asking from clean slate
-      common.print(
+      collectInput.print(
         chalk.red(
           `There has been an internal error when collecting input.\nIgnoring all CLI flags from now on, and starting to collect input from beginning.\nError message: ${validationResult}`,
         ),
@@ -59,7 +58,7 @@ export default async () => {
       validatedInput = validationResult;
     }
   } while (validatedInput === undefined);
-  common.print(
+  collectInput.print(
     chalk.bgGray(
       `Creating project to folder "${validatedInput.folderName}" with components "${validatedInput.components}".`,
     ),
@@ -67,7 +66,7 @@ export default async () => {
   const spinner = ora("Beginning template creation").start();
   let success = false;
   try {
-    await createTemplate.writeProjectFiles({
+    await createTemplate.writeFiles({
       validatedInput,
       onEvent: (evt) => {
         spinner.text = F.pipe(
@@ -114,7 +113,7 @@ export default async () => {
       );
     }
   }
-  common.print(
+  collectInput.print(
     chalk.whiteBright(
       `Project creation succeeded!\nPlease take a look in the README file within folder "${validatedInput.folderName}" for short information on how to proceed.`,
     ),

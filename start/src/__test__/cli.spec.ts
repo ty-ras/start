@@ -7,7 +7,7 @@ import * as util from "node:util";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import * as input from "../collect-input/index.mjs";
-import * as template from "../create-template.mjs";
+import * as writeFiles from "../create-template/write-files.js";
 
 const execFile = util.promisify(process.execFile);
 
@@ -141,9 +141,9 @@ interface CLIArgs {
 }
 
 const verifyTemplate = async (c: ExecutionContext, projectPath: string) => {
-  const packageJsonPaths = (await template.getAllFilePaths(projectPath)).filter(
-    (filePath) => path.basename(filePath) === "package.json",
-  );
+  const packageJsonPaths = (
+    await writeFiles.getAllFilePaths(projectPath)
+  ).filter((filePath) => path.basename(filePath) === "package.json");
   c.true(
     packageJsonPaths.length > 0,
     "There must be at least one package.json path in resulting template",

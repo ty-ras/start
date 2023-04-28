@@ -12,7 +12,7 @@ import * as Ord from "@effect/data/typeclass/Order";
 import * as S from "@effect/schema/Schema";
 import * as TF from "@effect/schema/TreeFormatter";
 import * as Match from "@effect/match";
-import * as common from "../common.mjs";
+import print from "./print.mjs";
 import type * as cliArgs from "./cli-args.mjs";
 import stages, {
   type Components,
@@ -105,7 +105,7 @@ const handleStageMessage = (
     // Wrap the result of pattern match (string | undefined) to perform another match
     Match.value,
     // If not undefined -> print the message as side-effect
-    Match.not(Match.undefined, (str) => common.print(str)),
+    Match.not(Match.undefined, (str) => print(str)),
     // Finalize 2nd matching, otherwise it will never get executed
     Match.option,
     O.none,
@@ -163,7 +163,7 @@ const getValueFromCLIFlagsOrArgs = (
     Match.when(Set.isHashSet, (cliArgsNames) => {
       if (Set.has(cliArgsNames, valueName)) {
         // The value was specified via CLI, but failed more advanced validation
-        common.print(
+        print(
           chalk.bold.cyanBright(
             `Not re-using CLI-supplied value for "${valueName}" after error.`,
           ),
@@ -188,7 +188,7 @@ const getValueFromCLIFlagsOrArgs = (
             // Notify user about this.
             Match.when(true, () => {
               // Side-effect: notify user that instead of prompting, the value from CLI will be used
-              common.print(
+              print(
                 chalk.italic(
                   `Using value supplied via CLI for "${valueName}" (${value}).`,
                 ),
@@ -199,7 +199,7 @@ const getValueFromCLIFlagsOrArgs = (
             // Notify user about this.
             Match.orElse(() => {
               // Side-effect: notify that value specified via CLI arg was not valid
-              common.print(
+              print(
                 chalk.bold.cyanBright(
                   `! The value specified as CLI ${
                     flag ? `parameter "${valueName}"` : "argument"

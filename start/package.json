@@ -21,6 +21,13 @@
   "type": "module",
   "bin": "./dist/cli.mjs",
   "module": "./dist/index.mjs",
+  "types": "./dist-ts/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist-ts/index.d.ts",
+      "import": "./dist/index.mjs"
+    }
+  },
   "dependencies": {
     "@effect/match": "0.16.0",
     "chalk": "5.2.0",

@@ -1,5 +1,30 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/ban-types */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-types */
+
+/**
+ * Purely virtual interface - no instances of this interface are supposed to be ever created.
+ * Property name: the name of the event.
+ * Property value: the type of the event payload.
+ */
+export interface EventsPayloads {
+  startCopyTemplateFiles: {};
+  endCopyTemplateFiles: {};
+  startFixPackageJsonVersions: {};
+  startReadPackument: { packageName: string; versionSpec: string };
+  endReadPackument: {
+    packageName: string;
+    versionSpec: string;
+    resolvedVersion: string;
+    versions: Record<string, unknown>;
+  };
+  endFixPackageJsonVersions: { packageJsonPaths: ReadonlyArray<string> };
+  startFixingPackageNames: {};
+  fixedPackageName: { path: string };
+  endFixingPackageNames: { paths: Set<string> };
+}
+
+export type OnEvent = (evt: EventArgument) => void;
+export type MaybeOnEvent = OnEvent | undefined;
+export type EventArgument = ToDiscriminatingTypeUnion<EventsPayloads>;
 
 /**
  * Transform type

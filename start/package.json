@@ -1,0 +1,101 @@
+{
+  "name": "@ty-ras/start",
+  "version": "0.13.0",
+  "author": {
+    "name": "Stanislav Muhametsin",
+    "email": "346799+stazz@users.noreply.github.com",
+    "url": "https://github.com/stazz"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ty-ras/meta"
+  },
+  "files": [
+    "./src",
+    "./dist",
+    "./dist-ts",
+    "./templates",
+    "README.md",
+    "LICENSE.txt"
+  ],
+  "type": "module",
+  "bin": "./dist/cli.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist-ts/index.d.mts",
+  "exports": {
+    ".": {
+      "types": "./dist-ts/index.d.mts",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "dependencies": {
+    "@effect/match": "0.16.0",
+    "chalk": "5.2.0",
+    "fs-extra": "11.1.0",
+    "gradient-string": "2.0.2",
+    "inquirer": "9.1.4",
+    "meow": "11.0.0",
+    "undici": "5.21.0"
+  },
+  "devDependencies": {
+    "@babel/core": "7.21.5",
+    "@babel/eslint-parser": "7.21.3",
+    "@typescript-eslint/eslint-plugin": "5.59.1",
+    "@typescript-eslint/parser": "5.59.1",
+    "@types/fs-extra": "11.0.1",
+    "@types/gradient-string": "1.1.2",
+    "@types/inquirer": "9.0.3",
+    "@types/node": "18.15.0",
+    "ava": "5.2.0",
+    "c8": "7.13.0",
+    "eslint": "8.35.0",
+    "eslint-config-prettier": "8.7.0",
+    "eslint-plugin-prettier": "4.2.1",
+    "eslint-plugin-sonarjs": "0.18.0",
+    "prettier": "2.8.4",
+    "ts-node": "10.9.1",
+    "typescript": "5.0.2",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "@types/react": "18.0.34",
+    "@types/react-dom": "18.0.11",
+    "@vitejs/plugin-react": "3.1.0",
+    "eslint-plugin-jsx-a11y": "6.7.1",
+    "eslint-plugin-react": "7.32.2",
+    "eslint-plugin-react-hooks": "4.6.0",
+    "vite": "4.2.1",
+    "@ty-ras/backend-node-io-ts-openapi": "0.13.5",
+    "@ty-ras-extras/backend-io-ts": "0.13.5",
+    "@ty-ras/frontend-fetch-io-ts": "0.13.1",
+    "@ty-ras-extras/frontend-io-ts": "0.13.2",
+    "fp-ts": "2.13.1",
+    "io-ts": "2.2.20",
+    "io-ts-types": "0.5.19",
+    "monocle-ts": "2.3.13",
+    "newtype-ts": "0.3.5",
+    "@ty-ras/backend-node-zod-openapi": "0.13.0",
+    "@ty-ras-extras/backend-zod": "0.13.1",
+    "@ty-ras/frontend-fetch-zod": "0.13.0",
+    "@ty-ras-extras/frontend-zod": "0.13.1",
+    "zod": "3.21.4"
+  },
+  "scripts": {
+    "build:run": "yarn run lint && yarn run tsc && yarn run chmodx",
+    "build:ci": "yarn run clear-build-artifacts && yarn run compile-d-ts-files && yarn run tsc && yarn run format-output-files && yarn run chmodx",
+    "chmodx": "chmod +x dist/cli.mjs",
+    "clear-build-artifacts": "rm -rf dist dist-ts build",
+    "compile-d-ts-files": "yarn run tsc --removeComments false --emitDeclarationOnly --declaration --declarationDir ./dist-ts && yarn run tsc:plain --project tsconfig.out.json",
+    "format-output-files": "rm dist-ts/cli.d.mts && find dist-ts -name '*.mts' -type f -exec sh -c \"echo '/* eslint-disable */\n/* eslint-enable prettier/prettier */'\"' | cat - $1 > $1.tmp && mv $1.tmp $1' -- {} \\; && eslint --no-eslintrc --config '.eslintrc.output.ts.cjs' --fix './dist-ts/**/*.mts' && eslint --no-eslintrc --config '.eslintrc.output.cjs' --fix 'dist/**/*.mjs'",
+    "lint": "eslint ./src --ext .ts,.mts,.tsx",
+    "dev": "ts-node src/cli.mts",
+    "tsc": "tsc --project tsconfig.build.json",
+    "tsc:plain": "tsc",
+    "test:coverage": "ava",
+    "test:run": "ava"
+  },
+  "resolutions": {
+    "@types/node": "18.15.0",
+    "@effect/schema": "0.16.0"
+  }
+}

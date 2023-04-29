@@ -35,7 +35,8 @@ jobs:
   build_and_test:
     strategy:
       matrix:
-        dir: [ ]
+        dir:
+          - start
     runs-on: ubuntu-latest
     name: Build and test ${{ matrix.dir }}
     steps:
@@ -96,6 +97,7 @@ jobs:
       - id: coverage
         name: Upload coverage for '${{ matrix.dir }}'
         uses: codecov/codecov-action@v3
+        if: matrix.dir != 'start'
         with:
           flags: ${{ matrix.dir }}
           directory: ${{ matrix.dir }}

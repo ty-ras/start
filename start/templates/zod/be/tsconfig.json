@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "lib": [
+      "ESNext"
+    ],
+    "target": "ESNext",
+    "esModuleInterop": true,
+    "sourceMap": false,
+    "strict": true,
+    "exactOptionalPropertyTypes": true,
+    "declaration": false,
+    "noErrorTruncation": true,
+    "incremental": true,
+    "rootDir": "./src",
+    "baseUrl": "./src",
+    "noEmit": true
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
+  },
+}

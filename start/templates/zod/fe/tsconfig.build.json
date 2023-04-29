@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // Uncomment this if using libs which have wrong typings.
+    // "skipLibCheck": true
+  },
+  "exclude": [
+    // Let's not compile any test files
+    "src/**/__test__/*"
+  ],
+}

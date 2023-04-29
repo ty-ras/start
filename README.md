@@ -8,3 +8,4 @@ The protocol specification is checked both at compile-time and run-time to verif
 This all is done in such way that it does not make development tedious or boring, but instead robust and fun!
 
 This particular repository contains libraries related to managing TyRAS itself.
+- [start](./start) folder holds code for the package which can be used to set up a template for new TyRAS projects.

@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "module": "ESNext",
+    "target": "ESNext",
+    "moduleResolution": "Node",
+    "lib": [
+      "ESNext"
+    ],
+    "sourceMap": false,
+    "allowJs": false,
+    "forceConsistentCasingInFileNames": true,
+    "exactOptionalPropertyTypes": true,
+    "declaration": false,
+    "noEmit": true,
+    "noErrorTruncation": true,
+    "incremental": true,
+  }
+}

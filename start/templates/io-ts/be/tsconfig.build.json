@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./build/tsconfig.tsbuildinfo",
+    "outDir": "./dist",
+    "noEmit": false,
+  },
+  "exclude": [
+    // Don't include tests to actual runtime build
+    "src/**/__test__/*"
+  ],
+}

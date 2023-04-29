@@ -1,5 +1,5 @@
 import validateInputImport from "./validate-input.mjs";
-import writeFilesImport from "./write-files.js";
+import writeFilesImport from "./write-files.mjs";
 
 export const validateInput = validateInputImport;
 export const writeFiles = writeFilesImport;

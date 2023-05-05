@@ -11,6 +11,7 @@ test.before("Transpile source code", async () => {
   console.info("Target directory is", targetDirectory);
   console.info("Beginning invoking TSC");
   await cliUtils.execFile("yarn", ["run", "tsc"], { shell: false });
+  await cliUtils.execFile("yarn", ["run", "chmodx"], { shell: false });
   console.info("Finished invoking TSC");
 });
 

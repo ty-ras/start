@@ -21,16 +21,16 @@ const expectedHelpText = `
   If any of them is omitted, the program will prompt for their values.
   Options:
     --packageManager, -m	Which package manager will be used in the project?
-          Schema: "yarn"|"npm"|"pnpm"|"unspecified", default: yarn
+          Schema: "yarn"|"npm"|"pnpm"|"unspecified"
     --components, -p	Which components will be using TyRAS libraries?
-          Schema: "be"|"fe"|"be-and-fe", default: be-and-fe
+          Schema: "be"|"fe"|"be-and-fe"
     --dataValidation, -d	Which data validation framework should TyRAS be providing?
-          Schema: "io-ts"|"zod", default: io-ts
+          Schema: "io-ts"|"zod"
     --server, -s	Which server should TyRAS be providing?
           Used only when components is "be" or "be-and-fe".
-          Schema: "node", default: node
+          Schema: "node"
     --client, -c	Which client should TyRAS be providing?
           Used only when components is "fe" or "be-and-fe".
-          Schema: "fetch", default: fetch
+          Schema: "fetch"
 
 `;

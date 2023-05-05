@@ -8,6 +8,7 @@ import stages, {
   type CommonStage,
   type StateMutatingStage,
 } from "./stages.mjs";
+import packageRoot from "../package-root/index.mjs";
 
 export default (): CLIArgs => {
   const { flags, input } = meow(help, {
@@ -59,8 +60,8 @@ const schemaToHelpText = (ast: AST.AST): string => {
 
 const help = `
   Usage: npx ${
-    (await readPkgUp.readPackageUp())?.packageJson.name
-  } [options...] [folder]
+    (await readPkgUp.readPackageUp({ cwd: packageRoot }))?.packageJson.name
+  }@latest [options...] [folder]
 
   All options and folder are optional as command-line arguments.
   If any of them is omitted, the program will prompt for their values.
@@ -69,13 +70,10 @@ const help = `
       .filter(
         (
           tuple,
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         ): tuple is [
           string,
           CommonStage & StateMutatingStage & { flag: AnyFlag },
-        ] =>
-          // This comment is only to make function body be on different line
-          "flag" in tuple[1],
+        ] => "flag" in tuple[1],
       )
       .map(
         ([

@@ -80,7 +80,7 @@ const help = `
           name,
           {
             flag: { alias },
-            prompt: { message },
+            prompt: { message, default: defaultValue },
             schema,
             condition,
           },
@@ -89,7 +89,9 @@ const help = `
             condition === undefined
               ? ""
               : `\n          ${condition.description}`
-          }\n          Schema: ${schemaToHelpText(schema.ast)}`,
+          }\n          Schema: ${schemaToHelpText(
+            schema.ast,
+          )}, default: ${defaultValue}`,
       )
       .join("\n    ")}
 `;

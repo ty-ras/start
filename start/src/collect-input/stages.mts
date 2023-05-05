@@ -43,8 +43,33 @@ const stages = {
       default: "./my-project",
     },
   },
-  components: {
+  packageManager: {
     orderNumber: 2,
+    schema: S.keyof(
+      S.struct({ yarn: S.any, npm: S.any, pnpm: S.any, unspecified: S.any }),
+    ),
+    prompt: {
+      type: "list",
+      message: "Which package manager will be used in the project?",
+      default: "yarn",
+      choices: [
+        { name: "Yarn", value: "yarn" },
+        { name: "NPM", value: "npm" },
+        { name: "PNPM", value: "pnpm" },
+        {
+          name: "Decide on your own after project creation",
+          value: "unspecified",
+        },
+      ],
+    },
+    flag: {
+      type: "string",
+      isRequired: false,
+      alias: "m",
+    },
+  },
+  components: {
+    orderNumber: 3,
     schema: componentsSchema,
     prompt: {
       type: "list",
@@ -63,7 +88,7 @@ const stages = {
     },
   },
   dataValidation: {
-    orderNumber: 3,
+    orderNumber: 4,
     schema: S.keyof(S.struct({ ["io-ts"]: S.any, zod: S.any })),
     prompt: {
       type: "list",
@@ -82,14 +107,14 @@ const stages = {
     },
   },
   beMessage: {
-    orderNumber: 4,
+    orderNumber: 5,
     message: (components) =>
       hasBEComponent.isApplicable(components)
         ? chalk.bold.bgBlueBright("# Backend-specific project configuration:")
         : undefined,
   },
   server: {
-    orderNumber: 5,
+    orderNumber: 6,
     schema: S.keyof(S.struct({ node: S.any })),
     prompt: {
       type: "list",

@@ -36,6 +36,7 @@ export default async (
             args.client ?? "none"
           }`,
         ),
+        packageManager: "yarn",
         ...args,
       },
     }),

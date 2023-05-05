@@ -6,6 +6,7 @@ import * as fse from "fs-extra";
 import type * as input from "./validate-input.mjs";
 import type * as events from "./events.mjs";
 import materializePackageJson from "./materialize-package-json.mjs";
+import packageRoot from "../package-root/index.mjs";
 
 export default async ({
   validatedInput: { folderName, dataValidation, components },
@@ -14,15 +15,7 @@ export default async ({
   // Copy all files first
   onEvent?.({ event: "startCopyTemplateFiles", data: {} });
   await fse.copy(
-    path.join(
-      new URL(import.meta.url).pathname,
-      "..",
-      "..",
-      "..",
-      "templates",
-      dataValidation,
-      components,
-    ),
+    path.join(packageRoot, "templates", dataValidation, components),
     folderName,
   );
   onEvent?.({ event: "endCopyTemplateFiles", data: {} });

@@ -36,7 +36,7 @@ runOneTest(
     server: "node",
     client: "fetch",
   },
-  4,
+  16,
 );
 
 runOneTest("Test BE-ZOD-NODE", testTemplateGeneration, {
@@ -60,7 +60,7 @@ runOneTest(
     server: "node",
     client: "fetch",
   },
-  4,
+  16,
 );
 
 runOneTest("Test BEFE-IOTS-NODE-FETCH with PNPM", async (c) => {

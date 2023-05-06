@@ -24,9 +24,9 @@ export const targetDirectory = await fs.mkdtemp(
 export default async (
   c: ExecutionContext,
   args: input.InputFromCLIOrUser,
-  expectedPackageJsonCount = 1,
+  expectedAssertCount = 7,
 ) => {
-  c.plan(2 + expectedPackageJsonCount);
+  c.plan(expectedAssertCount);
   await c.notThrowsAsync(
     runCLIAndVerify(c, {
       args: {
@@ -267,13 +267,16 @@ const createVerifySinglePackage = (
     );
     const outputCollectState = collectProcessOutputs(devRun);
 
-    await waitForProcessWithTimeout(
-      `Starting dev run for "${name}"`,
-      devRun,
-      outputCollectState,
-      waitForProcessPrinting(devRun, outputCollectState, {
-        stdout: isFE ? "✓ built in" : "Started server at",
-      }),
+    await c.notThrowsAsync(
+      async () =>
+        await waitForProcessWithTimeout(
+          `Starting dev run for "${name}"`,
+          devRun,
+          outputCollectState,
+          waitForProcessPrinting(devRun, outputCollectState, {
+            stdout: isFE ? "✓ built in" : "Started server at",
+          }),
+        ),
     );
   };
   return async (packageJsonPath: string) => {
@@ -298,23 +301,29 @@ const createVerifySinglePackage = (
       const yarnExtraArgs = isOnePackageJson ? [] : ["workspace", name];
 
       // Now run tsc, to ensure no compilation errors exist
-      await cliUtils.execFile(
-        packageManager,
-        [...yarnExtraArgs, "run", "tsc"],
-        {
-          shell: false,
-          cwd: projectPath,
-        },
+      await c.notThrowsAsync(
+        async () =>
+          await cliUtils.execFile(
+            packageManager,
+            [...yarnExtraArgs, "run", "tsc"],
+            {
+              shell: false,
+              cwd: projectPath,
+            },
+          ),
       );
 
       // Run also linter, to ensure that new project won't immediately have red suiggles because of bad formatting
-      await cliUtils.execFile(
-        packageManager,
-        [...yarnExtraArgs, "run", "lint"],
-        {
-          shell: false,
-          cwd: projectPath,
-        },
+      await c.notThrowsAsync(
+        async () =>
+          await cliUtils.execFile(
+            packageManager,
+            [...yarnExtraArgs, "run", "lint"],
+            {
+              shell: false,
+              cwd: projectPath,
+            },
+          ),
       );
 
       // Make sure program actually starts and prints information that it successfully initialized
@@ -327,7 +336,10 @@ const createVerifySinglePackage = (
           : "protocol";
       // Don't try to run protocol package - it is library-only
       if (packageKind !== "protocol") {
-        await runPackageDev(name, yarnExtraArgs, packageKind === "fe");
+        await c.notThrowsAsync(
+          async () =>
+            await runPackageDev(name, yarnExtraArgs, packageKind === "fe"),
+        );
       }
     }
   };

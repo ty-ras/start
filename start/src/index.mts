@@ -4,12 +4,16 @@ import ora from "ora";
 import * as F from "@effect/data/Function";
 import * as Set from "@effect/data/HashSet";
 import * as Match from "@effect/match";
+import * as path from "node:path";
+import * as url from "node:url";
 import * as collectInput from "./collect-input/index.mjs";
 import * as createTemplate from "./create-template/index.mjs";
 
 // eslint-disable-next-line sonarjs/cognitive-complexity
 export default async () => {
-  let cliArgs: collectInput.CLIArgsInfo = collectInput.createCLIArgs();
+  let cliArgs: collectInput.CLIArgsInfo = await collectInput.createCLIArgs(
+    packageRoot,
+  );
 
   // At this point, program would've exited if there was --help or --version specified
   // Since we are still here, continue with printing welcome message
@@ -68,6 +72,7 @@ export default async () => {
   try {
     await createTemplate.writeFiles({
       validatedInput,
+      packageRoot,
       onEvent: (evt) => {
         spinner.text = F.pipe(
           Match.value(evt),
@@ -121,3 +126,12 @@ export default async () => {
 };
 
 const gradient = gradientString("#0070BB", "#FEBE10", "#BC3F4A");
+
+const packageRoot = F.pipe(
+  path.join(
+    // From: https://blog.logrocket.com/alternatives-dirname-node-js-es-modules/
+    url.fileURLToPath(new URL(".", import.meta.url)),
+    "..",
+  ),
+  path.normalize,
+);

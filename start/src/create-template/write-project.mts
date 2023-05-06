@@ -1,29 +1,25 @@
 import * as F from "@effect/data/Function";
+import * as S from "@effect/schema/Schema";
 import * as Match from "@effect/match";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import * as fse from "fs-extra";
 import type * as input from "./validate-input.mjs";
 import type * as events from "./events.mjs";
 import materializePackageJson from "./materialize-package-json.mjs";
-import packageRoot from "../package-root/index.mjs";
+import packageJson from "./package-json.mjs";
+import copyFiles, { type CopyInstruction } from "./copy-files.mjs";
 
-export default async ({
-  validatedInput: { folderName, dataValidation, components },
-  onEvent,
-}: Input) => {
+export default async ({ validatedInput, packageRoot, onEvent }: Input) => {
   // Copy all files first
   onEvent?.({ event: "startCopyTemplateFiles", data: {} });
-  await fse.copy(
-    path.join(packageRoot, "templates", dataValidation, components),
-    folderName,
-  );
+  await copyFiles(getCopyInstructions({ packageRoot, validatedInput }));
   onEvent?.({ event: "endCopyTemplateFiles", data: {} });
 
   // Now, fix all version specs of all package.json files into actual versions.
   onEvent?.({ event: "startFixPackageJsonVersions", data: {} });
 
   // Start by finding all package.json files
+  const { folderName } = validatedInput;
   const allFilePaths = await getAllFilePaths(folderName);
   const packageJsonPaths = allFilePaths.filter(
     (filePath) => path.basename(filePath) === "package.json",
@@ -42,17 +38,8 @@ export default async ({
     Match.when(1, (): ExtractPackageName => () => projectName),
     // When there are multiple package.json files in the template, it means that there is workspaces-based setup.
     // Top-level package.json will be "@abc/main", while others will be "@abc/<folder name>"
-    Match.orElse(
-      // TODO - package.json name in these cases is actually not used.
-      (): ExtractPackageName => (packageJsonPath) =>
-        `@${projectName}/${
-          path.dirname(packageJsonPath) === folderName
-            ? // Top-level package.json is just a container for "workspaces"
-              "main"
-            : // Uppermost directory name (e.g. "components/backend/package.json" -> "backend")
-              path.basename(path.dirname(packageJsonPath))
-        }`,
-    ),
+    // This will be handled by the code running after emitting event "endFixPackageJsonVersions"
+    Match.orElse(() => undefined),
   );
   // Now perform actual version fixing
   await Promise.all(
@@ -61,7 +48,7 @@ export default async ({
       materializePackageJson(
         onEvent,
         packageJsonPath,
-        extractPackageName(packageJsonPath),
+        extractPackageName?.(packageJsonPath),
       ),
     ),
   );
@@ -106,6 +93,7 @@ export default async ({
 
 export interface Input {
   validatedInput: input.ValidatedInput;
+  packageRoot: string;
   onEvent?: events.OnEvent;
 }
 
@@ -134,3 +122,59 @@ async function* readDirRecursive(
 }
 
 type ExtractPackageName = (packageJsonPath: string) => string;
+
+const getCopyInstructions = ({
+  packageRoot,
+  validatedInput: { folderName, packageManager, components, dataValidation },
+}: Omit<Input, "onEvent">) => {
+  const first: CopyInstruction = {
+    source: path.join(packageRoot, "templates", dataValidation, components),
+    target: folderName,
+  };
+  const retVal = [first];
+  if (packageManager === "pnpm" && components === "be-and-fe") {
+    // When we are doing workspace-based setup with pnpm, we must delete 'workspaces' field from package.json,
+    // and emit pnpm-workspace.yaml with corresponding content.
+    // Apparently supporting 'workspaces' field of package.json is too much for pnpm.
+    // Notice that we can't read the file at packageJsonPath, as first copy step is not yet executed.
+    const packageJsonPath = path.join(folderName, "package.json");
+    let seenWorkspaces:
+      | S.To<typeof packageJsonWithWorkspaces>["workspaces"]
+      | undefined;
+    retVal.push(
+      // Write package.json without 'workspaces' property
+      {
+        source: async () =>
+          F.pipe(
+            await fs.readFile(packageJsonPath, "utf8"),
+            JSON.parse,
+            parsePackageJson,
+            ({ workspaces, ...packageJsonContents }) => (
+              (seenWorkspaces = workspaces), packageJsonContents
+            ),
+            JSON.stringify,
+          ),
+        target: packageJsonPath,
+      },
+      // Write pnpm-workspace.yaml file with same workspace information
+      // Since none of the current runtime dependencies have YAML lib dependency, just write inline
+      {
+        source: () =>
+          `packages:\n${(seenWorkspaces ?? [])
+            .map((ws) => `  - '${ws}'`)
+            .join("\n")}`,
+        target: path.join(folderName, "pnpm-workspace.yaml"),
+      },
+    );
+  }
+
+  return retVal;
+};
+
+const packageJsonWithWorkspaces = F.pipe(
+  packageJson,
+  S.extend(
+    S.struct({ workspaces: S.nonEmptyArray(F.pipe(S.string, S.nonEmpty())) }),
+  ),
+);
+const parsePackageJson = F.pipe(packageJsonWithWorkspaces, S.parse);

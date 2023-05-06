@@ -1,6 +1,6 @@
 {
   "name": "@ty-ras/start",
-  "version": "0.13.1",
+  "version": "0.13.2",
   "author": {
     "name": "Stanislav Muhametsin",
     "email": "346799+stazz@users.noreply.github.com",
@@ -91,8 +91,8 @@
     "dev": "ts-node src/cli.mts",
     "tsc": "tsc --project tsconfig.build.json",
     "tsc:plain": "tsc",
-    "test:coverage": "ava",
-    "test:run": "ava"
+    "test:coverage": "yarn run clear-build-artifacts && yarn run test:run",
+    "test:run": "yarn run tsc && yarn run chmodx && ava"
   },
   "resolutions": {
     "@types/node": "18.15.0",

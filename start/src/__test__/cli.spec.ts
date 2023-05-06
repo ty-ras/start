@@ -75,7 +75,7 @@ runOneTest("Test BEFE-IOTS-NODE-FETCH with PNPM", async (c) => {
       packageManager: "pnpm",
       folderName,
     },
-    5,
+    7,
   );
   // When the package manager is pnpm, this file must exist for workspace-based setup.
   c.true(

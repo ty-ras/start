@@ -32,5 +32,7 @@ const expectedHelpText = `
     --client, -c	Which client should TyRAS be providing?
           Used only when components is "fe" or "be-and-fe".
           Schema: "fetch"
+    --setupGit, -g	Should the project folder be initialized with Git?
+          Schema: boolean
 
 `;

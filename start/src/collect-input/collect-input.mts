@@ -257,9 +257,11 @@ export type InputFromCLIOrUser = Partial<{
   -readonly [P in SchemaKeys]: S.To<Stages[P]["schema"]>;
 }>;
 
-export type CLIArgsInfo = cliArgs.CLIArgs | Set.HashSet<CLIArgsInfoSetElement>;
+export type CLIArgsInfo =
+  | cliArgs.CLIArgs<Stages>
+  | Set.HashSet<CLIArgsInfoSetElement>;
 
-export type CLIArgsInfoSetElement = cliArgs.FlagKeys | CLIInputsKey;
+export type CLIArgsInfoSetElement = cliArgs.FlagKeys<Stages> | CLIInputsKey;
 
 type CLIInputsKey = {
   [P in keyof Stages]: Stages[P] extends {

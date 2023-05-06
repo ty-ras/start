@@ -1,10 +1,9 @@
 import chalk from "chalk";
-import { type AnyFlag } from "meow";
-import { type DistinctQuestion } from "inquirer";
 import * as F from "@effect/data/Function";
 import * as S from "@effect/schema/Schema";
 import * as path from "node:path";
 import * as process from "node:process";
+import type * as stageTypes from "../stages";
 
 const hasBEComponent: ConditionWithDescription = {
   description: 'Used only when components is "be" or "be-and-fe".',
@@ -200,38 +199,11 @@ const stages = {
 export default stages;
 
 export type Stages = typeof stages;
-
-export interface CommonStage {
-  orderNumber: number;
-}
-
-export interface StateMutatingStage {
-  prompt: DistinctQuestion;
-  flag?: AnyFlag;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  schema: S.Schema<any>;
-  condition?: ConditionWithDescription;
-}
-
-export interface ConditionWithDescription {
-  description: string;
-  isApplicable: DynamicValue<boolean>;
-}
-
-export interface MessageStage {
-  message:
-    | string
-    // We cannot pass StateBuilder as argument, since then stages object would be circularly referencing itself.
-    // But since all our dynamic messages depend on just be/fe/be-and-fe mode, we can pass that instead
-    | DynamicValue<string | undefined>;
-}
-
-export type Stage = CommonStage & (StateMutatingStage | MessageStage);
-export type StagesGeneric = Record<string, Stage>;
-
-export type DynamicValue<T> =
-  // We cannot pass StateBuilder as argument, since then stages object would be circularly referencing itself.
-  // But since all our dynamic messages depend on just be/fe/be-and-fe mode, we can pass that instead
-  (components: Components) => T;
-
+export type StagesGeneric = stageTypes.StagesGeneric<Components>;
+export type Stage = stageTypes.Stage<Components>;
+export type CommonStage = stageTypes.CommonStage;
+export type StateMutatingStage = stageTypes.StateMutatingStage<Components>;
+export type MessageStage = stageTypes.MessageStage<Components>;
 export type Components = S.To<typeof componentsSchema>;
+export type ConditionWithDescription =
+  stageTypes.ConditionWithDescription<Components>;

@@ -5,7 +5,7 @@ import * as process from "node:child_process";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import * as input from "../collect-input/index.mjs";
-import * as writeFiles from "../create-template/write-files.mjs";
+import * as writeFiles from "../create-template/write-project.mjs";
 import * as cliUtils from "./cli-utils.js";
 
 const testOutputDir = path.join(

@@ -8,10 +8,9 @@ import stages, {
   type CommonStage,
   type StateMutatingStage,
 } from "./stages.mjs";
-import packageRoot from "../package-root/index.mjs";
 
-export default (): CLIArgs => {
-  const { flags, input } = meow(help, {
+export default async (packageRoot: string): Promise<CLIArgs> => {
+  const { flags, input } = meow(await getHelpText(packageRoot), {
     importMeta: import.meta,
     flags: getFlags(),
     booleanDefault: undefined,
@@ -58,7 +57,7 @@ const schemaToHelpText = (ast: AST.AST): string => {
   }
 };
 
-const help = `
+const getHelpText = async (packageRoot: string) => `
   Usage: npx ${
     (await readPkgUp.readPackageUp({ cwd: packageRoot }))?.packageJson.name
   }@latest [options...] [folder]

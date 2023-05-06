@@ -48,7 +48,7 @@ export type ValidatedInput = S.To<typeof inputSchema>;
 // No intersections yet in @effect/schema I think...
 const inputSchema = F.pipe(
   F.pipe(
-    S.struct(pickSchemas("folderName", "dataValidation")),
+    S.struct(pickSchemas("folderName", "dataValidation", "packageManager")),
     S.identifier("GeneralProperties"),
   ),
   S.extend(

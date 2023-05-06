@@ -4,11 +4,12 @@ import * as fs from "node:fs/promises";
 import { request } from "undici";
 import * as semver from "semver";
 import type * as events from "./events.mjs";
+import packageJson from "./package-json.mjs";
 
 export default async (
   onEvent: events.MaybeOnEvent,
   packageJsonPath: string,
-  name: string,
+  name: string | undefined,
 ) => {
   // Modify raw version specifications of package.json file into actual versions, which are newest according to version spec
   const { devDependencies, dependencies, ...packageJson } = F.pipe(
@@ -19,7 +20,7 @@ export default async (
   const getLatestVersion = createGetLatestVersion(onEvent);
 
   const newPackageJson = {
-    name,
+    name: name ?? packageJson.name,
     ...packageJson,
     dependencies: Object.fromEntries(
       await Promise.all(Object.entries(dependencies).map(getLatestVersion)),
@@ -35,6 +36,8 @@ export default async (
     "utf8",
   );
 };
+
+const parsePackageJson = F.pipe(packageJson, S.parse);
 
 const createGetLatestVersion =
   (onEvent: events.MaybeOnEvent) =>
@@ -63,17 +66,6 @@ const createGetLatestVersion =
     }
     return [name, resolvedVersion] as const;
   };
-
-const parsePackageJson = F.pipe(
-  S.record(S.string, S.unknown),
-  S.extend(
-    S.struct({
-      dependencies: S.record(S.string, S.string),
-      devDependencies: S.record(S.string, S.string),
-    }),
-  ),
-  S.parse,
-);
 
 const parsePackument = F.pipe(
   S.struct({

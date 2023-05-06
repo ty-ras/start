@@ -1,21 +1,15 @@
-/* eslint-disable no-console */
 import test from "ava";
-import * as cliUtils from "./cli-utils";
 import testTemplateGeneration, { targetDirectory } from "./templates";
-import testHelpText from "./help";
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
 
 // These are hardly "unit" tests, but oh well... :)
 
-// Before running tests, transpile source code once
-test.before("Transpile source code", async () => {
+// Notice that all the source code is transpiled already before via script in package.json
+test.before("Transpile source code", () => {
+  // eslint-disable-next-line no-console
   console.info("Target directory is", targetDirectory);
-  console.info("Beginning invoking TSC");
-  await cliUtils.execFile("yarn", ["run", "tsc"], { shell: false });
-  await cliUtils.execFile("yarn", ["run", "chmodx"], { shell: false });
-  console.info("Finished invoking TSC");
 });
-
-test("Verify that help string is expected", testHelpText);
 
 // We must run template generation tests in serial - otherwise there will be so many connections established that there will be errors
 // Furthermore, due to nature of the program, running tests in sequential manner is actually a bit faster.
@@ -68,3 +62,23 @@ runOneTest(
   },
   4,
 );
+
+runOneTest("Test BEFE-IOTS-NODE-FETCH with PNPM", async (c) => {
+  const folderName = path.join(targetDirectory, "pnpm-test");
+  await testTemplateGeneration(
+    c,
+    {
+      components: "be-and-fe",
+      dataValidation: "io-ts",
+      server: "node",
+      client: "fetch",
+      packageManager: "pnpm",
+      folderName,
+    },
+    5,
+  );
+  // When the package manager is pnpm, this file must exist for workspace-based setup.
+  c.true(
+    (await fs.stat(path.join(folderName, "pnpm-workspace.yaml"))).isFile(),
+  );
+});

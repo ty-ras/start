@@ -1,7 +1,7 @@
-import type { ExecutionContext } from "ava";
+import test from "ava";
 import * as cliUtils from "./cli-utils";
 
-export default async (c: ExecutionContext) => {
+test("Verify that help string is expected", async (c) => {
   c.plan(1);
   // We must spawn our .mjs code with cwd being outside from package dir, in order to fully simulate situation where package.json is not in cwd.
   const outputs = await cliUtils.execFile(cliUtils.pathToCLI, ["--help"], {
@@ -12,7 +12,7 @@ export default async (c: ExecutionContext) => {
     stdout: expectedHelpText,
     stderr: "",
   });
-};
+});
 
 const expectedHelpText = `
   Usage: npx @ty-ras/start@latest [options...] [folder]

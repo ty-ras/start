@@ -12,7 +12,7 @@ import copyFiles, { type CopyInstruction } from "./copy-files.mjs";
 export default async ({ validatedInput, packageRoot, onEvent }: Input) => {
   // Copy all files first
   onEvent?.({ event: "startCopyTemplateFiles", data: {} });
-  await copyFiles(await getCopyInstructions({ packageRoot, validatedInput }));
+  await copyFiles(getCopyInstructions({ packageRoot, validatedInput }));
   onEvent?.({ event: "endCopyTemplateFiles", data: {} });
 
   // Now, fix all version specs of all package.json files into actual versions.
@@ -123,7 +123,7 @@ async function* readDirRecursive(
 
 type ExtractPackageName = (packageJsonPath: string) => string;
 
-const getCopyInstructions = async ({
+const getCopyInstructions = ({
   packageRoot,
   validatedInput: { folderName, packageManager, components, dataValidation },
 }: Omit<Input, "onEvent">) => {
@@ -136,23 +136,33 @@ const getCopyInstructions = async ({
     // When we are doing workspace-based setup with pnpm, we must delete 'workspaces' field from package.json,
     // and emit pnpm-workspace.yaml with corresponding content.
     // Apparently supporting 'workspaces' field of package.json is too much for pnpm.
+    // Notice that we can't read the file at packageJsonPath, as first copy step is not yet executed.
     const packageJsonPath = path.join(folderName, "package.json");
-    const { workspaces, ...packageJsonContents } = F.pipe(
-      await fs.readFile(packageJsonPath, "utf8"),
-      JSON.parse,
-      parsePackageJson,
-    );
+    let seenWorkspaces:
+      | S.To<typeof packageJsonWithWorkspaces>["workspaces"]
+      | undefined;
     retVal.push(
       // Write package.json without 'workspaces' property
       {
-        source: () => JSON.stringify(packageJsonContents),
+        source: async () =>
+          F.pipe(
+            await fs.readFile(packageJsonPath, "utf8"),
+            JSON.parse,
+            parsePackageJson,
+            ({ workspaces, ...packageJsonContents }) => (
+              (seenWorkspaces = workspaces), packageJsonContents
+            ),
+            JSON.stringify,
+          ),
         target: packageJsonPath,
       },
       // Write pnpm-workspace.yaml file with same workspace information
       // Since none of the current runtime dependencies have YAML lib dependency, just write inline
       {
         source: () =>
-          `packages:\n${workspaces.map((ws) => `  - '${ws}'`).join("\n")}`,
+          `packages:\n${(seenWorkspaces ?? [])
+            .map((ws) => `  - '${ws}'`)
+            .join("\n")}`,
         target: path.join(folderName, "pnpm-workspace.yaml"),
       },
     );
@@ -161,10 +171,10 @@ const getCopyInstructions = async ({
   return retVal;
 };
 
-const parsePackageJson = F.pipe(
+const packageJsonWithWorkspaces = F.pipe(
   packageJson,
   S.extend(
     S.struct({ workspaces: S.nonEmptyArray(F.pipe(S.string, S.nonEmpty())) }),
   ),
-  S.parse,
 );
+const parsePackageJson = F.pipe(packageJsonWithWorkspaces, S.parse);

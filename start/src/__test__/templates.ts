@@ -70,7 +70,11 @@ const runCLIAndVerify = async (
 
   await waitForProcessWithTimeout("Creating starter template", child, outputs);
 
-  await verifyTemplate(c, args?.folderName ?? "/no-folder-name-supplied");
+  await verifyTemplate(
+    c,
+    args?.folderName ?? "/no-folder-name-supplied",
+    args?.packageManager ?? "false",
+  );
 };
 
 interface CLIArgs {
@@ -79,7 +83,11 @@ interface CLIArgs {
   args?: input.InputFromCLIOrUser;
 }
 
-const verifyTemplate = async (c: ExecutionContext, projectPath: string) => {
+const verifyTemplate = async (
+  c: ExecutionContext,
+  projectPath: string,
+  packageManager: string,
+) => {
   const packageJsonPaths = (
     await writeFiles.getAllFilePaths(projectPath)
   ).filter((filePath) => path.basename(filePath) === "package.json");
@@ -96,6 +104,7 @@ const verifyTemplate = async (c: ExecutionContext, projectPath: string) => {
   const verifySinglePackage = createVerifySinglePackage(
     c,
     projectPath,
+    packageManager,
     !manyPackageJsons,
   );
 
@@ -240,6 +249,7 @@ const linkWorkspacePackages = async (
 const createVerifySinglePackage = (
   c: ExecutionContext,
   projectPath: string,
+  packageManager: string,
   isOnePackageJson: boolean,
 ) => {
   const runPackageDev = async (
@@ -248,7 +258,7 @@ const createVerifySinglePackage = (
     isFE: boolean,
   ) => {
     const devRun = process.spawn(
-      "yarn",
+      packageManager,
       [...yarnExtraArgs, "run", isFE ? "build" : "dev"],
       {
         shell: false,
@@ -280,20 +290,32 @@ const createVerifySinglePackage = (
     );
     const packageDir = path.dirname(packageJsonPath);
     // Don't do anything for top-level package.json if we are in multi-package.json template
-    if (isOnePackageJson || packageDir !== projectPath) {
+    // Only do this for yarn for now - pnpm is a bit tricker without too much extra setup.
+    if (
+      packageManager === "yarn" &&
+      (isOnePackageJson || packageDir !== projectPath)
+    ) {
       const yarnExtraArgs = isOnePackageJson ? [] : ["workspace", name];
 
       // Now run tsc, to ensure no compilation errors exist
-      await cliUtils.execFile("yarn", [...yarnExtraArgs, "run", "tsc"], {
-        shell: false,
-        cwd: projectPath,
-      });
+      await cliUtils.execFile(
+        packageManager,
+        [...yarnExtraArgs, "run", "tsc"],
+        {
+          shell: false,
+          cwd: projectPath,
+        },
+      );
 
       // Run also linter, to ensure that new project won't immediately have red suiggles because of bad formatting
-      await cliUtils.execFile("yarn", [...yarnExtraArgs, "run", "lint"], {
-        shell: false,
-        cwd: projectPath,
-      });
+      await cliUtils.execFile(
+        packageManager,
+        [...yarnExtraArgs, "run", "lint"],
+        {
+          shell: false,
+          cwd: projectPath,
+        },
+      );
 
       // Make sure program actually starts and prints information that it successfully initialized
       const packageKind: PackageKind =

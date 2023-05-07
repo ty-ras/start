@@ -34,4 +34,9 @@ export interface MessageStage<TDynamicValueInput> {
   message: string | DynamicValue<TDynamicValueInput, string | undefined>;
 }
 
-export type DynamicValue<TInput, TOutput> = (components: TInput) => TOutput;
+export type DynamicValue<TInput, TOutput> = (input: TInput) => TOutput;
+
+export type GetDynamicValueInput<TSTages extends StagesBase> =
+  TSTages extends StagesGeneric<infer TDynamicValueInput>
+    ? TDynamicValueInput
+    : never;

@@ -5,16 +5,19 @@ import * as A from "@effect/data/ReadonlyArray";
 import * as S from "@effect/schema/Schema";
 import * as TF from "@effect/schema/TreeFormatter";
 import * as Match from "@effect/match";
-import * as collectInput from "../collect-input/index.mjs";
+import inputSpec, {
+  type Stages,
+  type InputFromCLIOrUser,
+  type SchemaKeys,
+} from "./input-spec.mjs";
 import * as fs from "node:fs/promises";
 
 export default (
-  input: collectInput.InputFromCLIOrUser,
+  input: InputFromCLIOrUser,
 ):
   | string
   | Promise<
-      | ValidatedInput
-      | Array<readonly [keyof collectInput.InputFromCLIOrUser, string]>
+      ValidatedInput | Array<readonly [keyof InputFromCLIOrUser, string]>
     > =>
   F.pipe(
     input,
@@ -27,21 +30,17 @@ export default (
     ),
   );
 
-const pickSchemas = <TKeys extends Array<collectInput.SchemaKeys>>(
+const pickSchemas = <TKeys extends Array<SchemaKeys>>(
   ...keys: TKeys
-): { [P in TKeys[number]]: collectInput.Stages[P]["schema"] } =>
+): { [P in TKeys[number]]: Stages[P]["schema"] } =>
   Object.fromEntries(
-    Object.entries(collectInput.stages)
+    Object.entries(inputSpec)
       .filter(
-        (
-          entry,
-        ): entry is [
-          collectInput.SchemaKeys,
-          collectInput.Stages[collectInput.SchemaKeys],
-        ] => keys.indexOf(entry[0] as collectInput.SchemaKeys) >= 0,
+        (entry): entry is [SchemaKeys, Stages[SchemaKeys]] =>
+          keys.indexOf(entry[0] as SchemaKeys) >= 0,
       )
       .map(([key, stage]) => [key, stage.schema] as const),
-  ) as { [P in TKeys[number]]: collectInput.Stages[P]["schema"] };
+  ) as { [P in TKeys[number]]: Stages[P]["schema"] };
 
 export type ValidatedInput = S.To<typeof inputSchema>;
 
@@ -115,7 +114,7 @@ const invokeValidators = (input: Readonly<ValidatedInput>) =>
               value,
               S.decodeEither(
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                collectInput.stages[valueName].schema as S.Schema<any>,
+                inputSpec[valueName].schema as S.Schema<any>,
               ),
               async (result) => {
                 try {

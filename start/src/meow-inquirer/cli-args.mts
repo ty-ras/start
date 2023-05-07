@@ -1,7 +1,7 @@
 import meow, { type AnyFlag, type Result } from "meow";
 import * as readPkgUp from "read-pkg-up";
 import * as AST from "@effect/schema/AST";
-import type * as stages from "../stages";
+import type * as stages from "./stages";
 
 export default async <TStages extends stages.StagesBase>(
   packageRoot: string,

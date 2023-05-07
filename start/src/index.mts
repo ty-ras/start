@@ -2,20 +2,19 @@ import chalk from "chalk";
 import gradientString from "gradient-string";
 import ora from "ora";
 import * as F from "@effect/data/Function";
-import * as Set from "@effect/data/HashSet";
 import * as Match from "@effect/match";
 import * as path from "node:path";
 import * as url from "node:url";
-import * as collectInput from "./collect-input/index.mjs";
 import * as createTemplate from "./create-template/index.mjs";
 import * as initialize from "./initialize/index.mjs";
+import * as mi from "./meow-inquirer/index.mjs";
 
 // eslint-disable-next-line sonarjs/cognitive-complexity
 export default async () => {
-  const cliArgs = await collectInput.createCLIArgs<
-    collectInput.Stages | initialize.Stages
+  const cliArgs = await mi.createCLIArgs<
+    createTemplate.Stages | initialize.Stages
   >(packageRoot, {
-    ...collectInput.stages,
+    ...createTemplate.inputSpec,
     ...initialize.stages,
   });
 
@@ -24,13 +23,17 @@ export default async () => {
   printWelcomeMessage();
 
   // Collect any missing input (not passed via command-line arguments) by prompting the user
-  const validatedInput = await collectInputUntilValid(cliArgs);
+  const validatedInput = await mi.collectInput(createTemplate.inputSpec)(
+    cliArgs,
+    "components",
+    createTemplate.validateInput,
+  );
   // Now that the mandatory input is collected and validated, write project files
   await writeProjectFilesWithSpinner(validatedInput);
   // If there is missing input, and stdin is available, proceed to prompt the user for that
   // TODO
   // At this point, we are done
-  collectInput.print(
+  mi.print(
     chalk.whiteBright(
       `Project creation succeeded!\nPlease take a look in the README file within folder "${validatedInput.folderName}" for short information on how to proceed.`,
     ),
@@ -49,61 +52,18 @@ const packageRoot = F.pipe(
 );
 
 const printWelcomeMessage = () => {
-  collectInput.print(chalk.bold(gradient("\nTyRAS\n")));
-  collectInput.print(
+  mi.print(chalk.bold(gradient("\nTyRAS\n")));
+  mi.print(
     chalk.italic(
       "This program will create new project to work with HTTP backend and/or frontend utilizing TyRAS libraries.\n",
     ),
   );
 };
 
-const collectInputUntilValid = async (cliArgs: collectInput.CLIArgsInfo) => {
-  // Then, collect the inputs - use CLI args or prompt from user
-  // Keep collecting until all inputs pass validation
-  let input: collectInput.InputFromCLIOrUser = {};
-  let validatedInput: createTemplate.ValidatedInput | undefined;
-  do {
-    // Get the inputs from CLI args or user prompt
-    // On first loop, the 'input' will be empty and all the things will be checked/asked.
-    // On subsequent loops (if any), only the errored properties will be missing, and thus checked/asked again.
-    const cliArgsSet: Set.HashSet<collectInput.CLIArgsInfoSetElement> =
-      await collectInput.collectInput(cliArgs, input);
-    // Validate the inputs in a way that template creation part knows
-    const validationResult = await createTemplate.validateInput(input);
-    if (Array.isArray(validationResult)) {
-      // When there are errors, notify user and adjust 'input' variable.
-      for (const [valueName, errorMessage] of validationResult) {
-        // Notify user about the error
-        collectInput.print(
-          chalk.redBright(`Error for "${valueName}":\n${errorMessage}\n`),
-        );
-        // Delete it so that collectInputs would ask for it again
-        delete input[valueName];
-      }
-      if (!Set.isHashSet(cliArgs)) {
-        cliArgs = cliArgsSet;
-      }
-    } else if (typeof validationResult === "string") {
-      // This signifies internal error, as at this point the input itself is structurally invalid
-      // Clear everything and start asking from clean slate
-      collectInput.print(
-        chalk.red(
-          `There has been an internal error when collecting input.\nIgnoring all CLI flags from now on, and starting to collect input from beginning.\nError message: ${validationResult}`,
-        ),
-      );
-      cliArgs = { flags: {}, input: [] };
-      input = {};
-    } else {
-      validatedInput = validationResult;
-    }
-  } while (validatedInput === undefined);
-  return validatedInput;
-};
-
 const writeProjectFilesWithSpinner = async (
   validatedInput: createTemplate.ValidatedInput,
 ) => {
-  collectInput.print(
+  mi.print(
     chalk.bgGray(
       `Creating project to folder "${validatedInput.folderName}" with components "${validatedInput.components}".`,
     ),

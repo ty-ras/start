@@ -3,7 +3,7 @@ import * as F from "@effect/data/Function";
 import * as S from "@effect/schema/Schema";
 import * as path from "node:path";
 import * as process from "node:process";
-import type * as stageTypes from "../stages";
+import type * as mi from "../meow-inquirer/index.mjs";
 
 const hasBEComponent: ConditionWithDescription = {
   description: 'Used only when components is "be" or "be-and-fe".',
@@ -199,11 +199,12 @@ const stages = {
 export default stages;
 
 export type Stages = typeof stages;
-export type StagesGeneric = stageTypes.StagesGeneric<Components>;
-export type Stage = stageTypes.Stage<Components>;
-export type CommonStage = stageTypes.CommonStage;
-export type StateMutatingStage = stageTypes.StateMutatingStage<Components>;
-export type MessageStage = stageTypes.MessageStage<Components>;
+export type StagesGeneric = mi.StagesGeneric<Components>;
+export type Stage = mi.Stage<Components>;
+export type CommonStage = mi.CommonStage;
+export type StateMutatingStage = mi.StateMutatingStage<Components>;
+export type MessageStage = mi.MessageStage<Components>;
 export type Components = S.To<typeof componentsSchema>;
-export type ConditionWithDescription =
-  stageTypes.ConditionWithDescription<Components>;
+export type ConditionWithDescription = mi.ConditionWithDescription<Components>;
+export type InputFromCLIOrUser = mi.InputFromCLIOrUser<Stages>;
+export type SchemaKeys = mi.SchemaKeys<Stages>;

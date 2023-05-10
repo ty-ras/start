@@ -4,8 +4,8 @@ import * as F from "@effect/data/Function";
 import * as process from "node:child_process";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import type * as input from "../create-template/input-spec.mjs";
-import * as writeFiles from "../create-template/write-project.mjs";
+import type * as input from "../write/input-spec.mjs";
+import * as writeFiles from "../write/write-project.mjs";
 import * as cliUtils from "./cli-utils.js";
 
 const testOutputDir = path.join(

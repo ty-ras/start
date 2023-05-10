@@ -3,19 +3,18 @@ import gradientString from "gradient-string";
 import ora from "ora";
 import * as F from "@effect/data/Function";
 import * as Match from "@effect/match";
-import * as path from "node:path";
-import * as url from "node:url";
-import * as createTemplate from "./create-template/index.mjs";
+import * as createTemplate from "./write/index.mjs";
 import * as initialize from "./initialize/index.mjs";
-import * as mi from "./meow-inquirer/index.mjs";
+import * as mi from "meow-inquirer";
 
 // eslint-disable-next-line sonarjs/cognitive-complexity
 export default async () => {
-  const cliArgs = await mi.createCLIArgs<
-    createTemplate.Stages | initialize.Stages
-  >(packageRoot, {
-    ...createTemplate.inputSpec,
-    ...initialize.stages,
+  const { cliArgs, packageRoot } = await mi.createCLIArgs({
+    inputSpec: {
+      ...createTemplate.inputSpec,
+      ...initialize.inputSpec,
+    },
+    importMeta: import.meta,
   });
 
   // At this point, program would've exited if there was --help or --version specified
@@ -23,13 +22,13 @@ export default async () => {
   printWelcomeMessage();
 
   // Collect any missing input (not passed via command-line arguments) by prompting the user
-  const validatedInput = await mi.collectInput(createTemplate.inputSpec)(
+  const validatedInput = await collectInputForWriting({
     cliArgs,
-    "components",
-    createTemplate.validateInput,
-  );
+    getDynamicValueInput: (values) => values.components,
+    inputValidator: createTemplate.validateInput,
+  });
   // Now that the mandatory input is collected and validated, write project files
-  await writeProjectFilesWithSpinner(validatedInput);
+  await writeProjectFilesWithSpinner(packageRoot, validatedInput);
   // If there is missing input, and stdin is available, proceed to prompt the user for that
   // TODO
   // At this point, we are done
@@ -40,16 +39,9 @@ export default async () => {
   );
 };
 
-const gradient = gradientString("#0070BB", "#FEBE10", "#BC3F4A");
+const collectInputForWriting = mi.collectInput(createTemplate.inputSpec);
 
-const packageRoot = F.pipe(
-  path.join(
-    // From: https://blog.logrocket.com/alternatives-dirname-node-js-es-modules/
-    url.fileURLToPath(new URL(".", import.meta.url)),
-    "..",
-  ),
-  path.normalize,
-);
+const gradient = gradientString("#0070BB", "#FEBE10", "#BC3F4A");
 
 const printWelcomeMessage = () => {
   mi.print(chalk.bold(gradient("\nTyRAS\n")));
@@ -61,6 +53,7 @@ const printWelcomeMessage = () => {
 };
 
 const writeProjectFilesWithSpinner = async (
+  packageRoot: string,
   validatedInput: createTemplate.ValidatedInput,
 ) => {
   mi.print(

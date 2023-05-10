@@ -1,5 +1,5 @@
-import stagesImport from "./stages.mjs";
+import inputSpecImport from "./input-spec.mjs";
 
-export const stages = stagesImport;
+export const inputSpec = inputSpecImport;
 
-export type * from "./stages.mjs";
+export type * from "./input-spec.mjs";

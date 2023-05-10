@@ -1,9 +1,9 @@
 import chalk from "chalk";
 import * as F from "@effect/data/Function";
 import * as S from "@effect/schema/Schema";
+import * as mi from "meow-inquirer";
 import * as path from "node:path";
 import * as process from "node:process";
-import type * as mi from "../meow-inquirer/index.mjs";
 
 const hasBEComponent: ConditionWithDescription = {
   description: 'Used only when components is "be" or "be-and-fe".',
@@ -19,12 +19,14 @@ const componentsSchema = S.keyof(
   S.struct({ be: S.any, fe: S.any, ["be-and-fe"]: S.any }),
 );
 
-const stages = {
+const inputSpec = {
   generalMessage: {
+    type: mi.TYPE_MESSAGE,
     orderNumber: 0,
     message: chalk.bold.bgBlueBright("# General project configuration"),
   },
   folderName: {
+    type: mi.TYPE_VALIDATE,
     orderNumber: 1,
     schema: F.pipe(
       S.string,
@@ -43,6 +45,7 @@ const stages = {
     },
   },
   packageManager: {
+    type: mi.TYPE_VALIDATE,
     orderNumber: 2,
     schema: S.keyof(
       S.struct({ yarn: S.any, npm: S.any, pnpm: S.any, unspecified: S.any }),
@@ -64,10 +67,11 @@ const stages = {
     flag: {
       type: "string",
       isRequired: false,
-      alias: "m",
+      shortFlag: "m",
     },
   },
   components: {
+    type: mi.TYPE_VALIDATE,
     orderNumber: 3,
     schema: componentsSchema,
     prompt: {
@@ -83,10 +87,11 @@ const stages = {
     flag: {
       type: "string",
       isRequired: false,
-      alias: "p",
+      shortFlag: "p",
     },
   },
   dataValidation: {
+    type: mi.TYPE_VALIDATE,
     orderNumber: 4,
     schema: S.keyof(S.struct({ ["io-ts"]: S.any, zod: S.any })),
     prompt: {
@@ -102,10 +107,11 @@ const stages = {
     flag: {
       type: "string",
       isRequired: false,
-      alias: "d",
+      shortFlag: "d",
     },
   },
   beMessage: {
+    type: mi.TYPE_MESSAGE,
     orderNumber: 5,
     message: (components) =>
       hasBEComponent.isApplicable(components)
@@ -113,6 +119,7 @@ const stages = {
         : undefined,
   },
   server: {
+    type: mi.TYPE_VALIDATE,
     orderNumber: 6,
     schema: S.keyof(S.struct({ node: S.any })),
     prompt: {
@@ -129,7 +136,7 @@ const stages = {
     flag: {
       type: "string",
       isRequired: false,
-      alias: "s",
+      shortFlag: "s",
     },
     condition: hasBEComponent,
   },
@@ -151,6 +158,7 @@ const stages = {
   //   condition: hasBEComponent,
   // },
   feMessage: {
+    type: mi.TYPE_MESSAGE,
     orderNumber: 7,
     message: (components) =>
       hasFEComponent.isApplicable(components)
@@ -158,6 +166,7 @@ const stages = {
         : undefined,
   },
   client: {
+    type: mi.TYPE_VALIDATE,
     orderNumber: 8,
     schema: S.keyof(S.struct({ fetch: S.any })),
     prompt: {
@@ -173,7 +182,7 @@ const stages = {
     flag: {
       type: "string",
       isRequired: false,
-      alias: "c",
+      shortFlag: "c",
     },
     condition: hasFEComponent,
   },
@@ -196,14 +205,13 @@ const stages = {
   // },
 } as const satisfies StagesGeneric;
 
-export default stages;
+export default inputSpec;
 
-export type Stages = typeof stages;
-export type StagesGeneric = mi.StagesGeneric<Components>;
-export type Stage = mi.Stage<Components>;
-export type CommonStage = mi.CommonStage;
-export type StateMutatingStage = mi.StateMutatingStage<Components>;
-export type MessageStage = mi.MessageStage<Components>;
+export type Stages = typeof inputSpec;
+export type StagesGeneric = mi.InputSpec<Components>;
+export type Stage = mi.InputSpecProperty<Components>;
+export type StateMutatingStage = mi.ValidationSpec<Components>;
+export type MessageStage = mi.MessageSpec<Components>;
 export type Components = S.To<typeof componentsSchema>;
 export type ConditionWithDescription = mi.ConditionWithDescription<Components>;
 export type InputFromCLIOrUser = mi.InputFromCLIOrUser<Stages>;

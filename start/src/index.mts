@@ -20,8 +20,11 @@ export default async () => {
   // At this point, program would've exited if there was --help or --version specified
   // Since we are still here, continue with printing welcome message
   printWelcomeMessage();
+  process.stdin.resume();
 
-  // Collect any missing input (not passed via command-line arguments) by prompting the user
+  // process.on("exit", () => console.trace("PROCESS_EXIT"));
+  // process.on("beforeExit", () => console.trace("PROCESS_BEFORE_EXIT"));
+  // process.on("SIGINT", () => console.trace("SIGINTZZ")); // Collect any missing input (not passed via command-line arguments) by prompting the user
   const validatedInput = await collectInputForWriting({
     cliArgs,
     getDynamicValueInput: (values) => values.components,
@@ -29,8 +32,24 @@ export default async () => {
   });
   // Now that the mandatory input is collected and validated, write project files
   await writeProjectFilesWithSpinner(packageRoot, validatedInput);
+
   // If there is missing input, and stdin is available, proceed to prompt the user for that
-  // TODO
+  try {
+    await collectInputForInitializing({
+      cliArgs,
+      getDynamicValueInput: () => undefined,
+      inputValidator: () => Promise.resolve({}),
+    });
+  } catch (error) {
+    // This can happen e.g. when all mandatory arguments are provided via CLI parameters
+    // and stdin is /dev/null .
+    if (isTTYError(error)) {
+      // TODO print warning?
+    } else {
+      throw error;
+    }
+  }
+
   // At this point, we are done
   mi.print(
     chalk.whiteBright(
@@ -40,6 +59,7 @@ export default async () => {
 };
 
 const collectInputForWriting = mi.collectInput(createTemplate.inputSpec);
+const collectInputForInitializing = mi.collectInput(initialize.inputSpec);
 
 const gradient = gradientString("#0070BB", "#FEBE10", "#BC3F4A");
 
@@ -113,3 +133,6 @@ const writeProjectFilesWithSpinner = async (
     }
   }
 };
+
+const isTTYError = (error: unknown) =>
+  error instanceof Error && "isTtyError" in error && error.isTtyError === true;

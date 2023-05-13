@@ -23,7 +23,7 @@ const inputSpec = {
   generalMessage: {
     type: mi.TYPE_MESSAGE,
     orderNumber: 0,
-    message: chalk.bold.bgBlueBright("# General project configuration"),
+    message: chalk.bold.bgBlueBright("# Creating project"),
   },
   folderName: {
     type: mi.TYPE_VALIDATE,
@@ -203,16 +203,13 @@ const inputSpec = {
   //   },
   //   condition: hasFEComponent,
   // },
-} as const satisfies StagesGeneric;
+} as const satisfies InputSpecGeneric;
 
 export default inputSpec;
 
-export type Stages = typeof inputSpec;
-export type StagesGeneric = mi.InputSpec<Components>;
-export type Stage = mi.InputSpecProperty<Components>;
-export type StateMutatingStage = mi.ValidationSpec<Components>;
-export type MessageStage = mi.MessageSpec<Components>;
+export type InputSpec = typeof inputSpec;
+export type InputSpecGeneric = mi.InputSpec<Components>;
 export type Components = S.To<typeof componentsSchema>;
 export type ConditionWithDescription = mi.ConditionWithDescription<Components>;
-export type InputFromCLIOrUser = mi.InputFromCLIOrUser<Stages>;
-export type SchemaKeys = mi.SchemaKeys<Stages>;
+export type InputFromCLIOrUser = mi.InputFromCLIOrUser<InputSpec>;
+export type SchemaKeys = mi.SchemaKeys<InputSpec>;

@@ -1,11 +1,17 @@
+import chalk from "chalk";
 import * as S from "@effect/schema/Schema";
 import * as mi from "meow-inquirer";
 import type * as createTemplate from "../write/index.mjs";
 
 const inputSpec = {
+  generalMessage: {
+    type: mi.TYPE_MESSAGE,
+    orderNumber: 0,
+    message: chalk.bold.bgBlueBright("# Initialize created project"),
+  },
   setupGit: {
     type: mi.TYPE_VALIDATE,
-    orderNumber: 0,
+    orderNumber: 1,
     schema: S.boolean,
     prompt: {
       type: "confirm",
@@ -18,15 +24,27 @@ const inputSpec = {
       shortFlag: "g",
     },
   },
-} as const satisfies StagesGeneric;
+  installDependencies: {
+    type: mi.TYPE_VALIDATE,
+    orderNumber: 2,
+    schema: S.boolean,
+    prompt: {
+      type: "confirm",
+      message: "Should the project dependencies be installed?",
+      default: false,
+    },
+    flag: {
+      type: "boolean",
+      isRequired: false,
+      shortFlag: "i",
+    },
+  },
+} as const satisfies InputSpecGeneric;
 
 export default inputSpec;
 
 export type DynamicValueInput = createTemplate.ValidatedInput;
-export type Stages = typeof inputSpec;
-export type StagesGeneric = mi.InputSpec<DynamicValueInput>;
-export type Stage = mi.InputSpecProperty<DynamicValueInput>;
-export type StateMutatingStage = mi.ValidationSpec<DynamicValueInput>;
-export type MessageStage = mi.MessageSpec<DynamicValueInput>;
-export type ConditionWithDescription =
-  mi.ConditionWithDescription<DynamicValueInput>;
+export type InputSpec = typeof inputSpec;
+export type InputSpecGeneric = mi.InputSpec<DynamicValueInput>;
+export type InputFromCLIOrUser = mi.InputFromCLIOrUser<InputSpec>;
+export type SchemaKeys = mi.SchemaKeys<InputSpec>;

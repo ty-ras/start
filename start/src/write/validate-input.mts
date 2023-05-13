@@ -6,7 +6,7 @@ import * as S from "@effect/schema/Schema";
 import * as TF from "@effect/schema/TreeFormatter";
 import * as Match from "@effect/match";
 import inputSpec, {
-  type Stages,
+  type InputSpec,
   type InputFromCLIOrUser,
   type SchemaKeys,
 } from "./input-spec.mjs";
@@ -32,15 +32,15 @@ export default (
 
 const pickSchemas = <TKeys extends Array<SchemaKeys>>(
   ...keys: TKeys
-): { [P in TKeys[number]]: Stages[P]["schema"] } =>
+): { [P in TKeys[number]]: InputSpec[P]["schema"] } =>
   Object.fromEntries(
     Object.entries(inputSpec)
       .filter(
-        (entry): entry is [SchemaKeys, Stages[SchemaKeys]] =>
+        (entry): entry is [SchemaKeys, InputSpec[SchemaKeys]] =>
           keys.indexOf(entry[0] as SchemaKeys) >= 0,
       )
       .map(([key, stage]) => [key, stage.schema] as const),
-  ) as { [P in TKeys[number]]: Stages[P]["schema"] };
+  ) as { [P in TKeys[number]]: InputSpec[P]["schema"] };
 
 export type ValidatedInput = S.To<typeof inputSchema>;
 

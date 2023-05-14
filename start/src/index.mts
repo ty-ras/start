@@ -111,12 +111,13 @@ const writeProjectFilesWithSpinner = async (
               } total versions`,
           ),
           Match.when(
-            { event: "startFixingPackageNames" },
-            () => "Starting to fix package names",
+            { event: "startProcessingFileContents" },
+            () => "Starting to replace placeholders",
           ),
           Match.when(
-            { event: "fixedPackageName" },
-            ({ data: { path } }) => `Fixed package names from ${path}`,
+            { event: "endProcessingFileContents" },
+            ({ data: { paths } }) =>
+              `Replaced placeholders from ${paths.size} files`,
           ),
           Match.orElse(() => ""),
         );

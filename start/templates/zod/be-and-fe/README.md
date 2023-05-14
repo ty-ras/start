@@ -13,11 +13,9 @@ This project utilizes [workspaces](https://docs.npmjs.com/cli/v9/using-npm/works
 
 # Next tasks
 
-As a very first task, install dependencies of all the components using your favourite package manager:
+As a very first task, install dependencies of all the components, if not already done during project creation stage:
 ```sh
-yarn install
-npm install
-pnpm install
+__PACKAGE_MANAGER__ install
 ```
 
 Then, feel free to explore the three components mentioned above to learn more about them.

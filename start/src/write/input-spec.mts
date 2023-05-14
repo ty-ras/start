@@ -59,7 +59,7 @@ const inputSpec = {
         { name: "NPM", value: "npm" },
         { name: "PNPM", value: "pnpm" },
         {
-          name: "Decide on your own after project creation",
+          name: "Other/Decide later",
           value: "unspecified",
         },
       ],

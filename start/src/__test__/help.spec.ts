@@ -35,7 +35,7 @@ const expectedHelpText = `
     --setupGit, -g	Should the project folder be initialized with Git?
           Only if Git is detected to be installed
           Schema: boolean
-    --installDependencies, -i     Should the project dependencies be installed?
+    --installDependencies, -i	Should the project dependencies be installed?
           Only if selected package manager is detected to be installed
           Schema: boolean
 

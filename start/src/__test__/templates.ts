@@ -4,7 +4,9 @@ import * as F from "@effect/data/Function";
 import * as process from "node:child_process";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
+import * as os from "node:os";
 import type * as input from "../write/input-spec.mjs";
+import type * as initInput from "../initialize/input-spec.mjs";
 import * as writeFiles from "../write/write-project.mjs";
 import * as cliUtils from "./cli-utils.js";
 
@@ -16,14 +18,18 @@ const testOutputDir = path.join(
   "test-output",
 );
 await fs.mkdir(testOutputDir, { recursive: true });
-export const targetDirectory = await fs.mkdtemp(
+export const TARGET_DIR = await fs.mkdtemp(
   path.join(testOutputDir, "test-run-"),
+);
+
+export const EXTERNAL_DIR = await fs.mkdtemp(
+  path.join(os.tmpdir(), "ty-ras-start-test-"),
 );
 
 // This callback is parametrized test macro to run a successful test with given input
 export default async (
   c: ExecutionContext,
-  args: input.InputFromCLIOrUser,
+  args: input.InputFromCLIOrUser & initInput.InputFromCLIOrUser,
   expectedAssertCount = 7,
 ) => {
   c.plan(expectedAssertCount);
@@ -31,7 +37,7 @@ export default async (
     runCLIAndVerify(c, {
       args: {
         [FOLDER_NAME]: path.join(
-          targetDirectory,
+          TARGET_DIR,
           `${args.components}-${args.dataValidation}-${args.server ?? "none"}-${
             args.client ?? "none"
           }`,
@@ -90,14 +96,18 @@ const verifyTemplate = async (
 ) => {
   const packageJsonPaths = (
     await writeFiles.getAllFilePaths(projectPath)
-  ).filter((filePath) => path.basename(filePath) === "package.json");
+  ).filter(
+    (filePath) =>
+      path.basename(filePath) === "package.json" &&
+      filePath.indexOf("node_modules") === -1,
+  );
   c.true(
     packageJsonPaths.length > 0,
     "There must be at least one package.json path in resulting template",
   );
   const manyPackageJsons = packageJsonPaths.length > 1;
 
-  if (manyPackageJsons) {
+  if (manyPackageJsons && projectPath !== EXTERNAL_DIR) {
     await linkWorkspacePackages(projectPath, packageJsonPaths);
   }
 
@@ -254,6 +264,7 @@ const createVerifySinglePackage = (
 ) => {
   const runPackageDev = async (
     name: string,
+    cwd: string,
     yarnExtraArgs: ReadonlyArray<string>,
     isFE: boolean,
   ) => {
@@ -262,7 +273,7 @@ const createVerifySinglePackage = (
       [...yarnExtraArgs, "run", isFE ? "build" : "dev"],
       {
         shell: false,
-        cwd: projectPath,
+        cwd,
       },
     );
     const outputCollectState = collectProcessOutputs(devRun);
@@ -279,6 +290,7 @@ const createVerifySinglePackage = (
         ),
     );
   };
+  // eslint-disable-next-line sonarjs/cognitive-complexity
   return async (packageJsonPath: string) => {
     // Read package.json, verify it has no floating version specs
     const { name, dependencies, devDependencies } = F.pipe(
@@ -290,15 +302,16 @@ const createVerifySinglePackage = (
       Object.values(dependencies)
         .concat(Object.values(devDependencies))
         .every((version) => /^\d/.test(version)),
+      `All dependencies of ${packageJsonPath} must have resolved version`,
     );
     const packageDir = path.dirname(packageJsonPath);
     // Don't do anything for top-level package.json if we are in multi-package.json template
-    // Only do this for yarn for now - pnpm is a bit tricker without too much extra setup.
-    if (
-      packageManager === "yarn" &&
-      (isOnePackageJson || packageDir !== projectPath)
-    ) {
-      const yarnExtraArgs = isOnePackageJson ? [] : ["workspace", name];
+    if (isOnePackageJson || packageDir !== projectPath) {
+      const yarnExtraArgs =
+        packageManager === "yarn" && !isOnePackageJson
+          ? ["workspace", name]
+          : [];
+      const cwd = packageManager === "yarn" ? projectPath : packageDir;
 
       // Now run tsc, to ensure no compilation errors exist
       await c.notThrowsAsync(
@@ -308,23 +321,26 @@ const createVerifySinglePackage = (
             [...yarnExtraArgs, "run", "tsc"],
             {
               shell: false,
-              cwd: projectPath,
+              cwd,
             },
           ),
       );
 
       // Run also linter, to ensure that new project won't immediately have red suiggles because of bad formatting
-      await c.notThrowsAsync(
-        async () =>
-          await cliUtils.execFile(
-            packageManager,
-            [...yarnExtraArgs, "run", "lint"],
-            {
-              shell: false,
-              cwd: projectPath,
-            },
-          ),
-      );
+      // (But don't do it in case we have installed fresh dependencies, as then we might get Prettier errors if the version is updated)
+      if (projectPath !== EXTERNAL_DIR) {
+        await c.notThrowsAsync(
+          async () =>
+            await cliUtils.execFile(
+              packageManager,
+              [...yarnExtraArgs, "run", "lint"],
+              {
+                shell: false,
+                cwd,
+              },
+            ),
+        );
+      }
 
       // Make sure program actually starts and prints information that it successfully initialized
       const packageKind: PackageKind =
@@ -338,7 +354,7 @@ const createVerifySinglePackage = (
       if (packageKind !== "protocol") {
         await c.notThrowsAsync(
           async () =>
-            await runPackageDev(name, yarnExtraArgs, packageKind === "fe"),
+            await runPackageDev(name, cwd, yarnExtraArgs, packageKind === "fe"),
         );
       }
     }

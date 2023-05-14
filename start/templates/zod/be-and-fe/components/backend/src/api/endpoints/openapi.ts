@@ -1,12 +1,11 @@
 import * as aux from "../auxiliary";
-import { OpenAPIV3 as openapi } from "openapi-types";
 import * as tyras from "@ty-ras/backend-node-zod-openapi";
 import * as t from "zod";
 import * as tls from "tls";
 
 export const createOpenAPIEndpoint = (
   builder: aux.PlainBuilder,
-  metadata: openapi.Document,
+  metadata: tyras.FinalMetadata,
 ) => {
   // Notice that this will be undefined if all operations are behind authentication
   const metadataNotAuth = tyras.removeAuthenticatedOperations(metadata);

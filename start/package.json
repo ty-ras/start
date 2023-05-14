@@ -92,7 +92,7 @@
     "lint": "eslint ./src --ext .ts,.mts,.tsx",
     "tsc": "tsc --project tsconfig.build.json",
     "tsc:plain": "tsc",
-    "test:coverage": "yarn run clear-build-artifacts && yarn run test:run",
+    "test:coverage": "yarn run clear-build-artifacts && yarn global add pnpm && yarn run test:run",
     "test:run": "yarn run tsc && yarn run chmodx && ava"
   },
   "resolutions": {

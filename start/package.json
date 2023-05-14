@@ -1,6 +1,6 @@
 {
   "name": "@ty-ras/start",
-  "version": "0.13.2",
+  "version": "0.13.3",
   "author": {
     "name": "Stanislav Muhametsin",
     "email": "346799+stazz@users.noreply.github.com",
@@ -82,17 +82,17 @@
   "scripts": {
     "build:run": "yarn run lint && yarn run tsc",
     "build:ci": "yarn run clear-build-artifacts && yarn run compile-d-ts-files && yarn run tsc --outDir ./dist && yarn run format-output-files",
+    "chmodx": "chmod +x dist/cli.mjs",
     "clear-build-artifacts": "rm -rf dist dist-ts dist-cjs dist-esm build",
-    "compile-d-ts-files": "yarn run tsc --removeComments false --emitDeclarationOnly --declaration --declarationDir ./dist-ts && yarn run copy-d-ts-files && yarn run tsc:plain --project tsconfig.out.json",
-    "copy-d-ts-files": "find src -mindepth 1 -maxdepth 1 -name '*.d.ts' -exec cp {} ./dist-ts +",
+    "compile-d-ts-files": "yarn run tsc --removeComments false --emitDeclarationOnly --declaration --declarationDir ./dist-ts && yarn run tsc:plain --project tsconfig.out.json",
     "format-output-files": "yarn run format-output-files-ts && yarn run format-output-files-js",
     "format-output-files-ts": "find dist-ts -name '*.ts' -type f -exec sh -c \"echo '/* eslint-disable */\n/* eslint-enable prettier/prettier */'\"' | cat - $1 > $1.tmp && mv $1.tmp $1' -- {} \\; && eslint --no-eslintrc --config '.eslintrc.out-ts.cjs' --fix './dist-ts/**/*.ts'",
     "format-output-files-js": "eslint --no-eslintrc --config '.eslintrc.out.cjs' --fix 'dist/**/*js'",
-    "lint": "eslint ./src --ext .ts,.tsx",
+    "lint": "eslint ./src --ext .ts,.mts,.tsx",
     "tsc": "tsc --project tsconfig.build.json",
     "tsc:plain": "tsc",
-    "test:coverage": "yarn run tsc && c8 --temp-directory /tmp ava",
-    "test:run": "yarn run tsc && c8 --temp-directory /tmp --reporter text ava"
+    "test:coverage": "yarn run clear-build-artifacts && yarn run test:run",
+    "test:run": "yarn run tsc && yarn run chmodx && ava"
   },
   "resolutions": {
     "@types/node": "18.15.0"

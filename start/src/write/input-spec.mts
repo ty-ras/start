@@ -1,8 +1,7 @@
 import chalk from "chalk";
-import { type AnyFlag } from "meow";
-import { type DistinctQuestion } from "inquirer";
 import * as F from "@effect/data/Function";
 import * as S from "@effect/schema/Schema";
+import * as mi from "meow-inquirer";
 import * as path from "node:path";
 import * as process from "node:process";
 
@@ -20,12 +19,14 @@ const componentsSchema = S.keyof(
   S.struct({ be: S.any, fe: S.any, ["be-and-fe"]: S.any }),
 );
 
-const stages = {
+const inputSpec = {
   generalMessage: {
+    type: mi.TYPE_MESSAGE,
     orderNumber: 0,
-    message: chalk.bold.bgBlueBright("# General project configuration"),
+    message: chalk.bold.bgBlueBright("# Creating project"),
   },
   folderName: {
+    type: mi.TYPE_VALIDATE,
     orderNumber: 1,
     schema: F.pipe(
       S.string,
@@ -44,6 +45,7 @@ const stages = {
     },
   },
   packageManager: {
+    type: mi.TYPE_VALIDATE,
     orderNumber: 2,
     schema: S.keyof(
       S.struct({ yarn: S.any, npm: S.any, pnpm: S.any, unspecified: S.any }),
@@ -57,7 +59,7 @@ const stages = {
         { name: "NPM", value: "npm" },
         { name: "PNPM", value: "pnpm" },
         {
-          name: "Decide on your own after project creation",
+          name: "Other/Decide later",
           value: "unspecified",
         },
       ],
@@ -65,10 +67,11 @@ const stages = {
     flag: {
       type: "string",
       isRequired: false,
-      alias: "m",
+      shortFlag: "m",
     },
   },
   components: {
+    type: mi.TYPE_VALIDATE,
     orderNumber: 3,
     schema: componentsSchema,
     prompt: {
@@ -84,10 +87,11 @@ const stages = {
     flag: {
       type: "string",
       isRequired: false,
-      alias: "p",
+      shortFlag: "p",
     },
   },
   dataValidation: {
+    type: mi.TYPE_VALIDATE,
     orderNumber: 4,
     schema: S.keyof(S.struct({ ["io-ts"]: S.any, zod: S.any })),
     prompt: {
@@ -103,10 +107,11 @@ const stages = {
     flag: {
       type: "string",
       isRequired: false,
-      alias: "d",
+      shortFlag: "d",
     },
   },
   beMessage: {
+    type: mi.TYPE_MESSAGE,
     orderNumber: 5,
     message: (components) =>
       hasBEComponent.isApplicable(components)
@@ -114,6 +119,7 @@ const stages = {
         : undefined,
   },
   server: {
+    type: mi.TYPE_VALIDATE,
     orderNumber: 6,
     schema: S.keyof(S.struct({ node: S.any })),
     prompt: {
@@ -130,7 +136,7 @@ const stages = {
     flag: {
       type: "string",
       isRequired: false,
-      alias: "s",
+      shortFlag: "s",
     },
     condition: hasBEComponent,
   },
@@ -152,6 +158,7 @@ const stages = {
   //   condition: hasBEComponent,
   // },
   feMessage: {
+    type: mi.TYPE_MESSAGE,
     orderNumber: 7,
     message: (components) =>
       hasFEComponent.isApplicable(components)
@@ -159,6 +166,7 @@ const stages = {
         : undefined,
   },
   client: {
+    type: mi.TYPE_VALIDATE,
     orderNumber: 8,
     schema: S.keyof(S.struct({ fetch: S.any })),
     prompt: {
@@ -174,7 +182,7 @@ const stages = {
     flag: {
       type: "string",
       isRequired: false,
-      alias: "c",
+      shortFlag: "c",
     },
     condition: hasFEComponent,
   },
@@ -195,43 +203,13 @@ const stages = {
   //   },
   //   condition: hasFEComponent,
   // },
-} as const satisfies StagesGeneric;
+} as const satisfies InputSpecGeneric;
 
-export default stages;
+export default inputSpec;
 
-export type Stages = typeof stages;
-
-export interface CommonStage {
-  orderNumber: number;
-}
-
-export interface StateMutatingStage {
-  prompt: DistinctQuestion;
-  flag?: AnyFlag;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  schema: S.Schema<any>;
-  condition?: ConditionWithDescription;
-}
-
-export interface ConditionWithDescription {
-  description: string;
-  isApplicable: DynamicValue<boolean>;
-}
-
-export interface MessageStage {
-  message:
-    | string
-    // We cannot pass StateBuilder as argument, since then stages object would be circularly referencing itself.
-    // But since all our dynamic messages depend on just be/fe/be-and-fe mode, we can pass that instead
-    | DynamicValue<string | undefined>;
-}
-
-export type Stage = CommonStage & (StateMutatingStage | MessageStage);
-export type StagesGeneric = Record<string, Stage>;
-
-export type DynamicValue<T> =
-  // We cannot pass StateBuilder as argument, since then stages object would be circularly referencing itself.
-  // But since all our dynamic messages depend on just be/fe/be-and-fe mode, we can pass that instead
-  (components: Components) => T;
-
+export type InputSpec = typeof inputSpec;
+export type InputSpecGeneric = mi.InputSpec<Components>;
 export type Components = S.To<typeof componentsSchema>;
+export type ConditionWithDescription = mi.ConditionWithDescription<Components>;
+export type InputFromCLIOrUser = mi.InputFromCLIOrUser<InputSpec>;
+export type SchemaKeys = mi.SchemaKeys<InputSpec>;

@@ -135,8 +135,9 @@ const getCopyInstructions = ({
   if (packageManager === "pnpm" && components === "be-and-fe") {
     // When we are doing workspace-based setup with pnpm, we must delete 'workspaces' field from package.json,
     // and emit pnpm-workspace.yaml with corresponding content.
-    // Apparently supporting 'workspaces' field of package.json is too much for pnpm.
-    // Notice that we can't read the file at packageJsonPath, as first copy step is not yet executed.
+    // Apparently supporting 'workspaces' field of package.json is some kind of principal problem:
+    // https://github.com/pnpm/pnpm/issues/2255
+    // Notice that we can't read the file at packageJsonPath _at this point_, as first copy step is not yet executed.
     const packageJsonPath = path.join(folderName, "package.json");
     let seenWorkspaces:
       | S.To<typeof packageJsonWithWorkspaces>["workspaces"]

@@ -19,6 +19,11 @@ const componentsSchema = S.keyof(
   S.struct({ be: S.any, fe: S.any, ["be-and-fe"]: S.any }),
 );
 
+export const PACKAGE_MANAGER_NPM = "npm";
+export const PACKAGE_MANAGER_YARN = "yarn";
+export const PACKAGE_MANAGER_PNPM = "pnpm";
+export const PACKAGE_MANAGER_UNSPECIFIED = "unspecified";
+
 const inputSpec = {
   generalMessage: {
     type: mi.TYPE_MESSAGE,
@@ -48,19 +53,24 @@ const inputSpec = {
     type: mi.TYPE_VALIDATE,
     orderNumber: 2,
     schema: S.keyof(
-      S.struct({ yarn: S.any, npm: S.any, pnpm: S.any, unspecified: S.any }),
+      S.struct({
+        [PACKAGE_MANAGER_YARN]: S.any,
+        [PACKAGE_MANAGER_NPM]: S.any,
+        [PACKAGE_MANAGER_PNPM]: S.any,
+        [PACKAGE_MANAGER_UNSPECIFIED]: S.any,
+      }),
     ),
     prompt: {
       type: "list",
       message: "Which package manager will be used in the project?",
-      default: "yarn",
+      default: PACKAGE_MANAGER_YARN,
       choices: [
-        { name: "Yarn", value: "yarn" },
-        { name: "NPM", value: "npm" },
-        { name: "PNPM", value: "pnpm" },
+        { name: "Yarn", value: PACKAGE_MANAGER_YARN },
+        { name: "NPM", value: PACKAGE_MANAGER_NPM },
+        { name: "PNPM", value: PACKAGE_MANAGER_PNPM },
         {
           name: "Other/Decide later",
-          value: "unspecified",
+          value: PACKAGE_MANAGER_UNSPECIFIED,
         },
       ],
     },

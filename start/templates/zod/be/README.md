@@ -9,11 +9,9 @@ The contents of this folder were created using [`ty-ras/start` npx starter templ
 As a very first task, it is good idea to pick your favourite testing framework, and write some tests for the code.
 
 As a good second task, one can run development server.
-To do that, simply install dependencies, and execute `dev` script from `package.json` using your favourite package manager:
+To do that, simply install dependencies (if not already done during project creation stage), and execute `dev` script from `package.json`:
 ```sh
-yarn install && yarn run dev
-npm install && npm run dev
-pnpm install && pnpm run dev
+__PACKAGE_MANAGER__ install && __PACKAGE_MANAGER__ run dev
 ```
 
 After running the command above, the text `Started server at <host>:<port>` will signal that HTTP server is now listening at given port.

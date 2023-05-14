@@ -8,11 +8,9 @@ It is part of the [TyRAS-oriented Node HTTP fullstack app](../../README.md).
 As a very first task, it is good idea to pick your favourite testing framework, and write some tests for the code.
 
 As a good second task, one can run development server.
-To do that, simply execute `dev` script from `package.json` using your favourite package manager:
+To do that, simply execute `dev` script from `package.json`:
 ```sh
-yarn run dev
-npm run dev
-pnpm run dev
+__PACKAGE_MANAGER__ run dev
 ```
 
 After running the command above, the text `Started server at <host>:<port>` will signal that HTTP server is now listening at given port.

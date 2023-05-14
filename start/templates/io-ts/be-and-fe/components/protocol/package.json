@@ -14,7 +14,7 @@
   },
   "devDependencies": {},
   "scripts": {
-    "build": "yarn run tsc",
+    "build": "__PACKAGE_MANAGER__ run tsc",
     "lint": "eslint ./src --ext .ts,.tsx",
     "tsc": "tsc"
   }

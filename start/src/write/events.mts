@@ -17,9 +17,8 @@ export interface EventsPayloads {
     versions: Record<string, unknown>;
   };
   endFixPackageJsonVersions: { packageJsonPaths: ReadonlyArray<string> };
-  startFixingPackageNames: {};
-  fixedPackageName: { path: string };
-  endFixingPackageNames: { paths: Set<string> };
+  startProcessingFileContents: {};
+  endProcessingFileContents: { paths: Set<string> };
 }
 
 export type OnEvent = (evt: EventArgument) => void;

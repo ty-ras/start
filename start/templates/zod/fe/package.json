@@ -31,7 +31,7 @@
     "vite": "^4.2.1"
   },
   "scripts": {
-    "build": "yarn run tsc --project tsconfig.build.json && vite build",
+    "build": "__PACKAGE_MANAGER__ run tsc --project tsconfig.build.json && vite build",
     "dev": "vite --strictPort",
     "lint": "eslint ./src --ext .ts,.tsx",
     "tsc": "tsc"

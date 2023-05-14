@@ -3,11 +3,15 @@ import * as S from "@effect/schema/Schema";
 import * as Match from "@effect/match";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import type * as input from "./validate-input.mjs";
+import * as inputSpec from "./input-spec.mjs";
+import type * as validatedInput from "./validate-input.mjs";
 import type * as events from "./events.mjs";
 import materializePackageJson from "./materialize-package-json.mjs";
 import packageJson from "./package-json.mjs";
 import copyFiles, { type CopyInstruction } from "./copy-files.mjs";
+import processFileContents, {
+  type FileContentsReplacement,
+} from "./process-file-contents.mjs";
 
 export default async ({ validatedInput, packageRoot, onEvent }: Input) => {
   // Copy all files first
@@ -19,7 +23,7 @@ export default async ({ validatedInput, packageRoot, onEvent }: Input) => {
   onEvent?.({ event: "startFixPackageJsonVersions", data: {} });
 
   // Start by finding all package.json files
-  const { folderName } = validatedInput;
+  const { folderName, packageManager } = validatedInput;
   const allFilePaths = await getAllFilePaths(folderName);
   const packageJsonPaths = allFilePaths.filter(
     (filePath) => path.basename(filePath) === "package.json",
@@ -54,45 +58,43 @@ export default async ({ validatedInput, packageRoot, onEvent }: Input) => {
   );
   onEvent?.({ event: "endFixPackageJsonVersions", data: { packageJsonPaths } });
 
-  // If there is more than one package.json file, we must switch all "@ty-ras-sample" strings into actual project prefix
+  // At this point, we have copied files and stabilized dependencies' version specs
+  // But there are still certain placeholders that need replacing.
+  const fileProcessInstructions: Array<FileContentsReplacement> = [
+    {
+      searchFor: "__PACKAGE_MANAGER__",
+      // NPM Reasonable choice if package manager was not specified, since instructions tell this to be invoked via `npx`
+      replaceWith:
+        packageManager === inputSpec.PACKAGE_MANAGER_UNSPECIFIED
+          ? inputSpec.PACKAGE_MANAGER_NPM
+          : packageManager,
+    },
+  ];
   if (packageJsonPaths.length > 1) {
-    onEvent?.({ event: "startFixingPackageNames", data: {} });
-    const modifiedPaths: Set<string> = new Set();
-    await Promise.all(
-      allFilePaths.map(
-        async (filePath) =>
-          await F.pipe(
-            await fs.readFile(filePath, "utf8"),
-            (fileContents) => {
-              const newFileContents = fileContents.replaceAll(
-                "@ty-ras-sample",
-                `@${projectName}`,
-              );
-              if (fileContents !== newFileContents) {
-                modifiedPaths.add(filePath);
-                onEvent?.({
-                  event: "fixedPackageName",
-                  data: { path: filePath },
-                });
-              }
-              return newFileContents;
-            },
-            (newFileContents) =>
-              fs.writeFile(filePath, newFileContents, "utf8"),
-          ),
-      ),
-    );
-    onEvent?.({
-      event: "endFixingPackageNames",
-      data: { paths: modifiedPaths },
+    // If there is more than one package.json file, we must switch all "@ty-ras-sample" strings into actual project prefix
+    fileProcessInstructions.push({
+      searchFor: "@ty-ras-sample",
+      replaceWith: `@${projectName}`,
     });
   }
+
+  onEvent?.({ event: "startProcessingFileContents", data: {} });
+  const modifiedPaths = await processFileContents(
+    allFilePaths.map((filePath) => ({
+      filePath,
+      replacementData: fileProcessInstructions,
+    })),
+  );
+  onEvent?.({
+    event: "endProcessingFileContents",
+    data: { paths: modifiedPaths },
+  });
 
   // We are done!
 };
 
 export interface Input {
-  validatedInput: input.ValidatedInput;
+  validatedInput: validatedInput.ValidatedInput;
   packageRoot: string;
   onEvent?: events.OnEvent;
 }

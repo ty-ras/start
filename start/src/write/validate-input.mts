@@ -12,13 +12,7 @@ import inputSpec, {
 } from "./input-spec.mjs";
 import * as fs from "node:fs/promises";
 
-export default (
-  input: InputFromCLIOrUser,
-):
-  | string
-  | Promise<
-      ValidatedInput | Array<readonly [keyof InputFromCLIOrUser, string]>
-    > =>
+export default (input: InputFromCLIOrUser) =>
   F.pipe(
     input,
     inputSchemaDecoder,

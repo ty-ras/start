@@ -1,10 +1,6 @@
-import validateInputImport from "./validate-input.mjs";
-import writeFilesImport from "./write-project.mjs";
-import inputSpecImport from "./input-spec.mjs";
-
-export const validateInput = validateInputImport;
-export const writeFiles = writeFilesImport;
-export const inputSpec = inputSpecImport;
+export { default as inputSpec } from "./input-spec.mjs";
+export { default as validateInput } from "./validate-input.mjs";
+export { default as writeFiles } from "./write-project.mjs";
 
 export type * from "./validate-input.mjs";
 export type * from "./input-spec.mjs";

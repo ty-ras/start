@@ -7,7 +7,6 @@ import * as createTemplate from "./write/index.mjs";
 import * as initialize from "./initialize/index.mjs";
 import * as mi from "meow-inquirer";
 
-// eslint-disable-next-line sonarjs/cognitive-complexity
 export default async () => {
   const { cliArgs, packageRoot } = await mi.createCLIArgs({
     inputSpec: {
@@ -20,41 +19,39 @@ export default async () => {
   // At this point, program would've exited if there was --help or --version specified
   // Since we are still here, continue with printing welcome message
   printWelcomeMessage();
-  process.stdin.resume();
 
-  // process.on("exit", () => console.trace("PROCESS_EXIT"));
-  // process.on("beforeExit", () => console.trace("PROCESS_BEFORE_EXIT"));
-  // process.on("SIGINT", () => console.trace("SIGINTZZ")); // Collect any missing input (not passed via command-line arguments) by prompting the user
-  const validatedInput = await collectInputForWriting({
+  const writeProjectFilesInput = await collectInputForWriting({
     cliArgs,
     getDynamicValueInput: (values) => values.components,
     inputValidator: createTemplate.validateInput,
   });
   // Now that the mandatory input is collected and validated, write project files
-  await writeProjectFilesWithSpinner(packageRoot, validatedInput);
+  await writeProjectFilesWithSpinner(packageRoot, writeProjectFilesInput);
 
-  // If there is missing input, and stdin is available, proceed to prompt the user for that
+  // Proceed to prompt the user for that
+  let initializeInput: initialize.ValidatedInput | undefined;
   try {
-    await collectInputForInitializing({
+    initializeInput = await collectInputForInitializing({
       cliArgs,
-      getDynamicValueInput: () => validatedInput,
-      inputValidator: (partial) => Promise.resolve(partial),
+      getDynamicValueInput: () => writeProjectFilesInput,
+      inputValidator: initialize.validateInput,
     });
   } catch (error) {
     // This can happen e.g. when all mandatory arguments are provided via CLI parameters
     // and stdin is /dev/null .
-    if (isTTYError(error)) {
-      console.log("WAS TTY ERROR");
-      // TODO print warning?
-    } else {
+    if (!isTTYError(error)) {
       throw error;
     }
   }
 
-  // At this point, we are done
+  if (initializeInput) {
+    await initialize.initialize(writeProjectFilesInput, initializeInput);
+  }
+
+  // We are done!
   mi.print(
     chalk.whiteBright(
-      `Project creation succeeded!\nPlease take a look in the README file within folder "${validatedInput.folderName}" for short information on how to proceed.`,
+      `Project creation succeeded!\nPlease take a look in the README file within folder "${writeProjectFilesInput.folderName}" for short information on how to proceed.`,
     ),
   );
 };
@@ -65,7 +62,9 @@ const collectInputForInitializing = mi.collectInput(initialize.inputSpec);
 const gradient = gradientString("#0070BB", "#FEBE10", "#BC3F4A");
 
 const printWelcomeMessage = () => {
-  mi.print(chalk.bold(gradient("\nTyRAS\n")));
+  mi.print(
+    chalk.bold(`\n${gradient("TyRAS")} - Typesafe REST API Specification`),
+  );
   mi.print(
     chalk.italic(
       "This program will create new project to work with HTTP backend and/or frontend utilizing TyRAS libraries.\n",

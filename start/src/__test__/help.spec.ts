@@ -33,6 +33,10 @@ const expectedHelpText = `
           Used only when components is "fe" or "be-and-fe".
           Schema: "fetch"
     --setupGit, -g	Should the project folder be initialized with Git?
+          Only if Git is detected to be installed
+          Schema: boolean
+    --installDependencies, -i     Should the project dependencies be installed?
+          Only if selected package manager is detected to be installed
           Schema: boolean
 
 `;

@@ -37,13 +37,14 @@ export default async () => {
   try {
     await collectInputForInitializing({
       cliArgs,
-      getDynamicValueInput: () => undefined,
-      inputValidator: () => Promise.resolve({}),
+      getDynamicValueInput: () => validatedInput,
+      inputValidator: (partial) => Promise.resolve(partial),
     });
   } catch (error) {
     // This can happen e.g. when all mandatory arguments are provided via CLI parameters
     // and stdin is /dev/null .
     if (isTTYError(error)) {
+      console.log("WAS TTY ERROR");
       // TODO print warning?
     } else {
       throw error;

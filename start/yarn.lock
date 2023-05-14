@@ -3053,10 +3053,10 @@ mem@^9.0.2:
     map-age-cleaner "^0.1.3"
     mimic-fn "^4.0.0"
 
-meow-inquirer@0.9.3:
-  version "0.9.3"
-  resolved "https://registry.yarnpkg.com/meow-inquirer/-/meow-inquirer-0.9.3.tgz#cc612afaf5c3ad180ebbe92abf64a8cd3731fffe"
-  integrity sha512-NEkPi0YjVesATJFMRwz/Dnc6Skm7HetKNWdB1MDKSODuYubJLuAfwv3/jE1hKcpNHVVRLVB55cqEE30vAUKPYQ==
+meow-inquirer@0.9.4:
+  version "0.9.4"
+  resolved "https://registry.yarnpkg.com/meow-inquirer/-/meow-inquirer-0.9.4.tgz#7a33f0c814c79a2dcc6d00522907d5c84fc14c3d"
+  integrity sha512-eX9HEoKU8pFbDTbyBikzIM0v2wXZ6YvAcqeAtwBGvPC0mEDoCGGdH2Qaczr71MzjgyQ4sHsIluyxnGO0pwEUvw==
   dependencies:
     "@effect/match" "^0.20.3"
     chalk "^5.2.0"

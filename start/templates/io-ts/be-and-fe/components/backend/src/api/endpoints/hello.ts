@@ -40,7 +40,7 @@ const hello: aux.EndpointSpec<
   state: aux.endpointState(stateSpec),
   method: tyras.METHOD_GET,
   endpointHandler: ({ url: { target } }) => `Hello, ${target}!`,
-  output: tyras.responseBody(helloResponse, false),
+  output: tyras.responseBody(helloResponse),
   mdArgs: {
     openapi: {
       ...aux.mdArgsBase(

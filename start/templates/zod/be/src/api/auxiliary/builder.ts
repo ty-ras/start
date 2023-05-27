@@ -3,7 +3,7 @@
 import * as tyras from "@ty-ras/backend-node-zod-openapi";
 import type { state } from "@ty-ras-extras/backend-zod";
 import * as thisState from "./state";
-import type * as types from "./types";
+import * as types from "./types";
 
 export const createBuilders = <
   TStateInfo extends state.TStateInfoOfKeysBase,
@@ -17,12 +17,7 @@ export const createBuilders = <
     // Builder which requires metadata, with or without authentication
     withOpenAPI: noMetadata.withMetadataProvider(
       "openapi",
-      tyras.createOpenAPIProvider(
-        tyras.createJsonSchemaFunctionality({
-          contentTypes: [tyras.CONTENT_TYPE],
-          transformSchema: tyras.convertToOpenAPISchemaObject,
-        }),
-      ),
+      tyras.createOpenAPIProvider([types.CONTENT_TYPE]),
       (statePropertyNames) => {
         return {
           securitySchemes: statePropertyNames.some(
@@ -48,7 +43,7 @@ export const AUTH_SCHEME = "bearer";
 
 export type PlainBuilder<
   TStateInfo extends state.TStateInfoOfKeysBase = thisState.StateInfo,
-> = tyras.AppEndpointBuilderProvider<
+> = tyras.AppEndpointBuilderStage0<
   tyras.ServerContext,
   TStateInfo,
   unknown,
@@ -59,12 +54,12 @@ export type PlainBuilder<
 >;
 export type Builder<
   TStateInfo extends state.TStateInfoOfKeysBase = thisState.StateInfo,
-> = tyras.AppEndpointBuilderProvider<
+> = tyras.AppEndpointBuilderStage0<
   tyras.ServerContext,
   TStateInfo,
   tyras.AnyDecoder,
   tyras.AnyEncoder,
-  tyras.OutputValidatorSpec<any, any>,
-  tyras.InputValidatorSpec<any>,
+  tyras.OutputValidatorSpec<any, any, typeof types.CONTENT_TYPE>,
+  tyras.InputValidatorSpec<any, typeof types.CONTENT_TYPE>,
   types.TMetadataProviders
 >;

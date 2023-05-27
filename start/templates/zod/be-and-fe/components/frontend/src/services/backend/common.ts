@@ -1,6 +1,6 @@
 import * as tyras from "@ty-ras/frontend-fetch-zod";
 
-export type APICallFactory = tyras.APICallFactory<tyras.HKTEncoded, "auth">;
+export type APICallFactory = tyras.APICallFactory<"auth">;
 
 export type APIEndpointsCreationParameters = [APICallFactory];
 

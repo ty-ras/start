@@ -7,8 +7,8 @@
     "node": ">= 18"
   },
   "dependencies": {
-    "@ty-ras/frontend-fetch-io-ts": "^0.13.1",
-    "@ty-ras-extras/frontend-io-ts": "^0.13.2",
+    "@ty-ras/frontend-fetch-io-ts": "^1.0.1",
+    "@ty-ras-extras/frontend-io-ts": "^1.0.1",
     "@ty-ras-sample/protocol": "1.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

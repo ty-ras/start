@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 import * as tyras from "@ty-ras/backend-node-io-ts-openapi";
-import { function as F, either as E } from "fp-ts";
+import { either as E } from "fp-ts";
 import type * as api from "../api";
 import type * as config from "../config";
 import type * as env from "../environment";
@@ -26,20 +26,14 @@ export const startHTTPServer = async <
       // Endpoints comprise the REST API as a whole
       endpoints,
       // React on various server events.
-      events: F.flow(
+      events: (eventName, eventArgs) => {
         // First, trigger CORS handler (it will modify the context object of eventArgs)
-        (eventName, eventArgs) => ({
-          eventName,
-          eventArgs,
-          corsTriggered: corsHandler(eventName, eventArgs),
-        }),
+        const corsTriggered = corsHandler(eventName, eventArgs);
+
         // Then log event info + whether CORS triggered to console
-        ({ eventName, eventArgs, corsTriggered }) => (
-          console.info("EVENT", eventName, corsTriggered),
-          // eslint-disable-next-line sonarjs/no-use-of-empty-return-value
-          logEventArgs(eventArgs)
-        ),
-      ),
+        console.info("EVENT", eventName, corsTriggered);
+        logEventArgs(eventArgs);
+      },
       // Create the state object for endpoints
       // Endpoints specify which properties of State they want, and this callback tries to provide them
       // The final validation of the returned state object is always done by endpoint specification, and thus it is enough to just attempt to e.g. provide username.

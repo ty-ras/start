@@ -1,6 +1,5 @@
 const baseline = require('../../.eslintrc.base.cjs');
 baseline.parserOptions.tsconfigRootDir = __dirname
-baseline.settings['import/resolver'].node.extensions.push(".tsx");
 
 module.exports = {
   ...baseline,
@@ -11,7 +10,7 @@ module.exports = {
     "plugin:jsx-a11y/strict",
   ],
   settings: {
-    ...baseline.settings,
+    ...(baseline.settings || {}),
     "react": {
       version: "detect"
     }

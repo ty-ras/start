@@ -1,3 +1,4 @@
+// ESLint config for formatting the <project name>/src/**/*.ts files.
 module.exports = {
   root: true,
   extends: [
@@ -5,20 +6,16 @@ module.exports = {
     "plugin:@typescript-eslint/recommended",
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended-requiring-type-checking",
-    // See https://github.com/prettier/eslint-config-prettier/blob/main/CHANGELOG.md#version-800-2021-02-21
     "plugin:prettier/recommended",
     "plugin:sonarjs/recommended"
   ],
   plugins: ["prettier"],
   parser: "@typescript-eslint/parser",
-  env: {
-    node: true,
-    es2020: true
-  },
   parserOptions: {
     project: "./tsconfig.json",
     sourceType: "module",
-    ecmaVersion: 2020,
+    ecmaVersion: "latest",
+    tsconfigRootDir: __dirname,
   },
   rules: {
     "prettier/prettier": "error",
@@ -30,13 +27,5 @@ module.exports = {
     "no-useless-return": "error",
     "no-console": "error",
     "sonarjs/no-nested-template-literals": "off", // Nested template literals are OK really
-  },
-  settings: {
-    "import/resolver": {
-      node: {
-        paths: ["src"],
-        extensions: [".ts"] // Add .tsx, .js, .jsx if needed
-      }
-    }
   }
 };

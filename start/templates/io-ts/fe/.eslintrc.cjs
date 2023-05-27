@@ -16,14 +16,10 @@ module.exports = {
   ],
   plugins: ["prettier"],
   parser: "@typescript-eslint/parser",
-  env: {
-    node: true,
-    es2020: true
-  },
   parserOptions: {
     project: "./tsconfig.json",
     sourceType: "module",
-    ecmaVersion: 2022,
+    ecmaVersion: "latest",
     tsconfigRootDir: __dirname,
   },
   rules: {
@@ -40,12 +36,6 @@ module.exports = {
     "react/react-in-jsx-scope": "off"
   },
   settings: {
-    "import/resolver": {
-      node: {
-        paths: ["src"],
-        extensions: [".ts"] // Add .tsx, .js, .jsx if needed
-      }
-    },
     "react": {
       version: "detect"
     }

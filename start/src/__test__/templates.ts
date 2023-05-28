@@ -30,7 +30,7 @@ export const EXTERNAL_DIR = await fs.mkdtemp(
 export default async (
   c: ExecutionContext,
   args: input.InputFromCLIOrUser & initInput.InputFromCLIOrUser,
-  expectedAssertCount = 7,
+  expectedAssertCount = 8,
 ) => {
   c.plan(expectedAssertCount);
   await c.notThrowsAsync(
@@ -319,6 +319,19 @@ const createVerifySinglePackage = (
           await cliUtils.execFile(
             packageManager,
             [...yarnExtraArgs, "run", "tsc"],
+            {
+              shell: false,
+              cwd,
+            },
+          ),
+      );
+
+      // Now run also lint, to ensure code is formatted correctly
+      await c.notThrowsAsync(
+        async () =>
+          await cliUtils.execFile(
+            packageManager,
+            [...yarnExtraArgs, "run", "lint"],
             {
               shell: false,
               cwd,

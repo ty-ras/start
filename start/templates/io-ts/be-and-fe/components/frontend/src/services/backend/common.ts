@@ -1,6 +1,6 @@
 import * as tyras from "@ty-ras/frontend-fetch-io-ts";
 
-export type APICallFactory = tyras.APICallFactory<tyras.HKTEncoded, "auth">;
+export type APICallFactory = tyras.APICallFactory<"auth">;
 
 export type APIEndpointsCreationParameters = [APICallFactory];
 

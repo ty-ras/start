@@ -36,7 +36,7 @@ runOneTest(
     server: "node",
     client: "fetch",
   },
-  16,
+  19,
 );
 
 runOneTest("Test BE-ZOD-NODE", testTemplateGeneration, {
@@ -60,7 +60,7 @@ runOneTest(
     server: "node",
     client: "fetch",
   },
-  16,
+  19,
 );
 
 runOneTest(
@@ -75,5 +75,5 @@ runOneTest(
     folderName: EXTERNAL_DIR,
     installDependencies: true,
   },
-  13,
+  16,
 );

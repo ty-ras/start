@@ -1,4 +1,4 @@
-import type * as tyras from "@ty-ras/backend-node-zod-openapi";
+import * as tyras from "@ty-ras/backend-node-zod-openapi";
 import type { state } from "@ty-ras-extras/backend-zod";
 import type * as thisState from "./state";
 
@@ -15,15 +15,17 @@ export type EndpointSpec<
   tyras.ServerContext,
   state.StateInfoOfKeys<keyof TFullStateInfo>,
   state.GetState<TFullStateInfo, TStateSpec>,
-  TMetadataProviders
+  TMetadataProviders,
+  typeof CONTENT_TYPE,
+  typeof CONTENT_TYPE
 >;
 
 export type TMetadataProviders = {
   openapi: tyras.OpenAPIMetadataProvider<
     tyras.HeaderDecoder,
     tyras.HeaderEncoder,
-    tyras.OutputValidatorSpec<any, any>,
-    tyras.InputValidatorSpec<any>
+    tyras.OutputValidatorSpec<any, any, typeof CONTENT_TYPE>,
+    tyras.InputValidatorSpec<any, typeof CONTENT_TYPE>
   >;
 };
 
@@ -37,3 +39,5 @@ export type FunctionalityParameters<TFunctionality extends TFunctionalityBase> =
   TFunctionality extends TFunctionalityBase<infer T, infer _> ? T : never;
 export type FunctionalityOutput<TFunctionality extends TFunctionalityBase> =
   TFunctionality extends TFunctionalityBase<infer _, infer T> ? T : never;
+
+export const CONTENT_TYPE = tyras.CONTENT_TYPE;

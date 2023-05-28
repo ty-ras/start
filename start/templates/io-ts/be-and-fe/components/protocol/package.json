@@ -10,7 +10,7 @@
     "node": ">= 18"
   },
   "dependencies": {
-    "@ty-ras/protocol": "^0.13.0"
+    "@ty-ras/data-io-ts": "^1.0.1"
   },
   "devDependencies": {},
   "scripts": {

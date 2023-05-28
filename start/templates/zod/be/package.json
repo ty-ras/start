@@ -5,8 +5,8 @@
     "node": ">= 18"
   },
   "dependencies": {
-    "@ty-ras/backend-node-zod-openapi": "^0.13.0",
-    "@ty-ras-extras/backend-zod": "^0.13.1",
+    "@ty-ras/backend-node-zod-openapi": "^1.0.0",
+    "@ty-ras-extras/backend-zod": "^1.0.0",
     "zod": "^3.21.4"
   },
   "devDependencies": {

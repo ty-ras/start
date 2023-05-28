@@ -13,9 +13,9 @@ export const mdArgsBase = <TOutput>(
   urlParameters: undefined,
   queryParameters: undefined,
   requestHeaders: undefined,
-  body: undefined,
+  requestBody: undefined,
   responseHeaders: undefined,
-  output: {
+  responseBody: {
     description: output.description,
     mediaTypes: {
       "application/json": {

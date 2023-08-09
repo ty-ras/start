@@ -5,6 +5,7 @@ export default F.pipe(
   S.record(S.string, S.unknown),
   S.extend(
     S.struct({
+      name: S.string,
       dependencies: S.record(S.string, S.string),
       devDependencies: S.record(S.string, S.string),
     }),

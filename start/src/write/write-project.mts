@@ -9,7 +9,7 @@ import type * as events from "./events.mjs";
 import materializePackageJson, {
   parsePackageJson as parsePackageJsonWithoutWorkspaces,
 } from "./materialize-package-json.mjs";
-import packageJson from "./package-json.mjs";
+import packageJson, { type PackageDependencies } from "./package-json.mjs";
 import copyFiles, { type CopyInstruction } from "./copy-files.mjs";
 import processFileContents, {
   type FileContentsReplacement,
@@ -48,6 +48,10 @@ export default async ({ validatedInput, packageRoot, onEvent }: Input) => {
     Match.orElse(() => undefined),
   );
   // Now perform actual version fixing
+  const fixDeps =
+    packageManager === "pnpm"
+      ? createFixPnpmDependencies(validatedInput.dataValidation)
+      : undefined;
   await Promise.all(
     packageJsonPaths.map((packageJsonPath) =>
       // Change the "^x.y.z" version specifications to "x.b.c" fixed versions
@@ -55,6 +59,7 @@ export default async ({ validatedInput, packageRoot, onEvent }: Input) => {
         onEvent,
         packageJsonPath,
         extractPackageName?.(packageJsonPath),
+        fixDeps,
       ),
     ),
   );
@@ -310,4 +315,37 @@ const getComponentFolderName = (component: "be" | "fe") =>
 const sortByKey = (array: Array<[string, string]>) => {
   array.sort(([xKey], [yKey]) => xKey.localeCompare(yKey));
   return array;
+};
+
+// We need this because protocol code has 'import ... from "@ty-ras/protocol";',
+// and PNPM requires in this case for the "@ty-ras/protocol" to be in the top-level dependency list.
+const createFixPnpmDependencies = (dataValidation: string) => {
+  const dataValidationPackage = `@ty-ras/data-${dataValidation}`;
+  return (deps: PackageDependencies): PackageDependencies => {
+    const tyrasPackages = Object.keys(deps).filter((packageName) =>
+      packageName.startsWith("@ty-ras/"),
+    );
+    if (tyrasPackages.length > 0) {
+      const majorVersionString =
+        deps[dataValidationPackage] ??
+        getAtLeastMajorVersionString(deps[tyrasPackages[0]]);
+      deps = {
+        ...deps,
+        [dataValidationPackage]:
+          deps[dataValidationPackage] ?? majorVersionString,
+        [`@ty-ras/protocol`]: majorVersionString,
+      };
+    }
+    return deps;
+  };
+};
+
+const getAtLeastMajorVersionString = (versionSpecString: string) =>
+  `^${
+    /[0-9]+/.exec(versionSpecString)?.[0] ??
+    doThrow(`Failed to find major version of TyRAS packages.`)
+  }.0.0`;
+
+const doThrow = (msg: string) => {
+  throw new Error(msg);
 };

@@ -4,12 +4,15 @@ import * as fs from "node:fs/promises";
 import { request } from "undici";
 import * as semver from "semver";
 import type * as events from "./events.mjs";
-import packageJson from "./package-json.mjs";
+import packageJson, { type PackageDependencies } from "./package-json.mjs";
 
 export default async (
   onEvent: events.MaybeOnEvent,
   packageJsonPath: string,
   name: string | undefined,
+  processDependencies:
+    | ((dependencies: PackageDependencies) => PackageDependencies)
+    | undefined,
 ) => {
   // Modify raw version specifications of package.json file into actual versions, which are newest according to version spec
   const {
@@ -22,13 +25,18 @@ export default async (
     JSON.parse,
     parsePackageJson,
   );
+
   const getLatestVersion = createGetLatestVersion(onEvent);
 
   const newPackageJson = {
     name: name ?? originalName,
     ...packageJson,
     dependencies: Object.fromEntries(
-      await Promise.all(Object.entries(dependencies).map(getLatestVersion)),
+      await Promise.all(
+        Object.entries(processDependencies?.(dependencies) ?? dependencies).map(
+          getLatestVersion,
+        ),
+      ),
     ),
     devDependencies: Object.fromEntries(
       await Promise.all(Object.entries(devDependencies).map(getLatestVersion)),

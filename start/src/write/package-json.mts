@@ -1,7 +1,7 @@
 import * as F from "@effect/data/Function";
 import * as S from "@effect/schema/Schema";
 
-export default F.pipe(
+const packageJson = F.pipe(
   S.record(S.string, S.unknown),
   S.extend(
     S.struct({
@@ -11,3 +11,7 @@ export default F.pipe(
     }),
   ),
 );
+
+export default packageJson;
+
+export type PackageDependencies = S.To<typeof packageJson>["dependencies"];

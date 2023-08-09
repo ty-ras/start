@@ -1,8 +1,9 @@
-import * as tyras from "@ty-ras/frontend-fetch-io-ts";
-import config from "../../config";
-import * as hello from "./hello";
+/**
+ * @file This file exposes the built TyRAS callbacks that can be used to call the REST API endpoints in typesafe and easy manner.
+ */
 
-const factory = tyras.createAPICallFactory(config.backend).withHeaders({});
+import greeting from "./endpoints/greeting";
+
 export default {
-  hello: hello.createEndpoints(factory),
+  greeting,
 };

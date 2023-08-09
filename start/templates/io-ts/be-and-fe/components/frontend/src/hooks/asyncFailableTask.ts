@@ -31,11 +31,12 @@ export const useAsyncFailableTask = <E, T, TInput extends Array<any>>(
           void F.pipe(
             task,
             TE.bimap(
-              (error) => (
-                // eslint-disable-next-line no-console
-                console.error("Failure in async task", error),
-                setState({ result: "error", error })
-              ),
+              (error) =>
+                (
+                  // eslint-disable-next-line no-console
+                  console.error("Failure in async task", error),
+                  setState({ result: "error", error })
+                ),
               (data) => setState({ result: "success", data }),
             ),
           )();

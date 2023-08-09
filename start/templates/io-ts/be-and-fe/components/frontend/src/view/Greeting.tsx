@@ -15,7 +15,7 @@ const Greeting = () => {
         F.pipe(
           // Execute backend call, catching any thrown exceptions, and ending up in TaskEither<Error, tyras.APICallResult<T>>
           TE.tryCatch(
-            async () => await backend.hello.sayHello({ url: { target } }),
+            async () => await backend.greeting.getGreeting({ url: { target } }),
             E.toError,
           ),
           // Transform TaskEither<Error, tyras.APICallResult<T>> into TaskEither<tyras.APICallResultError, T>>

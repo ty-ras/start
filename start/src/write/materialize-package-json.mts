@@ -4,26 +4,39 @@ import * as fs from "node:fs/promises";
 import { request } from "undici";
 import * as semver from "semver";
 import type * as events from "./events.mjs";
-import packageJson from "./package-json.mjs";
+import packageJson, { type PackageDependencies } from "./package-json.mjs";
 
 export default async (
   onEvent: events.MaybeOnEvent,
   packageJsonPath: string,
   name: string | undefined,
+  processDependencies:
+    | ((dependencies: PackageDependencies) => PackageDependencies)
+    | undefined,
 ) => {
   // Modify raw version specifications of package.json file into actual versions, which are newest according to version spec
-  const { devDependencies, dependencies, ...packageJson } = F.pipe(
+  const {
+    devDependencies,
+    dependencies,
+    name: originalName,
+    ...packageJson
+  } = F.pipe(
     await fs.readFile(packageJsonPath, "utf8"),
     JSON.parse,
     parsePackageJson,
   );
+
   const getLatestVersion = createGetLatestVersion(onEvent);
 
   const newPackageJson = {
-    name: name ?? packageJson.name,
+    name: name ?? originalName,
     ...packageJson,
     dependencies: Object.fromEntries(
-      await Promise.all(Object.entries(dependencies).map(getLatestVersion)),
+      await Promise.all(
+        Object.entries(processDependencies?.(dependencies) ?? dependencies).map(
+          getLatestVersion,
+        ),
+      ),
     ),
     devDependencies: Object.fromEntries(
       await Promise.all(Object.entries(devDependencies).map(getLatestVersion)),
@@ -37,7 +50,7 @@ export default async (
   );
 };
 
-const parsePackageJson = F.pipe(packageJson, S.parse);
+export const parsePackageJson = F.pipe(packageJson, S.parse);
 
 const createGetLatestVersion =
   (onEvent: events.MaybeOnEvent) =>

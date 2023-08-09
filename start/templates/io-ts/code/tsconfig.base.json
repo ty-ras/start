@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "module": "ESNext",
+    "target": "ES2022",
+    "moduleResolution": "Node",
+    "lib": [
+      "ES2022"
+    ],
+    "sourceMap": false,
+    "allowJs": false,
+    "forceConsistentCasingInFileNames": true,
+    "exactOptionalPropertyTypes": true,
+    "declaration": false,
+    "noEmit": true,
+    "noErrorTruncation": true,
+    "incremental": true,
+  }
+}

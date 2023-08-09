@@ -6,8 +6,10 @@ import * as path from "node:path";
 import * as inputSpec from "./input-spec.mjs";
 import type * as validatedInput from "./validate-input.mjs";
 import type * as events from "./events.mjs";
-import materializePackageJson from "./materialize-package-json.mjs";
-import packageJson from "./package-json.mjs";
+import materializePackageJson, {
+  parsePackageJson as parsePackageJsonWithoutWorkspaces,
+} from "./materialize-package-json.mjs";
+import packageJson, { type PackageDependencies } from "./package-json.mjs";
 import copyFiles, { type CopyInstruction } from "./copy-files.mjs";
 import processFileContents, {
   type FileContentsReplacement,
@@ -26,7 +28,7 @@ export default async ({ validatedInput, packageRoot, onEvent }: Input) => {
   const { folderName, packageManager } = validatedInput;
   const allFilePaths = await getAllFilePaths(folderName);
   const packageJsonPaths = allFilePaths.filter(
-    (filePath) => path.basename(filePath) === "package.json",
+    (filePath) => path.basename(filePath) === PACKAGE_JSON,
   );
   const projectName = path.basename(folderName);
 
@@ -46,6 +48,10 @@ export default async ({ validatedInput, packageRoot, onEvent }: Input) => {
     Match.orElse(() => undefined),
   );
   // Now perform actual version fixing
+  const fixDeps =
+    packageManager === "pnpm"
+      ? createFixPnpmDependencies(validatedInput.dataValidation)
+      : undefined;
   await Promise.all(
     packageJsonPaths.map((packageJsonPath) =>
       // Change the "^x.y.z" version specifications to "x.b.c" fixed versions
@@ -53,6 +59,7 @@ export default async ({ validatedInput, packageRoot, onEvent }: Input) => {
         onEvent,
         packageJsonPath,
         extractPackageName?.(packageJsonPath),
+        fixDeps,
       ),
     ),
   );
@@ -69,14 +76,11 @@ export default async ({ validatedInput, packageRoot, onEvent }: Input) => {
           ? inputSpec.PACKAGE_MANAGER_NPM
           : packageManager,
     },
-  ];
-  if (packageJsonPaths.length > 1) {
-    // If there is more than one package.json file, we must switch all "@ty-ras-sample" strings into actual project prefix
-    fileProcessInstructions.push({
+    {
       searchFor: "@ty-ras-sample",
-      replaceWith: `@${projectName}`,
-    });
-  }
+      replaceWith: packageJsonPaths.length > 1 ? `@${projectName}` : "..",
+    },
+  ];
 
   onEvent?.({ event: "startProcessingFileContents", data: {} });
   const modifiedPaths = await processFileContents(
@@ -129,18 +133,139 @@ const getCopyInstructions = ({
   packageRoot,
   validatedInput: { folderName, packageManager, components, dataValidation },
 }: Omit<Input, "onEvent">) => {
+  const sourcePathComponentsBase = [
+    packageRoot,
+    "templates",
+    dataValidation,
+    "code",
+  ];
+  const sourcePathComponents = [...sourcePathComponentsBase];
+  if (components !== "be-and-fe") {
+    sourcePathComponents.push("components", getComponentFolderName(components));
+  }
   const first: CopyInstruction = {
-    source: path.join(packageRoot, "templates", dataValidation, components),
+    source: path.join(...sourcePathComponents),
     target: folderName,
   };
   const retVal = [first];
+  if (components !== "be-and-fe") {
+    // We must perform the following post-processing operations:
+    const protocolSourceFolder = sourcePathComponents
+      .slice(0, -1)
+      .concat("protocol", "src");
+    const protocolTargetFolder = [folderName, "src"].concat(
+      ...(components === "be"
+        ? ["api", "protocol"]
+        : ["services", "backend", "protocol"]),
+    );
+    retVal.push(
+      // 1. Copy protocol code directly to src/api folder
+      {
+        source: path.join(...protocolSourceFolder.concat("index.ts")),
+        target: path.join(...protocolTargetFolder.concat("index.ts")),
+      },
+      {
+        source: path.join(...protocolSourceFolder.concat("greeting")),
+        target: path.join(...protocolTargetFolder.concat("greeting")),
+      },
+      // 2. Copy <template root>/tsconfig.base.json, .prettierrc, .eslintrc.base.cjs
+      {
+        source: path.join(
+          ...sourcePathComponentsBase.concat("tsconfig.base.json"),
+        ),
+        target: path.join(folderName, "tsconfig.base.json"),
+      },
+      {
+        source: path.join(...sourcePathComponentsBase.concat(".prettierrc")),
+        target: path.join(folderName, ".prettierrc"),
+      },
+      {
+        source: path.join(
+          ...sourcePathComponentsBase.concat(".eslintrc.base.cjs"),
+        ),
+        target: path.join(folderName, ".eslintrc.base.cjs"),
+      },
+      // 3. fix paths in tsconfig.json, .eslintrc.cjs
+      {
+        source: async () =>
+          F.pipe(
+            await fs.readFile(path.join(folderName, "tsconfig.json"), "utf8"),
+            (strContents) =>
+              strContents.replaceAll(
+                '"extends": "../../tsconfig.base.json"',
+                '"extends": "./tsconfig.base.json"',
+              ),
+          ),
+        target: path.join(folderName, "tsconfig.json"),
+      },
+      {
+        source: async () =>
+          F.pipe(
+            await fs.readFile(path.join(folderName, ".eslintrc.cjs"), "utf8"),
+            (strContents) =>
+              strContents.replaceAll(
+                "require('../../.eslintrc.base.cjs')",
+                "require('./.eslintrc.base.cjs')",
+              ),
+          ),
+        target: path.join(folderName, ".eslintrc.cjs"),
+      },
+      // 4. Copy custom README
+      {
+        source: path.join(
+          ...sourcePathComponentsBase
+            .slice(0, -1)
+            .concat("customizations", components, "README.md"),
+        ),
+        target: path.join(folderName, "README.md"),
+      },
+      // 5. Merge all package.json dependencies (remove anything with "@ty-ras-sample/xyz")
+      {
+        source: async () => {
+          const basePackageJson = F.pipe(
+            await fs.readFile(
+              path.join(...sourcePathComponentsBase.concat(PACKAGE_JSON)),
+              "utf8",
+            ),
+            JSON.parse,
+            parsePackageJson,
+          );
+          return F.pipe(
+            await fs.readFile(path.join(folderName, PACKAGE_JSON), "utf8"),
+            JSON.parse,
+            parsePackageJsonWithoutWorkspaces,
+            ({ dependencies, devDependencies, ...remaining }) => ({
+              ...remaining,
+              dependencies: Object.fromEntries(
+                sortByKey([
+                  ...Object.entries(dependencies).filter(
+                    ([packageName]) =>
+                      !packageName.startsWith("@ty-ras-sample"),
+                  ),
+                  ...Object.entries(basePackageJson.dependencies),
+                ]),
+              ),
+              devDependencies: Object.fromEntries(
+                sortByKey([
+                  ...Object.entries(basePackageJson.devDependencies),
+                  ...Object.entries(devDependencies),
+                ]),
+              ),
+            }),
+            JSON.stringify,
+          );
+        },
+        target: path.join(folderName, PACKAGE_JSON),
+      },
+    );
+  }
   if (packageManager === "pnpm" && components === "be-and-fe") {
     // When we are doing workspace-based setup with pnpm, we must delete 'workspaces' field from package.json,
     // and emit pnpm-workspace.yaml with corresponding content.
     // Apparently supporting 'workspaces' field of package.json is some kind of principal problem:
     // https://github.com/pnpm/pnpm/issues/2255
     // Notice that we can't read the file at packageJsonPath _at this point_, as first copy step is not yet executed.
-    const packageJsonPath = path.join(folderName, "package.json");
+    const packageJsonPath = path.join(folderName, PACKAGE_JSON);
     let seenWorkspaces:
       | S.To<typeof packageJsonWithWorkspaces>["workspaces"]
       | undefined;
@@ -181,3 +306,46 @@ const packageJsonWithWorkspaces = F.pipe(
   ),
 );
 const parsePackageJson = F.pipe(packageJsonWithWorkspaces, S.parse);
+
+const PACKAGE_JSON = "package.json";
+
+const getComponentFolderName = (component: "be" | "fe") =>
+  component === "be" ? "backend" : "frontend";
+
+const sortByKey = (array: Array<[string, string]>) => {
+  array.sort(([xKey], [yKey]) => xKey.localeCompare(yKey));
+  return array;
+};
+
+// We need this because protocol code has 'import ... from "@ty-ras/protocol";',
+// and PNPM requires in this case for the "@ty-ras/protocol" to be in the top-level dependency list.
+const createFixPnpmDependencies = (dataValidation: string) => {
+  const dataValidationPackage = `@ty-ras/data-${dataValidation}`;
+  return (deps: PackageDependencies): PackageDependencies => {
+    const tyrasPackages = Object.keys(deps).filter((packageName) =>
+      packageName.startsWith("@ty-ras/"),
+    );
+    if (tyrasPackages.length > 0) {
+      const majorVersionString =
+        deps[dataValidationPackage] ??
+        getAtLeastMajorVersionString(deps[tyrasPackages[0]]);
+      deps = {
+        ...deps,
+        [dataValidationPackage]:
+          deps[dataValidationPackage] ?? majorVersionString,
+        [`@ty-ras/protocol`]: majorVersionString,
+      };
+    }
+    return deps;
+  };
+};
+
+const getAtLeastMajorVersionString = (versionSpecString: string) =>
+  `^${
+    /[0-9]+/.exec(versionSpecString)?.[0] ??
+    doThrow(`Failed to find major version of TyRAS packages.`)
+  }.0.0`;
+
+const doThrow = (msg: string) => {
+  throw new Error(msg);
+};

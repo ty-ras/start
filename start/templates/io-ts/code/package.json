@@ -1,0 +1,29 @@
+{
+  "name": "@ty-ras-sample/main",
+  "private": true,
+  "workspaces": [
+    "components/*"
+  ],
+  "engines": {
+    "node": ">= 18"
+  },
+  "dependencies": {
+    "fp-ts": "^2.13.1",
+    "io-ts": "^2.2.20",
+    "io-ts-types": "^0.5.19",
+    "monocle-ts": "^2.3.13",
+    "newtype-ts": "^0.3.5"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.22.10",
+    "@babel/eslint-parser": "^7.22.10",
+    "@typescript-eslint/eslint-plugin": "^6.3.0",
+    "@typescript-eslint/parser": "^6.3.0",
+    "eslint": "^8.46.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "eslint-plugin-sonarjs": "^0.20.0",
+    "prettier": "^3.0.1",
+    "typescript": "^5.1.6"
+  }
+}

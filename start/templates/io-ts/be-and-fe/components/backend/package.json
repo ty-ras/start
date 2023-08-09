@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@ty-ras/backend-node-io-ts-openapi": "^2.0.1",
+    "@ty-ras-extras/backend-io-ts": "^2.0.0",
     "@ty-ras-sample/protocol": "1.0.0"
   },
   "devDependencies": {

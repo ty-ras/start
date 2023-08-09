@@ -1,6 +1,7 @@
 import * as tyras from "@ty-ras/backend-node-io-ts-openapi";
 import { configuration } from "@ty-ras-extras/backend-io-ts";
 import { function as F, taskEither as TE, either as E, io as IO } from "fp-ts";
+import * as process from "node:process";
 import configValidation, { type ConfigHTTPServer } from "./config";
 import endpoints from "./api";
 import auth from "./auth";

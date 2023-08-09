@@ -10,7 +10,7 @@
     "node": ">= 18"
   },
   "dependencies": {
-    "@ty-ras/data-zod": "^1.0.0"
+    "@ty-ras/data-zod": "^2.0.0"
   },
   "devDependencies": {},
   "scripts": {

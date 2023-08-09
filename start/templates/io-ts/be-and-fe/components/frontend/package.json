@@ -8,13 +8,14 @@
   },
   "dependencies": {
     "@ty-ras/frontend-fetch-io-ts": "^2.0.0",
+    "@ty-ras-extras/frontend-io-ts": "^2.0.0",
     "@ty-ras-sample/protocol": "1.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@types/react": "^18.0.33",
-    "@types/react-dom": "^18.0.11",
+    "@types/react": "^18.2.19",
+    "@types/react-dom": "^18.2.7",
     "@vitejs/plugin-react": "^4.0.4",
     "eslint-plugin-jsx-a11y": "^6.7.1",
     "eslint-plugin-react": "^7.33.1",

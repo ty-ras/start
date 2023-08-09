@@ -11,11 +11,11 @@ const Greeting = () => {
   const { invokeTask } = task.useAsyncFailableTask(
     useCallback(async (target: string) => {
       // Execute backend call, catching any thrown exceptions, and ending up in TaskEither<Error, tyras.APICallResult<T>>
-      const beResult = await backend.hello.sayHello({ url: { target } });
+      const beResult = await backend.greeting.getGreeting({ url: { target } });
       if (beResult.error === "none") {
         setResult({ input: target, result: beResult.data });
       } else {
-        throw tyras.toErrorFE(beResult);
+        throw tyras.toError(beResult);
       }
     }, []),
   );

@@ -1,52 +1,80 @@
-import type { resources } from "@ty-ras-extras/backend-zod";
-import * as execution from "./execution";
-import configValidation from "./config";
-import * as api from "./api";
-import type * as env from "./environment";
+import * as tyras from "@ty-ras/backend-node-zod-openapi";
+import { configuration } from "@ty-ras-extras/backend-zod";
+import * as process from "node:process";
+import configValidation, { type ConfigHTTPServer } from "./config";
+import endpoints from "./api";
+import auth from "./auth";
 
-await execution.invokeMain({
-  configValidation,
-  // Change this name to something more suitable for your application
-  envVarName: "MY_BACKEND_CONFIG",
-  getServerParameters: ({ http }) => {
-    const environment: env.Environment<never> = {
-      tokenVerifier: () => {
-        throw new Error(
-          "When creating authentication for the HTTP server, please replace this code call to actual token verification code in src/environment/<cloud provider name>/xyz.ts files.",
-        );
-      },
-    };
-    // Add DB pools and other pools needed by endpoints here.
-    // Key should be state property name, and value class that will be validated using validator of that state property.
-    // The class typically encapsulates value of "ResourcePool" value, created using "resources" export of "@ty-ras-extras/backend-zod" library.
-    const poolsWithAdmins: Record<
-      string,
-      resources.ResourcePoolWithAdministration<never, void>
-    > = {};
-    return Promise.resolve({
-      config: http,
-      parameters: {
-        endpoints: api.apiEndpoints,
-        // Update as needed
-        authScheme: "Bearer",
-        pools: {
-          // When new pools are added, something like this:
-          // [api.DB_POOL_PROPERTY_NAME]: new api.DatabaseClass(poolsWithAdmins[api.DB_POOL_PROPERTY_NAME].pool)
-        },
-        tokenVerifierProperties: api.authenticationStateValidators,
-        getAdditionalStateValue: () => {
-          throw new Error(
-            "When there are other properties than resource pools or authentication properties, this callback will be responsible to provide those for endpoints.",
-          );
-        },
-      },
-      admin: {
-        // Needed so that
-        allPoolAdmins: Object.values(poolsWithAdmins).map(
-          ({ administration }) => administration,
-        ),
-        environment,
-      },
-    });
-  },
+/* eslint-disable no-console */
+
+const createCORSOptions = ({
+  frontendAddress,
+}: ConfigHTTPServer["cors"]): tyras.CORSOptions => ({
+  allowOrigin: frontendAddress,
+  allowHeaders: ["Content-Type", "Authorization"],
+  allowMethods: true,
 });
+
+const logEventArgs = (
+  eventArgs: tyras.VirtualRequestProcessingEvents<
+    unknown,
+    unknown
+  >[keyof tyras.VirtualRequestProcessingEvents<unknown, unknown>],
+) => {
+  const isError = "validationError" in eventArgs;
+  console[isError ? "error" : "info"](
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    tyras.omit(eventArgs, "ctx", "groups" as any, "regExp", "validationError"),
+  );
+  if (isError) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    console.error(JSON.stringify(eventArgs.validationError));
+  }
+};
+
+const ENV_VAR_NAME = "MY_BACKEND_CONFIG";
+const {
+  http: {
+    cors,
+    server: { host, port },
+  },
+} = configuration.validateFromMaybeStringifiedJSONOrThrow(
+  configValidation,
+  await configuration.getJSONStringValueFromMaybeStringWhichIsJSONOrFilenameFromEnvVar(
+    ENV_VAR_NAME,
+    process.env[ENV_VAR_NAME],
+  ),
+);
+
+const corsHandler = tyras.createCORSHandler(createCORSOptions(cors));
+
+await tyras.listenAsync(
+  tyras.createServer({
+    endpoints,
+    createState: async ({ stateInfo: statePropertyNames }) => {
+      const state: Partial<
+        Record<(typeof statePropertyNames)[number], unknown>
+      > = {};
+      for (const propertyName of statePropertyNames) {
+        if (propertyName in tyras.DEFAULT_AUTHENTICATED_STATE) {
+          state[propertyName] = await auth();
+        }
+      }
+
+      return state;
+    },
+    // React on various server events.
+    events: (eventName, eventArgs) => {
+      // First, trigger CORS handler (it will modify the context object of eventArgs)
+      const corsTriggered = corsHandler(eventName, eventArgs);
+
+      // Then log event info + whether CORS triggered to console
+      console.info("EVENT", eventName, corsTriggered);
+      logEventArgs(eventArgs);
+    },
+  }),
+  host,
+  port,
+);
+
+console.info(`Started server at ${host}:${port}.`);

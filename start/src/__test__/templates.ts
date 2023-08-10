@@ -30,7 +30,7 @@ export const EXTERNAL_DIR = await fs.mkdtemp(
 export default async (
   c: ExecutionContext,
   args: input.InputFromCLIOrUser & initInput.InputFromCLIOrUser,
-  expectedAssertCount = 8,
+  expectedAssertCount = 10,
 ) => {
   c.plan(expectedAssertCount);
   await c.notThrowsAsync(
@@ -119,6 +119,8 @@ const verifyTemplate = async (
   );
 
   await Promise.all(packageJsonPaths.map(verifySinglePackage));
+
+  await verifyProjectOtherFiles(c, projectPath);
 };
 
 const waitForProcessWithTimeout = async (
@@ -318,7 +320,7 @@ const createVerifySinglePackage = (
         async () =>
           await cliUtils.execFile(
             packageManager,
-            [...yarnExtraArgs, "run", "tsc"],
+            [...yarnExtraArgs, "run", "build"],
             {
               shell: false,
               cwd,
@@ -338,22 +340,6 @@ const createVerifySinglePackage = (
             },
           ),
       );
-
-      // Run also linter, to ensure that new project won't immediately have red suiggles because of bad formatting
-      // (But don't do it in case we have installed fresh dependencies, as then we might get Prettier errors if the version is updated)
-      if (projectPath !== EXTERNAL_DIR) {
-        await c.notThrowsAsync(
-          async () =>
-            await cliUtils.execFile(
-              packageManager,
-              [...yarnExtraArgs, "run", "lint"],
-              {
-                shell: false,
-                cwd,
-              },
-            ),
-        );
-      }
 
       // Make sure program actually starts and prints information that it successfully initialized
       const packageKind: PackageKind =
@@ -375,3 +361,19 @@ const createVerifySinglePackage = (
 };
 
 const FOLDER_NAME = "folderName";
+
+const verifyProjectOtherFiles = async (
+  c: ExecutionContext,
+  projectDir: string,
+) => {
+  // There are other files present too, but them being missing/containing wrong input will be catched by running build/lint commands.
+  // These files, however, will not affect outcome of those commands, and thus must be verified manually
+  await Promise.all(
+    [".gitignore", ".prettierrc", "README.md"].map(async (filePath) =>
+      c.deepEqual(
+        (await fs.stat(path.join(projectDir, filePath))).isFile(),
+        true,
+      ),
+    ),
+  );
+};

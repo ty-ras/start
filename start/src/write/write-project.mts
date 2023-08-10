@@ -219,7 +219,12 @@ const getCopyInstructions = ({
         ),
         target: path.join(folderName, "README.md"),
       },
-      // 5. Merge all package.json dependencies (remove anything with "@ty-ras-sample/xyz")
+      // 5. Copy git-ignore
+      {
+        source: path.join(...sourcePathComponentsBase.concat(".gitignore")),
+        target: path.join(folderName, ".gitignore"),
+      },
+      // 6. Merge all package.json dependencies (remove anything with "@ty-ras-sample/xyz")
       {
         source: async () => {
           const basePackageJson = F.pipe(

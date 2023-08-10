@@ -75,5 +75,5 @@ runOneTest(
     folderName: EXTERNAL_DIR,
     installDependencies: true,
   },
-  16,
+  19,
 );

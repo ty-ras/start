@@ -568,6 +568,17 @@
     "@ty-ras-extras/resource-pool-fp-ts" "^2.0.0"
     "@ty-ras-extras/typed-sql-io-ts" "^2.0.0"
 
+"@ty-ras-extras/backend-runtypes@2.0.1":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@ty-ras-extras/backend-runtypes/-/backend-runtypes-2.0.1.tgz#33a240c2985d31d9ba8806b6b88e0c5fe2d294f7"
+  integrity sha512-lx31g4OgzL9myMkeySByeUF+WvkaUaaMF6mZ2cgC7agAurs0ZWU5ykESQSiy3PpYAMv2uTBd6ZxU/lbxEYuBPg==
+  dependencies:
+    "@ty-ras-extras/cache" "^2.0.0"
+    "@ty-ras-extras/config-runtypes" "^2.0.1"
+    "@ty-ras-extras/main" "^2.0.0"
+    "@ty-ras-extras/resource-pool" "^2.0.0"
+    "@ty-ras-extras/typed-sql-runtypes" "^2.0.0"
+
 "@ty-ras-extras/backend-zod@2.0.0":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@ty-ras-extras/backend-zod/-/backend-zod-2.0.0.tgz#39471ef1911ed1be20aa514c5a225904722a1ae9"
@@ -599,6 +610,11 @@
   resolved "https://registry.yarnpkg.com/@ty-ras-extras/config-io-ts/-/config-io-ts-2.0.0.tgz#74e5447394295712cea4c6d231343ea86c8aa973"
   integrity sha512-Pr1ctC8gqFYy+y47ZZFy/UvZmG45BTHNaaaWlxdR9hbpeXKB+rmVONhV57D4D24RTnwP37jv45M45v6q1O6YUQ==
 
+"@ty-ras-extras/config-runtypes@^2.0.1":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@ty-ras-extras/config-runtypes/-/config-runtypes-2.0.1.tgz#25bafef5f7f178afbc6239f3eb5c93d6412ec3f6"
+  integrity sha512-fVcC/1CTh+MfTqLxxI6x19aXGCZXePr4jYsyKfTYtw9BfvdxKGvcy/Bow5iIfUiGxud9ePhLTzpsL8P4ranjeQ==
+
 "@ty-ras-extras/config-zod@^2.0.0":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@ty-ras-extras/config-zod/-/config-zod-2.0.0.tgz#010e2e7ef07b64dcd1e33bdfebacea7f950e7445"
@@ -611,6 +627,14 @@
   dependencies:
     "@ty-ras-extras/cache" "^1.0.0"
     "@ty-ras-extras/config-io-ts" "^1.0.2"
+
+"@ty-ras-extras/frontend-runtypes@2.0.1":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@ty-ras-extras/frontend-runtypes/-/frontend-runtypes-2.0.1.tgz#054be85c26de6001a36c81fdcc9f2f9261f04e1a"
+  integrity sha512-2yObjhjGd6Lz1d1fTE75ckgoDkvR950BIM+/Q/QaLukrN0k1di+KA4+wW+HdP/9FrJ/n4DvWLEyJvXFyCDYmMQ==
+  dependencies:
+    "@ty-ras-extras/cache" "^2.0.0"
+    "@ty-ras-extras/config-runtypes" "^2.0.1"
 
 "@ty-ras-extras/frontend-zod@2.0.0":
   version "2.0.0"
@@ -645,20 +669,25 @@
   resolved "https://registry.yarnpkg.com/@ty-ras-extras/typed-sql-io-ts/-/typed-sql-io-ts-2.0.0.tgz#b6f6f1d9d7048a1323488891de1375895ebd10bc"
   integrity sha512-adnMXiWtHpMeS5jubcCoMhZGgMJw1nqARfg+rhges+kB1py0ZPyxN3VF0Wp0yTDAAkY91FhMwT5+srmmx5LjUQ==
 
+"@ty-ras-extras/typed-sql-runtypes@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@ty-ras-extras/typed-sql-runtypes/-/typed-sql-runtypes-2.0.0.tgz#5160412a52f60e40d7194d3e8713d0a2fe6f177e"
+  integrity sha512-oFlg2BMzbtCmpK/DbeToNeIhbIAv0XDq0I5D8ZYy/O7JlHQzZAjo/+6niWlzee31VrmK22mzXsL8kJidGfd5Cg==
+
 "@ty-ras-extras/typed-sql-zod@^2.0.0":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@ty-ras-extras/typed-sql-zod/-/typed-sql-zod-2.0.0.tgz#02411757eacf48410183ea87180c27a2eddccd57"
   integrity sha512-ePV1m2xQWBbaCJRokCpC6T7Qxj0TIKA1QZpbXMb3SMTQ+AR6xHfVffLjmr4aWXe2czkVdN8G15QaFaafNG9MEQ==
 
-"@ty-ras/backend-node-io-ts-openapi@2.0.1":
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/@ty-ras/backend-node-io-ts-openapi/-/backend-node-io-ts-openapi-2.0.1.tgz#b3e95037bc1909ee6225814bc915984621ecf8da"
-  integrity sha512-dKZz4A76TcB2sCGn2wuwxdE0mHxXTzFhLnKrdZPg84mhlztVvyNpuHz2ESae3fS0POuCPEeChDbMf/b+vmjvZg==
+"@ty-ras/backend-node-io-ts-openapi@2.0.2":
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/@ty-ras/backend-node-io-ts-openapi/-/backend-node-io-ts-openapi-2.0.2.tgz#e57390ccb1eae84f99d23d5c2caccac7c1d5a353"
+  integrity sha512-tLXS5LSbkxPt3r+vwj0IXNiCiab1b/BDt4+LabvKhQyoZ60eAGGNAcCdfXRqO7KS4sExSNziq8WTYVU4No9K4Q==
   dependencies:
     "@ty-ras/data-backend-io-ts" "^2.0.2"
     "@ty-ras/endpoint-spec" "^2.0.0"
     "@ty-ras/metadata-jsonschema-io-ts" "^2.0.1"
-    "@ty-ras/metadata-openapi" "^2.0.1"
+    "@ty-ras/metadata-openapi" "^2.0.2"
     "@ty-ras/server-node" "^2.0.0"
     "@ty-ras/state-io-ts" "^2.0.1"
     fp-ts "^2.13.1"
@@ -669,15 +698,30 @@
     openapi-types "^12.0.2"
     raw-body "^2.5.1"
 
-"@ty-ras/backend-node-zod-openapi@2.0.0":
+"@ty-ras/backend-node-runtypes-openapi@2.0.0":
   version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@ty-ras/backend-node-zod-openapi/-/backend-node-zod-openapi-2.0.0.tgz#c819a94f8bb90a4dbaff5731cd970dbb2c0a8119"
-  integrity sha512-GkfS7R1Q5BVwGvAshFuMXUrGlYQO/nIDFWJTlKxTeU4bZHkHIGY6A2SQO6LCphTZB5jWMdoXqA7tNqwBUWCEfg==
+  resolved "https://registry.yarnpkg.com/@ty-ras/backend-node-runtypes-openapi/-/backend-node-runtypes-openapi-2.0.0.tgz#4d48159585b2e401a9e57b0787f7311fbb703e54"
+  integrity sha512-KcP4omyNmslU6S5xzyTyvUTdzb4+BYFl2WjvcPTYvEwHdSH59qCft8AXsG+u9Er8MHaMWE3QGmT+YDhgpgbweQ==
+  dependencies:
+    "@ty-ras/data-backend-runtypes" "^2.0.0"
+    "@ty-ras/endpoint-spec" "^2.0.0"
+    "@ty-ras/metadata-jsonschema-runtypes" "^2.0.0"
+    "@ty-ras/metadata-openapi" "^2.0.2"
+    "@ty-ras/server-node" "^2.0.0"
+    "@ty-ras/state-runtypes" "^2.0.0"
+    openapi-types "^12.0.2"
+    raw-body "^2.5.1"
+    runtypes "^6.7.0"
+
+"@ty-ras/backend-node-zod-openapi@2.0.1":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@ty-ras/backend-node-zod-openapi/-/backend-node-zod-openapi-2.0.1.tgz#d7ea0195e380a205a9e1725e30b4881970946920"
+  integrity sha512-Ihy1HwQF7Cvg90m/o290X0jF32DYtovnuKDCVyg9M6Ed1oDi1t2WBSm5cGKN751jwGCTeAQi8+P9qvaLegLKtQ==
   dependencies:
     "@ty-ras/data-backend-zod" "^2.0.0"
     "@ty-ras/endpoint-spec" "^2.0.0"
     "@ty-ras/metadata-jsonschema-zod" "^2.0.1"
-    "@ty-ras/metadata-openapi" "^2.0.1"
+    "@ty-ras/metadata-openapi" "^2.0.2"
     "@ty-ras/server-node" "^2.0.0"
     "@ty-ras/state-zod" "^2.0.1"
     openapi-types "^12.0.2"
@@ -699,6 +743,14 @@
   dependencies:
     "@ty-ras/data-backend" "^2.0.0"
     "@ty-ras/data-io-ts" "^2.0.1"
+
+"@ty-ras/data-backend-runtypes@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@ty-ras/data-backend-runtypes/-/data-backend-runtypes-2.0.0.tgz#52b52b9e6fdd056e28660a3d25bc2dfbce878693"
+  integrity sha512-i3td9pg/i4GjilIuhz+2uKXwinxyZuiUc7NxRGTMSqkKqLPUGUiCceNzit7eosYaZy8RmGLGGZYyOrqVNvN27Q==
+  dependencies:
+    "@ty-ras/data-backend" "^2.0.0"
+    "@ty-ras/data-runtypes" "^2.0.0"
 
 "@ty-ras/data-backend-zod@^2.0.0":
   version "2.0.0"
@@ -724,6 +776,14 @@
     "@ty-ras/data-frontend" "^2.0.1"
     "@ty-ras/data-io-ts" "^2.0.1"
 
+"@ty-ras/data-frontend-runtypes@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@ty-ras/data-frontend-runtypes/-/data-frontend-runtypes-2.0.0.tgz#7200999bd15b4c1f1960beb3e86dc749c019bf71"
+  integrity sha512-KbBZw9s2fuyl0/FT9s+2VgpsRAPZz42Dk3RNiqgGH5qqsB9SZ/imC/nPnm9GDDbYFDRSDMMmrzj2eyHTer+iWg==
+  dependencies:
+    "@ty-ras/data-frontend" "^2.0.1"
+    "@ty-ras/data-runtypes" "^2.0.0"
+
 "@ty-ras/data-frontend-zod@^2.0.0":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@ty-ras/data-frontend-zod/-/data-frontend-zod-2.0.0.tgz#161c9bb47f02bc6079573f4bfb12fea76e5f8364"
@@ -743,6 +803,13 @@
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/@ty-ras/data-io-ts/-/data-io-ts-2.0.1.tgz#d4be12b7dfd748bce85b02418fa4a54c0b441dbb"
   integrity sha512-n96FSLbflik0xQrH7gxR68jvfA8m8hR1tH2OfjQlWM+TBvSW1soryFt59hPKuSMf+eNul/Lvw5nWX+IvwW2+HA==
+  dependencies:
+    "@ty-ras/data" "^2.1.0"
+
+"@ty-ras/data-runtypes@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@ty-ras/data-runtypes/-/data-runtypes-2.0.0.tgz#7e46dfcf59f7c13f8a9af60435914d627511bf8a"
+  integrity sha512-ZujZbfRmQ6vsEb5iaAhqiMGG5rNdmg56R5iFTzJb6AOkRypsbVAOBItgbmlN95SHXLmQlAGHfervn/TScQWrjQ==
   dependencies:
     "@ty-ras/data" "^2.1.0"
 
@@ -785,6 +852,15 @@
     fp-ts "^2.13.1"
     io-ts "^2.2.19"
 
+"@ty-ras/frontend-fetch-runtypes@2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@ty-ras/frontend-fetch-runtypes/-/frontend-fetch-runtypes-2.0.0.tgz#3ee227a21e9394dc5c7dcfcd6c9fb37363350e36"
+  integrity sha512-9XSsCuxZjZR/KBYAvhdyHq9DBz3WOWtEAK1J/uGJWdi3g15aRxLtWteQxaSSyC1T33SiTo53m8fYCrgHKAm4pA==
+  dependencies:
+    "@ty-ras/client-fetch" "^2.0.0"
+    "@ty-ras/data-frontend-runtypes" "^2.0.0"
+    runtypes "^6.7.0"
+
 "@ty-ras/frontend-fetch-zod@2.0.0":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@ty-ras/frontend-fetch-zod/-/frontend-fetch-zod-2.0.0.tgz#060161f50ea7859d586a2ebd01c6f221fc2aa3d5"
@@ -802,6 +878,14 @@
     "@ty-ras/data-io-ts" "^2.0.1"
     "@ty-ras/metadata-jsonschema" "^2.0.0"
 
+"@ty-ras/metadata-jsonschema-runtypes@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@ty-ras/metadata-jsonschema-runtypes/-/metadata-jsonschema-runtypes-2.0.0.tgz#31ee5f64df17fd98ed994eede013b7d774c44661"
+  integrity sha512-5J/4uPVZG/HnDhSdqKUM9pv/XFSNno8nBldiUaSgQ0Pcuc2ZbAt6CZsC26rLPRTqAiaVe+EIBrHkdtcGSvu32g==
+  dependencies:
+    "@ty-ras/data-runtypes" "^2.0.0"
+    "@ty-ras/metadata-jsonschema" "^2.0.0"
+
 "@ty-ras/metadata-jsonschema-zod@^2.0.1":
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/@ty-ras/metadata-jsonschema-zod/-/metadata-jsonschema-zod-2.0.1.tgz#7f5a76868b70842769c399a538869ee74b4f2aea"
@@ -817,10 +901,10 @@
   dependencies:
     "@ty-ras/data" "^2.1.0"
 
-"@ty-ras/metadata-openapi@^2.0.1":
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/@ty-ras/metadata-openapi/-/metadata-openapi-2.0.1.tgz#99266c17ed57674aa6034c217230c40cb42369e9"
-  integrity sha512-31Zc5zas1irYB2hvGeM1umqzG02ExkxCgNnkqThd1iyKcsai4FDo+1EXIpwxsPjhxXN1yYWNxpb6Gf+RdZ34wg==
+"@ty-ras/metadata-openapi@^2.0.2":
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/@ty-ras/metadata-openapi/-/metadata-openapi-2.0.2.tgz#0c0214b775cb8b727b82c04fe9b94aeafb6bc8d4"
+  integrity sha512-DMxOT1oMYwSdILZic7cTtGZYHd301kxzUbFdlJKuJ6/YyiUEXrG20cscYY7RcX+dbgRGWnyv3Ib9JfYrEHA/4A==
   dependencies:
     "@ty-ras/endpoint" "^2.0.0"
     "@ty-ras/metadata" "^2.0.0"
@@ -856,6 +940,14 @@
   integrity sha512-tYhvYDl0vgUWwVuqjXnZZZSHa1T4XbaIHRqrApRIjZQkEiT4NQJIqSzfI7PTQmWGIQw4nXjiK/932U1dBbWp5A==
   dependencies:
     "@ty-ras/data-io-ts" "^2.0.1"
+    "@ty-ras/state" "^2.0.0"
+
+"@ty-ras/state-runtypes@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@ty-ras/state-runtypes/-/state-runtypes-2.0.0.tgz#35f246a4f0885985696801167b5832f60941a7cb"
+  integrity sha512-t3tiuWS73OTtCQlZojSmhmdkFJ5yApUWfo1UdcTiXjEQTKsFXmLDAM4N+6XfrHyFMpur59KLZIsg9CpNdBU8vg==
+  dependencies:
+    "@ty-ras/data-runtypes" "^2.0.0"
     "@ty-ras/state" "^2.0.0"
 
 "@ty-ras/state-zod@^2.0.1":
@@ -4263,6 +4355,11 @@ run-parallel@^1.1.9:
   integrity sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA==
   dependencies:
     queue-microtask "^1.2.2"
+
+runtypes@6.7.0, runtypes@^6.7.0:
+  version "6.7.0"
+  resolved "https://registry.yarnpkg.com/runtypes/-/runtypes-6.7.0.tgz#5ffc7e3a51142639d8a8e0155ef4bb8c2ae4c54b"
+  integrity sha512-3TLdfFX8YHNFOhwHrSJza6uxVBmBrEjnNQlNXvXCdItS0Pdskfg5vVXUTWIN+Y23QR09jWpSl99UHkA83m4uWA==
 
 rxjs@^7.2.0, rxjs@^7.8.1:
   version "7.8.1"

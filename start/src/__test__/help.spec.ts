@@ -25,7 +25,7 @@ const expectedHelpText = `
     --components, -p	Which components will be using TyRAS libraries?
           Schema: "be"|"fe"|"be-and-fe"
     --dataValidation, -d	Which data validation framework should TyRAS be providing?
-          Schema: "io-ts"|"zod"
+          Schema: "io-ts"|"zod"|"runtypes"
     --server, -s	Which server should TyRAS be providing?
           Used only when components is "be" or "be-and-fe".
           Schema: "node"

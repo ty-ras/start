@@ -1,0 +1,21 @@
+{
+  "name": "@ty-ras-sample/protocol",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "module": "./src/index.ts",
+  "engines": {
+    "node": ">= 18"
+  },
+  "dependencies": {
+    "@ty-ras/data-runtypes": "^2.0.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "build": "__PACKAGE_MANAGER__ run tsc",
+    "lint": "eslint ./src --ext .ts,.tsx",
+    "tsc": "tsc"
+  }
+}

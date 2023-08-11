@@ -63,6 +63,30 @@ runOneTest(
   19,
 );
 
+runOneTest("Test BE-RUNTYPES-NODE", testTemplateGeneration, {
+  components: "be",
+  dataValidation: "runtypes",
+  server: "node",
+});
+
+runOneTest("Test FE-RUNTYPES-FETCH", testTemplateGeneration, {
+  components: "fe",
+  dataValidation: "runtypes",
+  client: "fetch",
+});
+
+runOneTest(
+  "Test BEFE-RUNTYPES-NODE-FETCH",
+  testTemplateGeneration,
+  {
+    components: "be-and-fe",
+    dataValidation: "runtypes",
+    server: "node",
+    client: "fetch",
+  },
+  19,
+);
+
 runOneTest(
   "Test BEFE-IOTS-NODE-FETCH with PNPM",
   testTemplateGeneration,

@@ -1,7 +1,7 @@
 # HTTP Frontend with TyRAS Framework
 
 Welcome to TyRAS-oriented Vite-powered React app!
-This app is using [`zod`](https://github.com/colinhacks/zod) as data validation framework.
+This app is using [[`runtypes`](https://github.com/pelotom/runtypes) as data validation framework.
 The contents of this folder were created using [`ty-ras/start` npx starter template](https://github.com/ty-ras/meta/tree/main/start).
 
 # Next tasks
@@ -22,7 +22,7 @@ The `src` folder contains all the code.
 That folder is further structured in the following way:
 - `services` folder contains code not related to UI directly. It currently only contains one folder `backend` with the following contents:
     - `protocol` folder contains type definitions related to exposed HTTP endpoints and the data flowing between them.
-      This is the core which utilizes some TyRAS interfaces, but mostly it is just defining the endpoint shape using TypeScript types, and data contents using `zod` validators. 
+      This is the core which utilizes some TyRAS interfaces, but mostly it is just defining the endpoint shape using TypeScript types, and data contents using `runtypes` validators. 
     - `endpoints/greeting.ts` file contains code which will build invokable callback which will use the greeting API of the protocol.
     - `factory.ts` file contains common code used by all files in `endpoints` folder.
     - `index.ts` exposes an object which contains all of the callbacks to call endpoints defined in the [protocol component](../protocol).

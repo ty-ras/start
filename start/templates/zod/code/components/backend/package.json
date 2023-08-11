@@ -7,7 +7,7 @@
     "node": ">= 18"
   },
   "dependencies": {
-    "@ty-ras/backend-node-zod-openapi": "^2.0.0",
+    "@ty-ras/backend-node-zod-openapi": "^2.0.1",
     "@ty-ras-extras/backend-zod": "^2.0.0",
     "@ty-ras-sample/protocol": "1.0.0"
   },

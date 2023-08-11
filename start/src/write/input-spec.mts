@@ -103,7 +103,9 @@ const inputSpec = {
   dataValidation: {
     type: mi.TYPE_VALIDATE,
     orderNumber: 4,
-    schema: S.keyof(S.struct({ ["io-ts"]: S.any, zod: S.any })),
+    schema: S.keyof(
+      S.struct({ ["io-ts"]: S.any, zod: S.any, runtypes: S.any }),
+    ),
     prompt: {
       type: "list",
       message: "Which data validation framework should TyRAS be providing?",
@@ -111,7 +113,7 @@ const inputSpec = {
       choices: [
         { name: "IO-TS", value: "io-ts" },
         { name: "Zod", value: "zod" },
-        { name: "Runtypes", value: "runtypes", disabled: true },
+        { name: "Runtypes", value: "runtypes" },
       ],
     },
     flag: {

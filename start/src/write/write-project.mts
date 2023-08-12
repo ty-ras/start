@@ -154,7 +154,7 @@ const getCopyInstructions = ({
     // So use separate step to copy and rename it, since creating empty .npmignore did not help.
     // And also am not willing to add it to package.json files list explicitly
     {
-      source: path.join(...sourcePathComponentsBase.slice(0, 1), "gitignore"),
+      source: path.join(...sourcePathComponentsBase.slice(0, -1), "gitignore"),
       target: path.join(folderName, ".gitignore"),
     },
   ];

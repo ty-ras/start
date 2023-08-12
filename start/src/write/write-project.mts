@@ -143,11 +143,21 @@ const getCopyInstructions = ({
   if (components !== "be-and-fe") {
     sourcePathComponents.push("components", getComponentFolderName(components));
   }
-  const first: CopyInstruction = {
-    source: path.join(...sourcePathComponents),
-    target: folderName,
-  };
-  const retVal = [first];
+  const retVal: Array<CopyInstruction> = [
+    {
+      source: path.join(...sourcePathComponents),
+      target: folderName,
+    },
+    // Apparently NPM publish pretty much refuses to include .gitignore files:
+    // https://github.com/npm/npm/issues/3763
+    // https://stackoverflow.com/questions/24942161/does-npm-ignore-files-listed-in-gitignore
+    // So use separate step to copy and rename it, since creating empty .npmignore did not help.
+    // And also am not willing to add it to package.json files list explicitly
+    {
+      source: path.join(...sourcePathComponentsBase.slice(0, 1), "gitignore"),
+      target: path.join(folderName, ".gitignore"),
+    },
+  ];
   if (components !== "be-and-fe") {
     // We must perform the following post-processing operations:
     const protocolSourceFolder = sourcePathComponents
@@ -219,12 +229,7 @@ const getCopyInstructions = ({
         ),
         target: path.join(folderName, "README.md"),
       },
-      // 5. Copy git-ignore
-      {
-        source: path.join(...sourcePathComponentsBase.concat(".gitignore")),
-        target: path.join(folderName, ".gitignore"),
-      },
-      // 6. Merge all package.json dependencies (remove anything with "@ty-ras-sample/xyz")
+      // 5. Merge all package.json dependencies (remove anything with "@ty-ras-sample/xyz")
       {
         source: async () => {
           const basePackageJson = F.pipe(

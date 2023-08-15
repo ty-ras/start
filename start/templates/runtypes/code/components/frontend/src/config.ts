@@ -8,5 +8,6 @@ export default configuration.validateFromMaybeStringifiedJSONOrThrow(
     }),
     backend: t.String.withConstraint((str) => str.length > 0),
   }),
+  // Change this name to something more suitable for your application, and then update the '.env' file.
   import.meta.env["VITE_MY_FRONTEND_CONFIG"],
 );

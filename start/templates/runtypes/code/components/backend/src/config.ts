@@ -1,4 +1,6 @@
+import { configuration } from "@ty-ras-extras/backend-runtypes";
 import * as t from "runtypes";
+import * as process from "node:process";
 
 export type Config = t.Static<typeof config>;
 export type ConfigAuthentication = Config["authentication"];
@@ -30,4 +32,12 @@ const config = t.Record({
   // E.g. database, messaging, etc
 });
 
-export default config;
+// Change this name to something more suitable for your application, and then update the 'dev' script in package.json file.
+const ENV_VAR_NAME = "MY_BACKEND_CONFIG";
+export default configuration.validateFromMaybeStringifiedJSONOrThrow(
+  config,
+  await configuration.getJSONStringValueFromMaybeStringWhichIsJSONOrFilenameFromEnvVar(
+    ENV_VAR_NAME,
+    process.env[ENV_VAR_NAME],
+  ),
+);

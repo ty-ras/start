@@ -4,6 +4,7 @@ import { configuration } from "@ty-ras-extras/frontend-io-ts";
 import { function as F } from "fp-ts";
 
 const config = F.pipe(
+  // Change this name to something more suitable for your application, and then update the '.env' file.
   import.meta.env["VITE_MY_FRONTEND_CONFIG"],
   configuration.validateFromMaybeStringifiedJSONOrThrow(
     t.readonly(

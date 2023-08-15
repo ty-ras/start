@@ -1,3 +1,4 @@
+import { configuration } from "@ty-ras-extras/backend-zod";
 import * as t from "zod";
 
 export type Config = t.TypeOf<typeof config>;
@@ -40,4 +41,12 @@ const config = t
   })
   .describe("BEConfig");
 
-export default config;
+// Change this name to something more suitable for your application, and then update the 'dev' script in package.json file.
+const ENV_VAR_NAME = "MY_BACKEND_CONFIG";
+export default configuration.validateFromMaybeStringifiedJSONOrThrow(
+  config,
+  await configuration.getJSONStringValueFromMaybeStringWhichIsJSONOrFilenameFromEnvVar(
+    ENV_VAR_NAME,
+    process.env[ENV_VAR_NAME],
+  ),
+);

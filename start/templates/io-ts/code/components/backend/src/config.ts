@@ -1,5 +1,9 @@
+import * as tyras from "@ty-ras/backend-node-io-ts-openapi";
+import { configuration } from "@ty-ras-extras/backend-io-ts";
+import { function as F, task as T, taskEither as TE } from "fp-ts";
 import * as t from "io-ts";
 import * as tt from "io-ts-types";
+import * as process from "node:process";
 
 export type Config = t.TypeOf<typeof config>;
 export type ConfigAuthentication = Config["authentication"];
@@ -46,4 +50,13 @@ const config = t.type(
   "BEConfig",
 );
 
-export default config;
+// Change this name to something more suitable for your application, and then update the 'dev' script in package.json file.
+const ENV_VAR_NAME = "MY_BACKEND_CONFIG";
+export default await F.pipe(
+  process.env[ENV_VAR_NAME],
+  configuration.getJSONStringValueFromMaybeStringWhichIsJSONOrFilenameFromEnvVar(
+    ENV_VAR_NAME,
+  ),
+  TE.chainEitherKW(configuration.validateFromStringifiedJSON(config)),
+  T.map(tyras.getOrElseThrow),
+)();

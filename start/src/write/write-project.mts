@@ -315,7 +315,7 @@ const packageJsonWithWorkspaces = F.pipe(
     S.struct({ workspaces: S.nonEmptyArray(F.pipe(S.string, S.nonEmpty())) }),
   ),
 );
-const parsePackageJson = F.pipe(packageJsonWithWorkspaces, S.parse);
+const parsePackageJson = F.pipe(packageJsonWithWorkspaces, S.parseSync);
 
 const PACKAGE_JSON = "package.json";
 

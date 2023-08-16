@@ -50,7 +50,7 @@ export default async (
   );
 };
 
-export const parsePackageJson = F.pipe(packageJson, S.parse);
+export const parsePackageJson = F.pipe(packageJson, S.parseSync);
 
 const createGetLatestVersion =
   (onEvent: events.MaybeOnEvent) =>
@@ -84,7 +84,7 @@ const parsePackument = F.pipe(
   S.struct({
     versions: S.record(S.string, S.unknown),
   }),
-  S.parse,
+  S.parseSync,
 );
 
 const doThrow = (msg: string) => {

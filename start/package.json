@@ -1,6 +1,6 @@
 {
   "name": "@ty-ras/start",
-  "version": "2.1.2",
+  "version": "2.2.0",
   "author": {
     "name": "Stanislav Muhametsin",
     "email": "346799+stazz@users.noreply.github.com",
@@ -30,11 +30,9 @@
     }
   },
   "dependencies": {
-    "@effect/match": "0.21.1",
-    "chalk": "5.2.0",
     "fs-extra": "11.1.0",
     "gradient-string": "2.0.2",
-    "meow-inquirer": "0.9.4",
+    "meow-inquirer": "1.0.1",
     "undici": "5.21.0"
   },
   "devDependencies": {
@@ -60,14 +58,14 @@
     "typescript": "5.0.4",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "@types/react": "18.2.19",
+    "@types/react": "18.2.20",
     "@types/react-dom": "18.2.7",
     "@vitejs/plugin-react": "3.1.0",
     "eslint-plugin-jsx-a11y": "6.7.1",
     "eslint-plugin-react": "7.32.2",
     "eslint-plugin-react-hooks": "4.6.0",
     "vite": "4.2.3",
-    "@ty-ras/backend-node-io-ts-openapi": "2.0.2",
+    "@ty-ras/backend-node-io-ts-openapi": "2.0.3",
     "@ty-ras-extras/backend-io-ts": "2.0.0",
     "@ty-ras/frontend-fetch-io-ts": "2.0.0",
     "@ty-ras-extras/frontend-io-ts": "2.0.0",
@@ -76,12 +74,12 @@
     "io-ts-types": "0.5.19",
     "monocle-ts": "2.3.13",
     "newtype-ts": "0.3.5",
-    "@ty-ras/backend-node-zod-openapi": "2.0.1",
+    "@ty-ras/backend-node-zod-openapi": "2.0.2",
     "@ty-ras-extras/backend-zod": "2.0.0",
     "@ty-ras/frontend-fetch-zod": "2.0.0",
     "@ty-ras-extras/frontend-zod": "2.0.0",
-    "zod": "3.21.4",
-    "@ty-ras/backend-node-runtypes-openapi": "2.0.0",
+    "zod": "3.22.1",
+    "@ty-ras/backend-node-runtypes-openapi": "2.0.1",
     "@ty-ras-extras/backend-runtypes": "2.0.1",
     "@ty-ras/frontend-fetch-runtypes": "2.0.0",
     "@ty-ras-extras/frontend-runtypes": "2.0.1",

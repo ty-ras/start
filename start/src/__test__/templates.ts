@@ -166,7 +166,7 @@ const parsePackageJson = F.pipe(
     dependencies: S.record(S.string, S.string),
     devDependencies: S.record(S.string, S.string),
   }),
-  S.parse,
+  S.parseSync,
 );
 
 interface ProcessOutputCollectState {

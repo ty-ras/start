@@ -9,6 +9,7 @@
     ],
     "sourceMap": false,
     "allowJs": false,
+    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "exactOptionalPropertyTypes": true,
     "declaration": false,

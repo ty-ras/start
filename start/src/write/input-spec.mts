@@ -133,16 +133,18 @@ const inputSpec = {
   server: {
     type: mi.TYPE_VALIDATE,
     orderNumber: 6,
-    schema: S.keyof(S.struct({ node: S.any })),
+    schema: S.keyof(
+      S.struct({ node: S.any, koa: S.any, express: S.any, fastify: S.any }),
+    ),
     prompt: {
       type: "list",
       message: "Which server should TyRAS be providing?",
       default: "node",
       choices: [
         { name: "Node HTTP(S) 1/2 server", value: "node" },
-        { name: "Koa", value: "koa", disabled: true },
-        { name: "ExpressJS", value: "expressjs", disabled: true },
-        { name: "Fastify", value: "fastify", disabled: true },
+        { name: "Koa", value: "koa" },
+        { name: "ExpressJS", value: "express" },
+        { name: "Fastify", value: "fastify" },
       ],
     },
     flag: {

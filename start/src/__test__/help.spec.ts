@@ -1,7 +1,7 @@
 import test from "ava";
 import * as cliUtils from "./cli-utils";
 
-test("Verify that help string is expected", async (c) => {
+test("Global: Verify that help string is expected", async (c) => {
   c.plan(1);
   // We must spawn our .mjs code with cwd being outside from package dir, in order to fully simulate situation where package.json is not in cwd.
   const outputs = await cliUtils.execFile(cliUtils.pathToCLI, ["--help"], {
@@ -28,7 +28,7 @@ const expectedHelpText = `
           Schema: "io-ts"|"zod"|"runtypes"
     --server, -s	Which server should TyRAS be providing?
           Used only when components is "be" or "be-and-fe".
-          Schema: "node"
+          Schema: "node"|"koa"|"express"|"fastify"
     --client, -c	Which client should TyRAS be providing?
           Used only when components is "fe" or "be-and-fe".
           Schema: "fetch"

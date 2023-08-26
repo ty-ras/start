@@ -4,33 +4,30 @@ import * as F from "@effect/data/Function";
 import * as process from "node:child_process";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import * as os from "node:os";
 import type * as input from "../write/input-spec.mjs";
 import type * as initInput from "../initialize/input-spec.mjs";
 import * as writeFiles from "../write/write-project.mjs";
 import * as cliUtils from "./cli-utils.js";
 
+// This must not be inside of "start" folder in git root, otherwise the dependencies installed in this project will intervene with the ones used in tests.
 const testOutputDir = path.join(
   new URL(import.meta.url).pathname,
   "..",
   "..",
   "..",
-  "test-output",
+  "..",
+  "start-tests",
 );
 await fs.mkdir(testOutputDir, { recursive: true });
 export const TARGET_DIR = await fs.mkdtemp(
   path.join(testOutputDir, "test-run-"),
 );
 
-export const EXTERNAL_DIR = await fs.mkdtemp(
-  path.join(os.tmpdir(), "ty-ras-start-test-"),
-);
-
 // This callback is parametrized test macro to run a successful test with given input
 export default async (
   c: ExecutionContext,
   args: input.InputFromCLIOrUser & initInput.InputFromCLIOrUser,
-  expectedAssertCount = 10,
+  expectedAssertCount: number,
 ) => {
   c.plan(expectedAssertCount);
   await c.notThrowsAsync(
@@ -80,6 +77,8 @@ const runCLIAndVerify = async (
     c,
     args?.folderName ?? "/no-folder-name-supplied",
     args?.packageManager ?? "false",
+    args?.server,
+    args?.client,
   );
 };
 
@@ -93,23 +92,51 @@ const verifyTemplate = async (
   c: ExecutionContext,
   projectPath: string,
   packageManager: string,
+  server: string | undefined,
+  client: string | undefined,
 ) => {
   const packageJsonPaths = (
-    await writeFiles.getAllFilePaths(projectPath)
-  ).filter(
-    (filePath) =>
-      path.basename(filePath) === "package.json" &&
-      filePath.indexOf("node_modules") === -1,
-  );
+    await writeFiles.getAllFilePaths(
+      projectPath,
+      (dirName) => !dirName.endsWith("node_modules"),
+    )
+  ).filter((filePath) => path.basename(filePath) === "package.json");
   c.true(
     packageJsonPaths.length > 0,
     "There must be at least one package.json path in resulting template",
   );
-  const manyPackageJsons = packageJsonPaths.length > 1;
 
-  if (manyPackageJsons && projectPath !== EXTERNAL_DIR) {
-    await linkWorkspacePackages(projectPath, packageJsonPaths);
-  }
+  c.deepEqual(
+    (
+      await tryStat(
+        path.join(
+          projectPath,
+          "node_modules",
+          "@ty-ras",
+          `server${server === undefined ? "" : `-${server}`}`,
+        ),
+      )
+    )?.isDirectory(),
+    server === undefined ? undefined : true,
+    "The server-specific package must (not) be installed",
+  );
+
+  c.deepEqual(
+    (
+      await tryStat(
+        path.join(
+          projectPath,
+          "node_modules",
+          "@ty-ras",
+          `client${client === undefined ? "" : `-${client}`}`,
+        ),
+      )
+    )?.isDirectory(),
+    client === undefined ? undefined : true,
+    "The client-specific package must (not) be installed",
+  );
+
+  const manyPackageJsons = packageJsonPaths.length > 1;
 
   const verifySinglePackage = createVerifySinglePackage(
     c,
@@ -231,31 +258,6 @@ const tryStat = async (path: string) => {
   } catch {
     return undefined;
   }
-};
-
-const linkWorkspacePackages = async (
-  projectPath: string,
-  packageJsonPaths: ReadonlyArray<string>,
-) => {
-  // Create symlinks to top-level node_modules folder to simulate effect of running yarn install on workspaces
-  const scopeName = `@${path.basename(projectPath)}`;
-  const symlinkHome = path.join(projectPath, "node_modules", scopeName);
-  await fs.mkdir(symlinkHome, {
-    recursive: true,
-  });
-  await Promise.all(
-    packageJsonPaths
-      .filter(
-        (packageJsonPath) => path.dirname(packageJsonPath) !== projectPath,
-      )
-      .map(async (packageJsonPath) =>
-        fs.symlink(
-          `../../${path.relative(projectPath, path.dirname(packageJsonPath))}`,
-          path.join(symlinkHome, path.basename(path.dirname(packageJsonPath))),
-          "dir",
-        ),
-      ),
-  );
 };
 
 const createVerifySinglePackage = (

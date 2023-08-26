@@ -1,5 +1,9 @@
 import test from "ava";
-import testTemplateGeneration, { TARGET_DIR, EXTERNAL_DIR } from "./templates";
+import testTemplateGeneration, { TARGET_DIR } from "./templates";
+import * as input from "../write/input-spec.mjs";
+import type * as initInput from "../initialize/input-spec.mjs";
+
+import * as path from "node:path";
 
 // These are hardly "unit" tests, but oh well... :)
 
@@ -7,88 +11,25 @@ import testTemplateGeneration, { TARGET_DIR, EXTERNAL_DIR } from "./templates";
 test.before("Transpile source code", () => {
   // eslint-disable-next-line no-console
   console.info("Target directory is", TARGET_DIR);
-  // eslint-disable-next-line no-console
-  console.info("External directory is", EXTERNAL_DIR);
 });
 
 // We must run template generation tests in serial - otherwise there will be so many connections established that there will be errors
 // Furthermore, due to nature of the program, running tests in sequential manner is actually a bit faster.
 const runOneTest = test.serial;
 
-runOneTest("Test BE-IOTS-NODE", testTemplateGeneration, {
-  components: "be",
-  dataValidation: "io-ts",
-  server: "node",
-});
-
-runOneTest("Test FE-IOTS-FETCH", testTemplateGeneration, {
-  components: "fe",
-  dataValidation: "io-ts",
-  client: "fetch",
-});
-
-runOneTest(
-  "Test BEFE-IOTS-NODE-FETCH",
-  testTemplateGeneration,
-  {
-    components: "be-and-fe",
-    dataValidation: "io-ts",
-    server: "node",
-    client: "fetch",
-  },
-  19,
-);
-
-runOneTest("Test BE-ZOD-NODE", testTemplateGeneration, {
-  components: "be",
-  dataValidation: "zod",
-  server: "node",
-});
-
-runOneTest("Test FE-ZOD-FETCH", testTemplateGeneration, {
-  components: "fe",
-  dataValidation: "zod",
-  client: "fetch",
-});
+for (const testArg of Array.from(generateAllTestCombinations())) {
+  runOneTest(
+    `Specific: Test ${testArg.dataValidation}-${testArg.server ?? "none"}-${
+      testArg.client ?? "none"
+    }`,
+    testTemplateGeneration,
+    testArg,
+    testArg.components === "be-and-fe" ? 21 : 12,
+  );
+}
 
 runOneTest(
-  "Test BEFE-ZOD-NODE-FETCH",
-  testTemplateGeneration,
-  {
-    components: "be-and-fe",
-    dataValidation: "zod",
-    server: "node",
-    client: "fetch",
-  },
-  19,
-);
-
-runOneTest("Test BE-RUNTYPES-NODE", testTemplateGeneration, {
-  components: "be",
-  dataValidation: "runtypes",
-  server: "node",
-});
-
-runOneTest("Test FE-RUNTYPES-FETCH", testTemplateGeneration, {
-  components: "fe",
-  dataValidation: "runtypes",
-  client: "fetch",
-});
-
-runOneTest(
-  "Test BEFE-RUNTYPES-NODE-FETCH",
-  testTemplateGeneration,
-  {
-    components: "be-and-fe",
-    dataValidation: "runtypes",
-    server: "node",
-    client: "fetch",
-  },
-  19,
-);
-
-runOneTest(
-  "Test BEFE-IOTS-NODE-FETCH with PNPM",
+  "Global: Test BEFE-IOTS-NODE-FETCH with PNPM",
   testTemplateGeneration,
   {
     components: "be-and-fe",
@@ -96,8 +37,42 @@ runOneTest(
     server: "node",
     client: "fetch",
     packageManager: "pnpm",
-    folderName: EXTERNAL_DIR,
+    folderName: path.join(TARGET_DIR, "pnpm"),
     installDependencies: true,
   },
-  19,
+  21,
 );
+
+// eslint-disable-next-line sonarjs/cognitive-complexity
+function* generateAllTestCombinations() {
+  for (const dataValidation of ["io-ts", "runtypes", "zod"] as const) {
+    for (const server of [
+      undefined,
+      "node",
+      "koa",
+      "express",
+      "fastify",
+    ] as const) {
+      for (const client of [undefined, "fetch"] as const) {
+        if (client !== undefined || server !== undefined) {
+          const testArg: input.InputFromCLIOrUser &
+            initInput.InputFromCLIOrUser = Object.assign(
+            {
+              installDependencies: true,
+              dataValidation,
+              components:
+                client === undefined
+                  ? ("be" as const)
+                  : server === undefined
+                  ? ("fe" as const)
+                  : ("be-and-fe" as const),
+            },
+            client === undefined ? {} : { client },
+            server === undefined ? {} : { server },
+          );
+          yield testArg;
+        }
+      }
+    }
+  }
+}

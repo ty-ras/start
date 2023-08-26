@@ -11,7 +11,7 @@
     "allowJs": false,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "exactOptionalPropertyTypes": true,
+    "exactOptionalPropertyTypes": false,
     "declaration": false,
     "noEmit": true,
     "noErrorTruncation": true,

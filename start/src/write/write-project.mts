@@ -104,9 +104,15 @@ export interface Input {
 }
 
 // We export this only for tests
-export const getAllFilePaths = async (rootDir: string) => {
+export const getAllFilePaths = async (
+  rootDir: string,
+  includeDir?: (dirName: string) => boolean,
+) => {
   const filePaths: Array<string> = [];
-  for await (const filePath of readDirRecursive(rootDir)) {
+  for await (const filePath of readDirRecursive(
+    rootDir,
+    includeDir ?? (() => true),
+  )) {
     filePaths.push(filePath);
   }
   return filePaths;
@@ -115,12 +121,15 @@ export const getAllFilePaths = async (rootDir: string) => {
 // For some reason, fs-extra doesn't have recursive readdir, so we have our own
 async function* readDirRecursive(
   dir: string,
+  includeDir: (dirName: string) => boolean,
 ): AsyncGenerator<string, void, unknown> {
   const entries = await fs.readdir(dir, { withFileTypes: true });
   for (const entry of entries) {
     const res = path.resolve(dir, entry.name);
     if (entry.isDirectory()) {
-      yield* readDirRecursive(res);
+      if (includeDir(res)) {
+        yield* readDirRecursive(res, includeDir);
+      }
     } else {
       yield res;
     }

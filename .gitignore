@@ -4,6 +4,4 @@ build
 dist*
 coverage
 .yarn
-*/.eslintrc*.cjs
-*/tsconfig*.json
 start-tests

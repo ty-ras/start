@@ -1,0 +1,43 @@
+name: Set up cache for running tests
+
+on:
+  workflow_call:
+
+jobs:
+  setup-cache-build:
+    runs-on: ubuntu-latest
+    name: Set up the cache
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - id: cache-dl
+        name: Cache downloaded Yarn packages
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-dl
+        with:
+          # Our install script uses this as yarn cache directory
+          path: .yarn
+          # We don't need OS in cache key, as we run yarn always via Docker (Alpine image)
+          key: ${{ env.cache-name }}-${{ hashFiles('code/yarn.lock') }}
+
+      - id: cache-modules
+        name: Cache installed Yarn packages
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-modules
+        with:
+          # Our install script uses this as yarn cache directory
+          path: code/node_modules
+          # We don't need OS in cache key, as we run yarn always via Docker (Alpine image)
+          key: ${{ env.cache-name }}-${{ hashFiles('code/yarn.lock') }}
+      
+      - if: steps.cache-dl.outputs.cache-hit != 'true' || steps.cache-modules.outputs.cache-hit != 'true'
+        name: Download and install Yarn packages
+        shell: bash
+        run: |
+          set -e
+
+          ./scripts/install.sh --frozen-lockfile

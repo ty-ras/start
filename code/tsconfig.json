@@ -1,6 +1,6 @@
 // TS config for the <project name>/src/**/*.ts files.
 {
-  "extends": "../tsconfig.json",
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",

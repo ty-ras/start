@@ -8,7 +8,6 @@ jobs:
     strategy:
       matrix:
         validation:
-          - none # Will run tests with 'Global: ' prefix.
           - io-ts
           - runtypes
           - zod
@@ -51,11 +50,35 @@ jobs:
         shell: bash
         run: |
           set -e
-          
-          if [ '${{ matrix.validation }}' = 'none' ]; then
-            TYRAS_TEST_TITLE_MATCH='Global: *'
-          else
-            TYRAS_TEST_TITLE_MATCH='Specific: Test ${{ matrix.validation }}-${{ matrix.server }}-${{ matrix.client }}'
-          fi
 
-          ./scripts/test.sh coverage -m "${TYRAS_TEST_TITLE_MATCH}"
+          ./scripts/test.sh coverage -m 'Specific: Test ${{ matrix.validation }}-${{ matrix.server }}-${{ matrix.client }}'
+
+  test-global:
+    runs-on: ubuntu-latest
+    name: Test global tests
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - id: restore-modules-from-cache
+        name: Retrieve installed Yarn packages from cache
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-modules
+        with:
+          # Our install script uses this as yarn cache directory
+          path: code/node_modules
+          # We don't need OS in cache key, as we run yarn always via Docker (Alpine image)
+          key: ${{ env.cache-name }}-${{ hashFiles('code/yarn.lock') }}
+          # If there is no cache at this point, it is either internal error, or concurrent cache invalidation
+          # In any case, fail.
+          fail-on-cache-miss: true
+
+      - id: test
+        name: Test ${{ matrix.validation }}, ${{ matrix.server }}, ${{ matrix.client }}
+        shell: bash
+        run: |
+          set -e
+
+          ./scripts/test.sh coverage -m 'Global: *'

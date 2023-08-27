@@ -1,7 +1,7 @@
 # Typesafe REST API Specification - Meta Repository
 
-[![CI Pipeline](https://github.com/ty-ras/meta/actions/workflows/ci.yml/badge.svg)](https://github.com/ty-ras/meta/actions/workflows/ci.yml)
-[![CD Pipeline](https://github.com/ty-ras/meta/actions/workflows/cd.yml/badge.svg)](https://github.com/ty-ras/meta/actions/workflows/cd.yml)
+[![CI Pipeline](https://github.com/ty-ras/start/actions/workflows/ci.yml/badge.svg)](https://github.com/ty-ras/start/actions/workflows/ci.yml)
+[![CD Pipeline](https://github.com/ty-ras/start/actions/workflows/cd.yml/badge.svg)](https://github.com/ty-ras/start/actions/workflows/cd.yml)
 
 The Typesafe REST API Specification is a family of libraries used to enable seamless development of Backend and/or Frontend which communicate via HTTP protocol.
 The protocol specification is checked both at compile-time and run-time to verify that communication indeed adhers to the protocol.

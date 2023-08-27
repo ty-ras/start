@@ -2,7 +2,7 @@
 
 Welcome to TyRAS-oriented Node HTTP fullstack app!
 This app is using [`io-ts`](https://github.com/gcanti/io-ts) as data validation framework.
-The contents of this folder were created using [`ty-ras/start` npx starter template](https://github.com/ty-ras/meta/tree/main/start).
+The contents of this folder were created using [`ty-ras/start` npx starter template](https://github.com/ty-ras/start/tree/main/code).
 
 # Project structure
 

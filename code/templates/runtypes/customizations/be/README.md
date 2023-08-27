@@ -2,7 +2,7 @@
 
 Welcome to TyRAS-oriented Node HTTP server app!
 This app is using [`runtypes`](https://github.com/pelotom/runtypes) as data validation framework.
-The contents of this folder were created using [`ty-ras/start` npx starter template](https://github.com/ty-ras/meta/tree/main/start).
+The contents of this folder were created using [`ty-ras/start` npx starter template](https://github.com/ty-ras/start/tree/main/code).
 
 # Next tasks
 

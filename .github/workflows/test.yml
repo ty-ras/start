@@ -76,7 +76,7 @@ jobs:
           fail-on-cache-miss: true
 
       - id: test
-        name: Test ${{ matrix.validation }}, ${{ matrix.server }}, ${{ matrix.client }}
+        name: Run tests not related to specific data validation/server/client combination
         shell: bash
         run: |
           set -e

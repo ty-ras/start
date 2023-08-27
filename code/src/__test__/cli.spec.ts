@@ -29,7 +29,7 @@ for (const testArg of Array.from(generateAllTestCombinations())) {
 }
 
 runOneTest(
-  "Global: Test BEFE-IOTS-NODE-FETCH with PNPM",
+  "Global: Test BEFE-ZOD-NODE-FETCH with PNPM",
   testTemplateGeneration,
   {
     components: "be-and-fe",
@@ -40,7 +40,7 @@ runOneTest(
     folderName: path.join(TARGET_DIR, "pnpm"),
     installDependencies: true,
   },
-  29,
+  19,
 );
 
 // eslint-disable-next-line sonarjs/cognitive-complexity

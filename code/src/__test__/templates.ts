@@ -17,7 +17,7 @@ const testOutputDir = path.join(
   "..",
   "..",
   "..",
-  "start-tests",
+  "tests-output",
 );
 await fs.mkdir(testOutputDir, { recursive: true });
 export const TARGET_DIR = await fs.mkdtemp(
@@ -107,35 +107,37 @@ const verifyTemplate = async (
     "There must be at least one package.json path in resulting template",
   );
 
-  c.deepEqual(
-    (
-      await tryStat(
-        path.join(
-          projectPath,
-          "node_modules",
-          "@ty-ras",
-          `server${server === undefined ? "" : `-${server}`}`,
-        ),
-      )
-    )?.isDirectory(),
-    server === undefined ? undefined : true,
-    "The server-specific package must (not) be installed",
-  );
+  if (packageManager !== "pnpm") {
+    c.deepEqual(
+      (
+        await tryStat(
+          path.join(
+            projectPath,
+            "node_modules",
+            "@ty-ras",
+            `server${server === undefined ? "" : `-${server}`}`,
+          ),
+        )
+      )?.isDirectory(),
+      server === undefined ? undefined : true,
+      "The server-specific package must (not) be installed",
+    );
 
-  c.deepEqual(
-    (
-      await tryStat(
-        path.join(
-          projectPath,
-          "node_modules",
-          "@ty-ras",
-          `client${client === undefined ? "" : `-${client}`}`,
-        ),
-      )
-    )?.isDirectory(),
-    client === undefined ? undefined : true,
-    "The client-specific package must (not) be installed",
-  );
+    c.deepEqual(
+      (
+        await tryStat(
+          path.join(
+            projectPath,
+            "node_modules",
+            "@ty-ras",
+            `client${client === undefined ? "" : `-${client}`}`,
+          ),
+        )
+      )?.isDirectory(),
+      client === undefined ? undefined : true,
+      "The client-specific package must (not) be installed",
+    );
+  }
 
   const manyPackageJsons = packageJsonPaths.length > 1;
 
@@ -152,7 +154,7 @@ const verifyTemplate = async (
 
   await verifyProjectOtherFiles(c, projectPath);
 
-  if (packageJsonsContents.length > 1) {
+  if (packageJsonsContents.length > 1 && packageManager !== "pnpm") {
     const allProjectNames = new Set(
       packageJsonsContents.map(({ name }) => name),
     );

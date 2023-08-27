@@ -53,6 +53,7 @@
     "eslint-plugin-prettier": "5.0.0",
     "eslint-plugin-sonarjs": "0.20.0",
     "madge": "6.1.0",
+    "pnpm": "8.7.0",
     "prettier": "3.0.1",
     "ts-node": "10.9.1",
     "typescript": "5.2.2"

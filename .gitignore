@@ -4,4 +4,5 @@ build
 dist*
 coverage
 .yarn
-start-tests
+tests-output
+.pnpm-store

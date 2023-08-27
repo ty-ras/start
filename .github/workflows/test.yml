@@ -8,6 +8,7 @@ jobs:
     strategy:
       matrix:
         validation:
+          - none # Will run tests with 'Global: ' prefix.
           - io-ts
           - runtypes
           - zod
@@ -20,6 +21,10 @@ jobs:
         client:
           - none
           - fetch
+        exclude:
+          # One of the servers or clients must always be present
+          - server: none
+            client: none
     runs-on: ubuntu-latest
     name: Test ${{ matrix.validation }}, ${{ matrix.server }}, ${{ matrix.client }}
     steps:
@@ -47,7 +52,7 @@ jobs:
         run: |
           set -e
           
-          if [ '${{ matrix.server }}' = 'none' ] && [ '${{ matrix.client }}' = 'none' ]; then
+          if [ '${{ matrix.validation }}' = 'none' ]; then
             TYRAS_TEST_TITLE_MATCH='Global: *'
           else
             TYRAS_TEST_TITLE_MATCH='Specific: Test ${{ matrix.validation }}-${{ matrix.server }}-${{ matrix.client }}'

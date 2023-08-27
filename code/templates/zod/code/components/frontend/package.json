@@ -1,0 +1,31 @@
+{
+  "name": "@ty-ras-sample/frontend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">= 18"
+  },
+  "dependencies": {
+    "@ty-ras/frontend-__TYRAS_CLIENT__-zod": "^2.0.0",
+    "@ty-ras-extras/frontend-zod": "^2.0.0",
+    "@ty-ras-sample/protocol": "1.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.19",
+    "@types/react-dom": "^18.2.7",
+    "@vitejs/plugin-react": "^4.0.4",
+    "eslint-plugin-jsx-a11y": "^6.7.1",
+    "eslint-plugin-react": "^7.33.1",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "vite": "^4.4.9"
+  },
+  "scripts": {
+    "build": "__PACKAGE_MANAGER__ run tsc --project tsconfig.build.json && vite build",
+    "dev": "vite --strictPort",
+    "lint": "eslint ./src --ext .ts,.tsx",
+    "tsc": "tsc"
+  }
+}

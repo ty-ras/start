@@ -1,0 +1,25 @@
+{
+  "name": "@ty-ras-sample/backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">= 18"
+  },
+  "dependencies": {
+    "@ty-ras/backend-__TYRAS_SERVER__-runtypes-openapi": "^2.0.0",
+    "@ty-ras-extras/backend-runtypes": "^2.0.0",
+    "@ty-ras-sample/protocol": "1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.16.3",
+    "ts-node": "^10.9.1"
+  },
+  "scripts": {
+    "build": "__PACKAGE_MANAGER__ run tsc --project tsconfig.build.json",
+    "dev": "MY_BACKEND_CONFIG=./config-dev.json __PACKAGE_MANAGER__ run server-ts",
+    "lint": "eslint ./src --ext .ts,.tsx",
+    "server-ts": "ts-node src/index",
+    "tsc": "tsc"
+  }
+}

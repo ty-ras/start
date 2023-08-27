@@ -20,11 +20,12 @@ on:
         default: |
           tyras_post_run ()
           {
-            cd "$1"
-            cp ../LICENSE ./LICENSE.txt
+            TYRAS_GIT_ROOT="$(pwd)"
+            cd code
+            cp "${TYRAS_GIT_ROOT}/LICENSE" ./LICENSE.txt
             # Note - yarn doesn't have functionality to install package without saving it to package.json (!)
             # So we use global install instead.
-            yarn global add "@jsdevtools/npm-publish@$(cat ../versions/npm-publish)"
+            yarn global add "@jsdevtools/npm-publish@$(cat "${TYRAS_GIT_ROOT}/versions/npm-publish")"
             npm-publish --dry-run --access public
           }
     secrets:
@@ -32,79 +33,78 @@ on:
         required: false
 
 jobs:
-  build_and_test:
-    strategy:
-      matrix:
-        dir:
-          - start
+  # The tests are running in parallel.
+  # Before that, set up the cache so that each runner in parallel stage won't need to separately download and install a bunch of packages.
+  setup-cache:
+    uses: ./.github/workflows/cache.yml
+
+  # Run the tests now
+  test:
+    needs: setup-cache
+    uses: ./.github/workflows/test.yml
+
+  # Now we can build + run other tasks
+  build:
+    needs: test
     runs-on: ubuntu-latest
-    name: Build and test ${{ matrix.dir }}
+    name: Build and test
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: ${{ inputs.fetch-depth }}
 
       - id: prepare
-        name: Prepare ${{ matrix.dir }}
+        name: Prepare
         shell: bash
         run: |
           set -e
 
           ${{ inputs.pre-run-function }}
-          tyras_pre_run '${{ matrix.dir }}'
+          tyras_pre_run
 
-      - id: install
-        name: Install dependencies of ${{ matrix.dir }}
-        shell: bash
-        run: |
-          set -e
-
-          ./scripts/install.sh '${{ matrix.dir }}' --frozen-lockfile
-
-      - id: test
-        name: Test ${{ matrix.dir }}
-        shell: bash
-        run: |
-          set -e
-
-          ./scripts/test.sh '${{ matrix.dir }}' coverage
+      - id: restore-modules-from-cache
+        name: Retrieve installed Yarn packages from cache
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-modules
+        with:
+          # Our install script uses this as yarn cache directory
+          path: code/node_modules
+          # We don't need OS in cache key, as we run yarn always via Docker (Alpine image)
+          key: ${{ env.cache-name }}-${{ hashFiles('code/yarn.lock') }}
+          # If there is no cache at this point, it is either internal error, or concurrent cache invalidation
+          # In any case, fail.
+          fail-on-cache-miss: true
 
       - id: lint
-        name: Lint ${{ matrix.dir }}
+        name: Lint
         shell: bash
         run: |
           set -e
 
-          ./scripts/lint.sh '${{ matrix.dir }}'
+          ./scripts/lint.sh
 
-      # Run build *after* tests - since tests no longer require transpiled JS to run
-      # We still want to run build to catch any TS error possibly lurking somewhere.
-      # Because we test first and build then, we can do compilation without __tests__ directory.
-      # We re-add it to src folder in order to include it in published NPM package (if CD pipeline).
-      # Notice we must produce stub package.json file to dist-cjs folder, otherwise `require` will fail on relative imports within the dist-cjs folder.
       - id: compile
-        name: Compile ${{ matrix.dir }}
+        name: Compile
         shell: bash
         run: |
           set -e
 
-          ./scripts/build.sh '${{ matrix.dir }}' ci
+          ./scripts/build.sh ci
 
-      - id: coverage
-        name: Upload coverage for '${{ matrix.dir }}'
-        uses: codecov/codecov-action@v3
-        if: matrix.dir != 'start'
-        with:
-          flags: ${{ matrix.dir }}
-          directory: ${{ matrix.dir }}
+      # - id: coverage
+      #   name: Upload coverage
+      #   uses: codecov/codecov-action@v3
+      #   with:
+      #     directory: code
 
       - id: finalize
-        name: Finalize ${{ matrix.dir }}
+        name: Finalize
         shell: bash
         run: |
           set -e
 
           ${{ inputs.post-run-function }}
-          tyras_post_run '${{ matrix.dir }}'
+          tyras_post_run
         env:
           NPM_PUBLISH_TOKEN: ${{ secrets.npm-publish-token }}

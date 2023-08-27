@@ -2,7 +2,7 @@
  * @file This file contains the implementation for greeting endpoint.
  */
 
-import * as tyras from "@ty-ras/backend-node-runtypes-openapi";
+import * as tyras from "@ty-ras/backend-__TYRAS_SERVER__-runtypes-openapi";
 import { greeting } from "@ty-ras-sample/protocol";
 import app, { type StateSpecBase } from "../app";
 

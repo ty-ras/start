@@ -6,6 +6,7 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import type * as input from "../write/input-spec.mjs";
 import type * as initInput from "../initialize/input-spec.mjs";
+import type * as pJson from "../write/package-json.mjs";
 import * as writeFiles from "../write/write-project.mjs";
 import * as cliUtils from "./cli-utils.js";
 
@@ -145,9 +146,39 @@ const verifyTemplate = async (
     !manyPackageJsons,
   );
 
-  await Promise.all(packageJsonPaths.map(verifySinglePackage));
+  const packageJsonsContents = await Promise.all(
+    packageJsonPaths.map(verifySinglePackage),
+  );
 
   await verifyProjectOtherFiles(c, projectPath);
+
+  if (packageJsonsContents.length > 1) {
+    const allProjectNames = new Set(
+      packageJsonsContents.map(({ name }) => name),
+    );
+    let accumulatedDependencies: pJson.PackageDependencies = {};
+    for (const { dependencies, devDependencies } of packageJsonsContents) {
+      c.true(
+        Object.keys(dependencies).every(
+          (key) =>
+            allProjectNames.has(key) || !(key in accumulatedDependencies),
+        ),
+        "There must not be overlapping dependencies between dependencies",
+      );
+      c.true(
+        Object.keys(devDependencies).every(
+          (key) =>
+            allProjectNames.has(key) || !(key in accumulatedDependencies),
+        ),
+        "There must not be overlapping dependencies between development dependencies",
+      );
+      accumulatedDependencies = {
+        ...accumulatedDependencies,
+        ...dependencies,
+        ...devDependencies,
+      };
+    }
+  }
 };
 
 const waitForProcessWithTimeout = async (
@@ -297,11 +328,12 @@ const createVerifySinglePackage = (
   // eslint-disable-next-line sonarjs/cognitive-complexity
   return async (packageJsonPath: string) => {
     // Read package.json, verify it has no floating version specs
-    const { name, dependencies, devDependencies } = F.pipe(
+    const packageJsonContents = F.pipe(
       await fs.readFile(packageJsonPath, "utf8"),
       JSON.parse,
       parsePackageJson,
     );
+    const { name, dependencies, devDependencies } = packageJsonContents;
     c.true(
       Object.values(dependencies)
         .concat(Object.values(devDependencies))
@@ -359,6 +391,7 @@ const createVerifySinglePackage = (
         );
       }
     }
+    return packageJsonContents;
   };
 };
 

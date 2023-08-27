@@ -1,6 +1,6 @@
 import { function as F, either as E, taskEither as TE } from "fp-ts";
 import { useState, useCallback } from "react";
-import * as tyras from "@ty-ras/frontend-fetch-io-ts";
+import * as tyras from "@ty-ras/frontend-__TYRAS_CLIENT__-io-ts";
 import * as task from "../hooks/asyncFailableTask";
 import backend from "../services/backend";
 

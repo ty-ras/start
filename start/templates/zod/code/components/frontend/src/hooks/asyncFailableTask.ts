@@ -1,6 +1,39 @@
 import { useCallback, useEffect, useState } from "react";
+import * as tyras from "@ty-ras/frontend-__TYRAS_CLIENT__-zod";
 
 /* eslint-disable @typescript-eslint/no-explicit-any*/
+
+/**
+ * This is a variant of {@link useAsyncFailableTask} geared towards invoking backend API call created via TyRAS framework.
+ *
+ * IMPORTANT!
+ * Please pass result of `useCallback` as a first and second parameters to this function!
+ * Otherwise, the `invokeTask` of returned object will constantly change!
+ * @param apiCall Callback to invoke the backend API call.
+ * @param processResult The callback to postprocess the result in case of successful backend API call invocation.
+ * @param skipLoggingIfError Skip logging error information to console (for "legit" error cases).
+ * @returns Object with task invocation callback, as well as current task state information.
+ */
+export const useAsyncAPICall = <T, TInput extends Array<any>>(
+  apiCall: (...args: TInput) => Promise<tyras.APICallResult<T>>,
+  processResult: (result: T, ...args: TInput) => unknown,
+  skipLoggingIfError = false,
+) =>
+  useAsyncFailableTask(
+    useCallback(
+      async (...args: TInput) => {
+        // Execute backend call, catching any thrown exceptions, and ending up in tyras.APICallResult<T>.
+        const beResult = await apiCall(...args);
+        if (beResult.error === "none") {
+          await processResult(beResult.data, ...args);
+        } else {
+          throw tyras.toError(beResult);
+        }
+      },
+      [apiCall, processResult],
+    ),
+    skipLoggingIfError,
+  );
 
 /**
  * Creates a invocation callback and task state tracking for a callback producing `Promise`, which typically performs some asynchronous, failable action.
@@ -9,12 +42,12 @@ import { useCallback, useEffect, useState } from "react";
  * IMPORTANT!
  * Please pass result of `useCallback` as a parameter to this function!
  * Otherwise, the `invokeTask` of returned object will constantly change!
- * @param createTask The callback which return the Promise, or returns `undefined`. **Should be result of `useCallback` call**.
+ * @param executeAsync The callback which return the Promise, or returns `undefined`. **Should be result of `useCallback` call**.
  * @param skipLoggingIfError Skip logging error information to console (for "legit" error cases).
  * @returns Object with task invocation callback, as well as current task state information.
  */
 export const useAsyncFailableTask = <T, TInput extends Array<any>>(
-  createTask: (...args: TInput) => Promise<T> | undefined,
+  executeAsync: (...args: TInput) => Promise<T> | undefined,
   skipLoggingIfError = false,
 ) => {
   /* eslint-enable @typescript-eslint/no-explicit-any*/
@@ -26,7 +59,7 @@ export const useAsyncFailableTask = <T, TInput extends Array<any>>(
       if (state !== "invoking") {
         void (async () => {
           try {
-            const task = createTask(...args);
+            const task = executeAsync(...args);
             if (task) {
               setState("invoking");
               started = true;
@@ -42,7 +75,7 @@ export const useAsyncFailableTask = <T, TInput extends Array<any>>(
 
       return started;
     },
-    [state, createTask],
+    [state, executeAsync],
   );
 
   if (!skipLoggingIfError) {

@@ -2,7 +2,7 @@
  * @file This file contains code exposing the TyRAS application builder.
  */
 
-import * as tyras from "@ty-ras/backend-node-io-ts-openapi";
+import * as tyras from "@ty-ras/backend-__TYRAS_SERVER__-io-ts-openapi";
 
 const app = tyras.newBuilder({
   // Max limit for request bodies is 10MB by default.

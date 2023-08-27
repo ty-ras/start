@@ -1,4 +1,4 @@
-import * as tyras from "@ty-ras/backend-node-runtypes-openapi";
+import * as tyras from "@ty-ras/backend-__TYRAS_SERVER__-runtypes-openapi";
 import config from "./config";
 import endpoints from "./api";
 import auth from "./auth";

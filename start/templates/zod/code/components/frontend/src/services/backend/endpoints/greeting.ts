@@ -2,7 +2,7 @@
  * @file This file contains the code to call the greeting endpoint.
  */
 
-import * as tyras from "@ty-ras/frontend-fetch-zod";
+import * as tyras from "@ty-ras/frontend-__TYRAS_CLIENT__-zod";
 import { greeting } from "@ty-ras-sample/protocol";
 import factory from "../factory";
 

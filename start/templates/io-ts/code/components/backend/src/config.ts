@@ -1,4 +1,4 @@
-import * as tyras from "@ty-ras/backend-node-io-ts-openapi";
+import * as tyras from "@ty-ras/backend-__TYRAS_SERVER__-io-ts-openapi";
 import { configuration } from "@ty-ras-extras/backend-io-ts";
 import { function as F, task as T, taskEither as TE } from "fp-ts";
 import * as t from "io-ts";

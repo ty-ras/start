@@ -24,7 +24,7 @@ for (const testArg of Array.from(generateAllTestCombinations())) {
     }`,
     testTemplateGeneration,
     testArg,
-    testArg.components === "be-and-fe" ? 21 : 12,
+    testArg.components === "be-and-fe" ? 29 : 12,
   );
 }
 
@@ -40,7 +40,7 @@ runOneTest(
     folderName: path.join(TARGET_DIR, "pnpm"),
     installDependencies: true,
   },
-  21,
+  29,
 );
 
 // eslint-disable-next-line sonarjs/cognitive-complexity

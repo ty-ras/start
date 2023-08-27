@@ -7,8 +7,8 @@
     "node": ">= 18"
   },
   "dependencies": {
-    "@ty-ras/frontend-fetch-runtypes": "^2.0.0",
-    "@ty-ras-extras/frontend-runtypes": "^2.0.1",
+    "@ty-ras/frontend-__TYRAS_CLIENT__-runtypes": "^2.0.0",
+    "@ty-ras-extras/frontend-runtypes": "^2.0.0",
     "@ty-ras-sample/protocol": "1.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

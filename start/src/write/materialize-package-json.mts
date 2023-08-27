@@ -10,9 +10,8 @@ export default async (
   onEvent: events.MaybeOnEvent,
   packageJsonPath: string,
   name: string | undefined,
-  processDependencies:
-    | ((dependencies: PackageDependencies) => PackageDependencies)
-    | undefined,
+  processDependencies: FixPackageJsonDependencies | undefined,
+  processDevDependencies: FixPackageJsonDependencies | undefined,
 ) => {
   // Modify raw version specifications of package.json file into actual versions, which are newest according to version spec
   const {
@@ -28,18 +27,24 @@ export default async (
 
   const getLatestVersion = createGetLatestVersion(onEvent);
 
+  const actualName = name ?? originalName;
   const newPackageJson = {
-    name: name ?? originalName,
+    name: actualName,
     ...packageJson,
     dependencies: Object.fromEntries(
       await Promise.all(
-        Object.entries(processDependencies?.(dependencies) ?? dependencies).map(
-          getLatestVersion,
-        ),
+        Object.entries(
+          processDependencies?.(dependencies, actualName) ?? dependencies,
+        ).map(getLatestVersion),
       ),
     ),
     devDependencies: Object.fromEntries(
-      await Promise.all(Object.entries(devDependencies).map(getLatestVersion)),
+      await Promise.all(
+        Object.entries(
+          processDevDependencies?.(devDependencies, actualName) ??
+            devDependencies,
+        ).map(getLatestVersion),
+      ),
     ),
   };
 
@@ -51,6 +56,11 @@ export default async (
 };
 
 export const parsePackageJson = F.pipe(packageJson, S.parseSync);
+
+export type FixPackageJsonDependencies = (
+  dependencies: PackageDependencies,
+  packageName: string,
+) => PackageDependencies;
 
 const createGetLatestVersion =
   (onEvent: events.MaybeOnEvent) =>

@@ -8,8 +8,9 @@ import type * as validatedInput from "./validate-input.mjs";
 import type * as events from "./events.mjs";
 import materializePackageJson, {
   parsePackageJson as parsePackageJsonWithoutWorkspaces,
+  type FixPackageJsonDependencies,
 } from "./materialize-package-json.mjs";
-import packageJson, { type PackageDependencies } from "./package-json.mjs";
+import packageJson from "./package-json.mjs";
 import copyFiles, { type CopyInstruction } from "./copy-files.mjs";
 import processFileContents, {
   type FileContentsReplacement,
@@ -21,16 +22,56 @@ export default async ({ validatedInput, packageRoot, onEvent }: Input) => {
   await copyFiles(getCopyInstructions({ packageRoot, validatedInput }));
   onEvent?.({ event: "endCopyTemplateFiles", data: {} });
 
-  // Now, fix all version specs of all package.json files into actual versions.
-  onEvent?.({ event: "startFixPackageJsonVersions", data: {} });
-
-  // Start by finding all package.json files
+  // We have now copied the correct raw template files to correct paths.
+  // But BEFORE starting to fix package dependency versions, we must replace all the placeholders with actual values.
+  onEvent?.({ event: "startProcessingFileContents", data: {} });
   const { folderName, packageManager } = validatedInput;
   const allFilePaths = await getAllFilePaths(folderName);
   const packageJsonPaths = allFilePaths.filter(
     (filePath) => path.basename(filePath) === PACKAGE_JSON,
   );
   const projectName = path.basename(folderName);
+  const fileProcessInstructions: Array<FileContentsReplacement> = [
+    {
+      searchFor: "__PACKAGE_MANAGER__",
+      // NPM Reasonable choice if package manager was not specified, since instructions tell this to be invoked via `npx`
+      replaceWith:
+        packageManager === inputSpec.PACKAGE_MANAGER_UNSPECIFIED
+          ? inputSpec.PACKAGE_MANAGER_NPM
+          : packageManager,
+    },
+    {
+      searchFor: "@ty-ras-sample",
+      replaceWith: packageJsonPaths.length > 1 ? `@${projectName}` : "..",
+    },
+    {
+      searchFor: "__TYRAS_SERVER__",
+      replaceWith:
+        "server" in validatedInput
+          ? validatedInput.server
+          : "internal_bug_server_ref_in_non_server_project",
+    },
+    {
+      searchFor: "__TYRAS_CLIENT__",
+      replaceWith:
+        "client" in validatedInput
+          ? validatedInput.client
+          : "internal_bug_client_ref_in_non_client_project",
+    },
+  ];
+  const modifiedPaths = await processFileContents(
+    allFilePaths.map((filePath) => ({
+      filePath,
+      replacementData: fileProcessInstructions,
+    })),
+  );
+  onEvent?.({
+    event: "endProcessingFileContents",
+    data: { paths: modifiedPaths },
+  });
+
+  // Now, fix all version specs of all package.json files into actual versions.
+  onEvent?.({ event: "startFixPackageJsonVersions", data: {} });
 
   // Callback which will create the "name" field of package.json file.
   const extractPackageName = F.pipe(
@@ -52,6 +93,13 @@ export default async ({ validatedInput, packageRoot, onEvent }: Input) => {
     packageManager === "pnpm"
       ? createFixPnpmDependencies(validatedInput.dataValidation)
       : undefined;
+  const fixDevDeps =
+    "server" in validatedInput
+      ? createFixDevDependencies(
+          validatedInput.components,
+          getServerInfo(validatedInput.server),
+        )
+      : undefined;
   await Promise.all(
     packageJsonPaths.map((packageJsonPath) =>
       // Change the "^x.y.z" version specifications to "x.b.c" fixed versions
@@ -60,39 +108,11 @@ export default async ({ validatedInput, packageRoot, onEvent }: Input) => {
         packageJsonPath,
         extractPackageName?.(packageJsonPath),
         fixDeps,
+        fixDevDeps,
       ),
     ),
   );
   onEvent?.({ event: "endFixPackageJsonVersions", data: { packageJsonPaths } });
-
-  // At this point, we have copied files and stabilized dependencies' version specs
-  // But there are still certain placeholders that need replacing.
-  const fileProcessInstructions: Array<FileContentsReplacement> = [
-    {
-      searchFor: "__PACKAGE_MANAGER__",
-      // NPM Reasonable choice if package manager was not specified, since instructions tell this to be invoked via `npx`
-      replaceWith:
-        packageManager === inputSpec.PACKAGE_MANAGER_UNSPECIFIED
-          ? inputSpec.PACKAGE_MANAGER_NPM
-          : packageManager,
-    },
-    {
-      searchFor: "@ty-ras-sample",
-      replaceWith: packageJsonPaths.length > 1 ? `@${projectName}` : "..",
-    },
-  ];
-
-  onEvent?.({ event: "startProcessingFileContents", data: {} });
-  const modifiedPaths = await processFileContents(
-    allFilePaths.map((filePath) => ({
-      filePath,
-      replacementData: fileProcessInstructions,
-    })),
-  );
-  onEvent?.({
-    event: "endProcessingFileContents",
-    data: { paths: modifiedPaths },
-  });
 
   // We are done!
 };
@@ -338,9 +358,11 @@ const sortByKey = (array: Array<[string, string]>) => {
 
 // We need this because protocol code has 'import ... from "@ty-ras/protocol";',
 // and PNPM requires in this case for the "@ty-ras/protocol" to be in the top-level dependency list.
-const createFixPnpmDependencies = (dataValidation: string) => {
+const createFixPnpmDependencies = (
+  dataValidation: string,
+): FixPackageJsonDependencies => {
   const dataValidationPackage = `@ty-ras/data-${dataValidation}`;
-  return (deps: PackageDependencies): PackageDependencies => {
+  return (deps) => {
     const tyrasPackages = Object.keys(deps).filter((packageName) =>
       packageName.startsWith("@ty-ras/"),
     );
@@ -358,6 +380,34 @@ const createFixPnpmDependencies = (dataValidation: string) => {
     return deps;
   };
 };
+
+const createFixDevDependencies = (
+  components: validatedInput.ValidatedInput["components"],
+  info: ServerInfo | undefined,
+): FixPackageJsonDependencies | undefined =>
+  info === undefined
+    ? undefined
+    : (devDeps, packageName) =>
+        components === "be" || packageName.endsWith("/backend")
+          ? {
+              ...devDeps,
+              [`@types/${info.server}`]: info.typesVersionSpec,
+            }
+          : devDeps;
+
+const getServerInfo = (server: string): ServerInfo | undefined => {
+  switch (server) {
+    case "koa":
+      return { server, typesVersionSpec: "^2.13.8" };
+    case "express":
+      return { server, typesVersionSpec: "^4.17.17" };
+  }
+};
+
+interface ServerInfo {
+  server: string;
+  typesVersionSpec: string;
+}
 
 const getAtLeastMajorVersionString = (versionSpecString: string) =>
   `^${

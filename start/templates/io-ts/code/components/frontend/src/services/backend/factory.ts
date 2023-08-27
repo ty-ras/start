@@ -2,7 +2,7 @@
  * @file This file contains code exposing the TyRAS api call callback factory.
  */
 
-import * as tyras from "@ty-ras/frontend-fetch-io-ts";
+import * as tyras from "@ty-ras/frontend-__TYRAS_CLIENT__-io-ts";
 import config from "../../config";
 
 /**

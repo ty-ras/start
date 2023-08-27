@@ -2,7 +2,7 @@
  * @file This file contains the implementation for greeting endpoint.
  */
 
-import * as tyras from "@ty-ras/backend-node-zod-openapi";
+import * as tyras from "@ty-ras/backend-__TYRAS_SERVER__-zod-openapi";
 import { greeting } from "@ty-ras-sample/protocol";
 import app, { type StateSpecBase } from "../app";
 

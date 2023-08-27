@@ -2,7 +2,7 @@
  * @file This file exposes the built TyRAS AppEndpoints, including OpenAPI endpoint, to be served via HTTP server.
  */
 
-import * as tyras from "@ty-ras/backend-node-io-ts-openapi";
+import * as tyras from "@ty-ras/backend-__TYRAS_SERVER__-io-ts-openapi";
 import app from "./app";
 import Greeting from "./endpoints/greeting";
 

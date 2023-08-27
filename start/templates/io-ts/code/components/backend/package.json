@@ -7,12 +7,12 @@
     "node": ">= 18"
   },
   "dependencies": {
-    "@ty-ras/backend-node-io-ts-openapi": "^2.0.3",
+    "@ty-ras/backend-__TYRAS_SERVER__-io-ts-openapi": "^2.0.0",
     "@ty-ras-extras/backend-io-ts": "^2.0.0",
     "@ty-ras-sample/protocol": "1.0.0"
   },
   "devDependencies": {
-    "@types/node": "^18.15.0",
+    "@types/node": "^18.16.3",
     "ts-node": "^10.9.1"
   },
   "scripts": {

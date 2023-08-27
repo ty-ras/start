@@ -1,5 +1,4 @@
 import { useState, useCallback } from "react";
-import * as tyras from "@ty-ras/frontend-fetch-zod";
 import * as task from "../hooks/asyncFailableTask";
 import backend from "../services/backend";
 
@@ -8,16 +7,13 @@ const Greeting = () => {
   const [{ input, result }, setResult] = useState<TaskResult>({
     input: target,
   });
-  const { invokeTask } = task.useAsyncFailableTask(
-    useCallback(async (target: string) => {
-      // Execute backend call, catching any thrown exceptions, and ending up in TaskEither<Error, tyras.APICallResult<T>>
-      const beResult = await backend.greeting.getGreeting({ url: { target } });
-      if (beResult.error === "none") {
-        setResult({ input: target, result: beResult.data });
-      } else {
-        throw tyras.toError(beResult);
-      }
-    }, []),
+  const { invokeTask } = task.useAsyncAPICall(
+    useCallback(
+      async (target: string) =>
+        await backend.greeting.getGreeting({ url: { target } }),
+      [],
+    ),
+    useCallback((result, target) => setResult({ input: target, result }), []),
   );
   return (
     <>

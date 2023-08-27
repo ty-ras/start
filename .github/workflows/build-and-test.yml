@@ -45,6 +45,7 @@ jobs:
 
   # Now we can build + run other tasks
   build:
+    needs: test
     runs-on: ubuntu-latest
     name: Build and test ${{ matrix.dir }}
     steps:

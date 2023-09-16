@@ -5,6 +5,7 @@ import commonjs from "@rollup/plugin-commonjs";
 import json from "@rollup/plugin-json";
 import nodeResolve from "@rollup/plugin-node-resolve";
 import license from "rollup-plugin-license";
+import shebang from "rollup-plugin-shebang-bin";
 
 const outDir = "bundle";
 
@@ -30,6 +31,9 @@ const rollupConfigs = [
       moduleSideEffects: "no-external",
     },
     plugins: [
+      shebang({
+        include: "dist/cli.mjs",
+      }),
       nodeResolve({
         browser: false,
         // Without this, the chalk will fail:

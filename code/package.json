@@ -61,6 +61,7 @@
     "prettier": "3.0.3",
     "rollup": "3.29.2",
     "rollup-plugin-dts": "6.0.2",
+    "rollup-plugin-shebang-bin": "0.0.5",
     "rollup-plugin-license": "3.1.0",
     "ts-node": "10.9.1",
     "typescript": "5.2.2"

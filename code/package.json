@@ -1,6 +1,6 @@
 {
   "name": "@ty-ras/start",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "author": {
     "name": "Stanislav Muhametsin",
     "email": "346799+stazz@users.noreply.github.com",
@@ -13,56 +13,68 @@
   },
   "files": [
     "./src",
-    "./dist",
-    "./dist-ts",
+    "./bundle",
     "./templates",
     "README.md",
     "LICENSE.txt"
   ],
   "type": "module",
-  "bin": "./dist/cli.mjs",
-  "module": "./dist/index.mjs",
-  "types": "./dist-ts/index.d.mts",
+  "bin": "./bundle/cli.mjs",
+  "module": "./bundle/index.mjs",
+  "types": "./bundle/index.d.mts",
   "exports": {
     ".": {
-      "types": "./dist-ts/index.d.mts",
-      "import": "./dist/index.mjs"
+      "types": "./bundle/index.d.mts",
+      "import": "./bundle/index.mjs"
     }
   },
   "dependencies": {
     "fs-extra": "11.1.0",
     "gradient-string": "2.0.2",
     "meow-inquirer": "1.0.1",
+    "chalk": "5.3.0",
+    "inquirer": "9.2.11",
+    "ora": "7.0.1",
     "undici": "5.21.0"
   },
   "devDependencies": {
-    "@babel/core": "7.22.10",
-    "@babel/eslint-parser": "7.22.10",
-    "@typescript-eslint/eslint-plugin": "6.3.0",
-    "@typescript-eslint/parser": "6.3.0",
+    "@babel/core": "7.22.19",
+    "@babel/eslint-parser": "7.22.15",
+    "@rollup/plugin-commonjs": "25.0.4",
+    "@rollup/plugin-json": "6.0.0",
+    "@rollup/plugin-node-resolve": "15.2.1",
+    "@rollup/plugin-typescript": "11.1.3",
+    "@typescript-eslint/eslint-plugin": "6.7.0",
+    "@typescript-eslint/parser": "6.7.0",
     "@types/fs-extra": "11.0.1",
     "@types/gradient-string": "1.1.2",
     "@types/inquirer": "9.0.3",
     "@types/node": "18.16.3",
-    "ava": "5.2.0",
-    "c8": "7.13.0",
-    "eslint": "8.46.0",
+    "ava": "5.3.1",
+    "c8": "8.0.1",
+    "eslint": "8.49.0",
     "eslint-config-prettier": "9.0.0",
     "eslint-plugin-path-import-extension": "0.9.0",
     "eslint-plugin-type-only-import": "0.9.0",
     "eslint-plugin-prettier": "5.0.0",
-    "eslint-plugin-sonarjs": "0.20.0",
+    "eslint-plugin-sonarjs": "0.21.0",
     "madge": "6.1.0",
     "pnpm": "8.7.0",
-    "prettier": "3.0.1",
+    "prettier": "3.0.3",
+    "rollup": "3.29.2",
+    "rollup-plugin-dts": "6.0.2",
+    "rollup-plugin-license": "3.1.0",
     "ts-node": "10.9.1",
     "typescript": "5.2.2"
   },
   "scripts": {
     "build:run": "yarn run lint && yarn run tsc && yarn run chmodx",
-    "build:ci": "yarn run clear-build-artifacts && yarn run compile-d-ts-files && yarn run tsc && yarn run format-output-files && yarn run chmodx",
-    "chmodx": "chmod +x dist/cli.mjs",
+    "build:ci": "yarn run clear-build-artifacts && yarn run clear-bundle-artifacts && yarn run compile-d-ts-files && yarn run tsc && yarn run bundle && yarn run chmodx",
+    "bundle": "yarn run clear-bundle-artifacts && yarn run bundle:plain",
+    "bundle:plain": "rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
+    "chmodx": "chmod +x bundle/cli.mjs",
     "clear-build-artifacts": "rm -rf dist dist-ts build",
+    "clear-bundle-artifacts": "rm -rf bundle",
     "compile-d-ts-files": "yarn run tsc --removeComments false --emitDeclarationOnly --declaration --declarationDir ./dist-ts && yarn run tsc:plain --project tsconfig.out.json",
     "dev": "ts-node src/cli.mts",
     "format-output-files": "yarn run format-output-files-ts && yarn run format-output-files-js",
@@ -74,12 +86,13 @@
     "tsc": "tsc --project tsconfig.build.json",
     "tsc:plain": "tsc",
     "test:coverage": "yarn run clear-build-artifacts && yarn run test:run",
-    "test:run": "yarn run tsc && yarn run chmodx && ava"
+    "test:run": "yarn run tsc && yarn run bundle && yarn run chmodx && ava"
   },
   "resolutions": {
-    "@types/node": "18.15.0",
+    "@types/node": "18.16.3",
     "detective-typescript": "11.1.0",
     "dependency-tree": "10.0.9",
-    "precinct": "11.0.5"
+    "precinct": "11.0.5",
+    "typescript": "5.2.2"
   }
 }

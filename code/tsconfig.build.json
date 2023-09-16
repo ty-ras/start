@@ -14,4 +14,8 @@
     // We don't want dangling // eslint-disable-xyz comments, as that will cause errors during formatting output .[m]js files.
     "removeComments": true
   },
+  // Re-define include so that we won't get errors about rollup.config.ts (and it won't be transpiled to rollup.config.d.ts)
+  "include": [
+    "src/**/*.mts"
+  ]
 }

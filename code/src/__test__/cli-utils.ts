@@ -4,4 +4,4 @@ import * as util from "node:util";
 
 export const execFile = util.promisify(childProcess.execFile);
 
-export const pathToCLI = `${process.cwd()}/dist/cli.mjs`;
+export const pathToCLI = `${process.cwd()}/bundle/cli.mjs`;

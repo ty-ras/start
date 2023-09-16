@@ -356,8 +356,8 @@ const sortByKey = (array: Array<[string, string]>) => {
   return array;
 };
 
-// We need this because protocol code has 'import ... from "@ty-ras/protocol";',
-// and PNPM requires in this case for the "@ty-ras/protocol" to be in the top-level dependency list.
+// We need this because protocol code has 'import ... from "@ty-ras/protocol|data-<validation>";',
+// and PNPM requires in this case for the "@ty-ras/protocol|data-<validation>" to be in the top-level dependency list.
 const createFixPnpmDependencies = (
   dataValidation: string,
 ): FixPackageJsonDependencies => {

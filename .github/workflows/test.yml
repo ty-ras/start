@@ -20,6 +20,8 @@ jobs:
         client:
           - none
           - fetch
+          - node
+          - axios
         exclude:
           # One of the servers or clients must always be present
           - server: none

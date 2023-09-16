@@ -119,13 +119,12 @@ export default async ({ validatedInput, packageRoot, onEvent }: Input) => {
         packageJsonPath,
         extractPackageName?.(packageJsonPath),
         fixDeps,
-        (...args) => {
-          let [devDeps] = args;
+        (...[devDeps, ...args]) => {
           if (fixBEDevDeps) {
-            devDeps = fixBEDevDeps(...args);
+            devDeps = fixBEDevDeps(...[devDeps, ...args]);
           }
           if (fixFEDevDeps) {
-            devDeps = fixFEDevDeps(...args);
+            devDeps = fixFEDevDeps(...[devDeps, ...args]);
           }
           return devDeps;
         },
@@ -410,8 +409,8 @@ const createFixDevDependencies = (
     : (devDeps, packageName) =>
         shouldChangeDevDeps(packageName)
           ? {
-              ...devDeps,
               [`@types/${info.library}`]: info.typesVersionSpec,
+              ...devDeps,
             }
           : devDeps;
 

@@ -96,17 +96,19 @@ export default async ({ validatedInput, packageRoot, onEvent }: Input) => {
   const fixBEDevDeps =
     "server" in validatedInput
       ? createFixDevDependencies(
-          validatedInput.components,
           getServerInfo(validatedInput.server),
-          "/backend",
+          (packageName) =>
+            validatedInput.components === "be" ||
+            packageName.endsWith("/backend"),
         )
       : undefined;
   const fixFEDevDeps =
     "client" in validatedInput
       ? createFixDevDependencies(
-          validatedInput.components,
           getClientInfo(validatedInput.client),
-          "/frontend",
+          (packageName) =>
+            validatedInput.components === "fe" ||
+            packageName.endsWith("/frontend"),
         )
       : undefined;
   await Promise.all(
@@ -400,14 +402,13 @@ const createFixPnpmDependencies = (
 };
 
 const createFixDevDependencies = (
-  components: validatedInput.ValidatedInput["components"],
   info: DevDependencyInfo | undefined,
-  packageNameEndsWith: string,
+  shouldChangeDevDeps: (packageName: string) => boolean,
 ): FixPackageJsonDependencies | undefined =>
   info === undefined
     ? undefined
     : (devDeps, packageName) =>
-        components === "be" || packageName.endsWith(packageNameEndsWith)
+        shouldChangeDevDeps(packageName)
           ? {
               ...devDeps,
               [`@types/${info.library}`]: info.typesVersionSpec,

@@ -84,7 +84,7 @@
     "tsc": "tsc --project tsconfig.build.json",
     "tsc:plain": "tsc",
     "test:coverage": "yarn run clear-build-artifacts && yarn run test:run",
-    "test:run": "yarn run tsc && yarn run bundle && yarn run clear-build-artifacts && yarn run chmodx && ava"
+    "test:run": "yarn run tsc && TYRAS_START_ONLY_TEST=true yarn run bundle && yarn run clear-build-artifacts && yarn run chmodx && ava"
   },
   "resolutions": {
     "@types/node": "18.16.3",

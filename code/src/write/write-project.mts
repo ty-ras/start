@@ -93,11 +93,22 @@ export default async ({ validatedInput, packageRoot, onEvent }: Input) => {
     packageManager === "pnpm"
       ? createFixPnpmDependencies(validatedInput.dataValidation)
       : undefined;
-  const fixDevDeps =
+  const fixBEDevDeps =
     "server" in validatedInput
       ? createFixDevDependencies(
-          validatedInput.components,
           getServerInfo(validatedInput.server),
+          (packageName) =>
+            validatedInput.components === "be" ||
+            packageName.endsWith("/backend"),
+        )
+      : undefined;
+  const fixFEDevDeps =
+    "client" in validatedInput
+      ? createFixDevDependencies(
+          getClientInfo(validatedInput.client),
+          (packageName) =>
+            validatedInput.components === "fe" ||
+            packageName.endsWith("/frontend"),
         )
       : undefined;
   await Promise.all(
@@ -108,7 +119,15 @@ export default async ({ validatedInput, packageRoot, onEvent }: Input) => {
         packageJsonPath,
         extractPackageName?.(packageJsonPath),
         fixDeps,
-        fixDevDeps,
+        (...[devDeps, ...args]) => {
+          if (fixBEDevDeps) {
+            devDeps = fixBEDevDeps(...[devDeps, ...args]);
+          }
+          if (fixFEDevDeps) {
+            devDeps = fixFEDevDeps(...[devDeps, ...args]);
+          }
+          return devDeps;
+        },
       ),
     ),
   );
@@ -356,8 +375,8 @@ const sortByKey = (array: Array<[string, string]>) => {
   return array;
 };
 
-// We need this because protocol code has 'import ... from "@ty-ras/protocol";',
-// and PNPM requires in this case for the "@ty-ras/protocol" to be in the top-level dependency list.
+// We need this because protocol code has 'import ... from "@ty-ras/protocol|data-<validation>";',
+// and PNPM requires in this case for the "@ty-ras/protocol|data-<validation>" to be in the top-level dependency list.
 const createFixPnpmDependencies = (
   dataValidation: string,
 ): FixPackageJsonDependencies => {
@@ -382,30 +401,38 @@ const createFixPnpmDependencies = (
 };
 
 const createFixDevDependencies = (
-  components: validatedInput.ValidatedInput["components"],
-  info: ServerInfo | undefined,
+  info: DevDependencyInfo | undefined,
+  shouldChangeDevDeps: (packageName: string) => boolean,
 ): FixPackageJsonDependencies | undefined =>
   info === undefined
     ? undefined
     : (devDeps, packageName) =>
-        components === "be" || packageName.endsWith("/backend")
+        shouldChangeDevDeps(packageName)
           ? {
+              [`@types/${info.library}`]: info.typesVersionSpec,
               ...devDeps,
-              [`@types/${info.server}`]: info.typesVersionSpec,
             }
           : devDeps;
 
-const getServerInfo = (server: string): ServerInfo | undefined => {
-  switch (server) {
+const getServerInfo = (library: string): DevDependencyInfo | undefined => {
+  switch (library) {
     case "koa":
-      return { server, typesVersionSpec: "^2.13.8" };
+      return { library, typesVersionSpec: "^2.13.8" };
     case "express":
-      return { server, typesVersionSpec: "^4.17.17" };
+      return { library, typesVersionSpec: "^4.17.17" };
   }
 };
 
-interface ServerInfo {
-  server: string;
+const getClientInfo = (library: string): DevDependencyInfo | undefined => {
+  // eslint-disable-next-line sonarjs/no-small-switch
+  switch (library) {
+    case "node":
+      return { library, typesVersionSpec: "18.16.3" };
+  }
+};
+
+interface DevDependencyInfo {
+  library: string;
   typesVersionSpec: string;
 }
 

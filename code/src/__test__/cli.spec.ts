@@ -53,7 +53,7 @@ function* generateAllTestCombinations() {
       "express",
       "fastify",
     ] as const) {
-      for (const client of [undefined, "fetch"] as const) {
+      for (const client of [undefined, "fetch", "node", "axios"] as const) {
         if (client !== undefined || server !== undefined) {
           const testArg: input.InputFromCLIOrUser &
             initInput.InputFromCLIOrUser = Object.assign(

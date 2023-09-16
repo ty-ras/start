@@ -182,15 +182,15 @@ const inputSpec = {
   client: {
     type: mi.TYPE_VALIDATE,
     orderNumber: 8,
-    schema: S.keyof(S.struct({ fetch: S.any })),
+    schema: S.keyof(S.struct({ fetch: S.any, node: S.any, axios: S.any })),
     prompt: {
       type: "list",
       message: "Which client should TyRAS be providing?",
       default: "fetch",
       choices: [
         { name: "Fetch API", value: "fetch" },
-        { name: "Node Request API", value: "node", disabled: true },
-        { name: "Axios", value: "axios", disabled: true },
+        { name: "Node Request API", value: "node" },
+        { name: "Axios", value: "axios" },
       ],
     },
     flag: {

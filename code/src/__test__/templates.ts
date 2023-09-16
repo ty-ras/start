@@ -170,7 +170,10 @@ const verifyTemplate = async (
       c.true(
         Object.keys(devDependencies).every(
           (key) =>
-            allProjectNames.has(key) || !(key in accumulatedDependencies),
+            // Node types is special case - it is OK for separate packages to have it
+            key === "@types/node" ||
+            allProjectNames.has(key) ||
+            !(key in accumulatedDependencies),
         ),
         "There must not be overlapping dependencies between development dependencies",
       );

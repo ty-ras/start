@@ -7,6 +7,7 @@
     "tsBuildInfoFile": "./build/tsconfig.tsbuildinfo"
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "rollup.config.ts"
   ],
 }

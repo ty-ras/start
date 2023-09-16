@@ -67,7 +67,7 @@
   },
   "scripts": {
     "build:run": "yarn run lint && yarn run tsc && yarn run chmodx",
-    "build:ci": "yarn run clear-build-artifacts && yarn run clear-bundle-artifacts && yarn run compile-d-ts-files && yarn run tsc && yarn run bundle && yarn run chmodx",
+    "build:ci": "yarn run clear-build-artifacts && yarn run clear-bundle-artifacts && yarn run compile-d-ts-files && yarn run tsc && yarn run bundle && yarn run clear-build-artifacts && yarn run chmodx",
     "bundle": "yarn run clear-bundle-artifacts && yarn run bundle:plain",
     "bundle:plain": "rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
     "chmodx": "chmod +x bundle/cli.mjs",

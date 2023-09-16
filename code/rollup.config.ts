@@ -15,7 +15,8 @@ const config = defineConfig({
     generatedCode: {
       preset: "es2015",
     },
-    chunkFileNames: "[name].js",
+    chunkFileNames: "[name].mjs",
+    entryFileNames: "[name].mjs",
     manualChunks: (id) => {
       if (id.includes("node_modules")) {
         return "dependencies";
@@ -27,7 +28,12 @@ const config = defineConfig({
     moduleSideEffects: "no-external",
   },
   plugins: [
-    nodeResolve(),
+    nodeResolve({
+      browser: false,
+      // Without this, the chalk will fail:
+      // https://github.com/chalk/supports-color/issues/113
+      exportConditions: ["node"],
+    }),
     commonjs({
       include: "node_modules/**",
     }),

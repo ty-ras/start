@@ -93,11 +93,20 @@ export default async ({ validatedInput, packageRoot, onEvent }: Input) => {
     packageManager === "pnpm"
       ? createFixPnpmDependencies(validatedInput.dataValidation)
       : undefined;
-  const fixDevDeps =
+  const fixBEDevDeps =
     "server" in validatedInput
       ? createFixDevDependencies(
           validatedInput.components,
           getServerInfo(validatedInput.server),
+          "/backend",
+        )
+      : undefined;
+  const fixFEDevDeps =
+    "client" in validatedInput
+      ? createFixDevDependencies(
+          validatedInput.components,
+          getClientInfo(validatedInput.client),
+          "/frontend",
         )
       : undefined;
   await Promise.all(
@@ -108,7 +117,16 @@ export default async ({ validatedInput, packageRoot, onEvent }: Input) => {
         packageJsonPath,
         extractPackageName?.(packageJsonPath),
         fixDeps,
-        fixDevDeps,
+        (...args) => {
+          let [devDeps] = args;
+          if (fixBEDevDeps) {
+            devDeps = fixBEDevDeps(...args);
+          }
+          if (fixFEDevDeps) {
+            devDeps = fixFEDevDeps(...args);
+          }
+          return devDeps;
+        },
       ),
     ),
   );
@@ -383,29 +401,38 @@ const createFixPnpmDependencies = (
 
 const createFixDevDependencies = (
   components: validatedInput.ValidatedInput["components"],
-  info: ServerInfo | undefined,
+  info: DevDependencyInfo | undefined,
+  packageNameEndsWith: string,
 ): FixPackageJsonDependencies | undefined =>
   info === undefined
     ? undefined
     : (devDeps, packageName) =>
-        components === "be" || packageName.endsWith("/backend")
+        components === "be" || packageName.endsWith(packageNameEndsWith)
           ? {
               ...devDeps,
-              [`@types/${info.server}`]: info.typesVersionSpec,
+              [`@types/${info.library}`]: info.typesVersionSpec,
             }
           : devDeps;
 
-const getServerInfo = (server: string): ServerInfo | undefined => {
-  switch (server) {
+const getServerInfo = (library: string): DevDependencyInfo | undefined => {
+  switch (library) {
     case "koa":
-      return { server, typesVersionSpec: "^2.13.8" };
+      return { library, typesVersionSpec: "^2.13.8" };
     case "express":
-      return { server, typesVersionSpec: "^4.17.17" };
+      return { library, typesVersionSpec: "^4.17.17" };
   }
 };
 
-interface ServerInfo {
-  server: string;
+const getClientInfo = (library: string): DevDependencyInfo | undefined => {
+  // eslint-disable-next-line sonarjs/no-small-switch
+  switch (library) {
+    case "node":
+      return { library, typesVersionSpec: "18.6.3" };
+  }
+};
+
+interface DevDependencyInfo {
+  library: string;
   typesVersionSpec: string;
 }
 

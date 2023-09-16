@@ -427,7 +427,7 @@ const getClientInfo = (library: string): DevDependencyInfo | undefined => {
   // eslint-disable-next-line sonarjs/no-small-switch
   switch (library) {
     case "node":
-      return { library, typesVersionSpec: "18.6.3" };
+      return { library, typesVersionSpec: "18.16.3" };
   }
 };
 
